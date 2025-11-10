@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-def home(request):
+def userhome(request):
     return render(request, 'user/home.html')
 
 def category(request):
@@ -14,8 +14,8 @@ def history(request):
     return render(request, 'user/history.html')
 
 
-def mypage(request):
+def usermypage(request):
     return render(request, 'user/mypage.html')
 
-def alert(request):
+def useralert(request):
     return render(request, 'user/alert.html')
