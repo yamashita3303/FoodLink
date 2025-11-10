@@ -123,17 +123,10 @@
 <body>
 
   <!-- 上部バー -->
-<div class="top-bar">
-  <a href="{% url 'alert' %}" title="お知らせ"
-     class="{% if request.path == '/alert/' %}active{% endif %}">
-    <i class="bi bi-bell"></i>
-  </a>
-  <a href="{% url 'mypage' %}" title="マイページ"
-     class="{% if request.path == '/mypage/' %}active{% endif %}">
-    <i class="bi bi-person-fill"></i>
-  </a>
-</div>
-
+  <div class="top-bar">
+    <a href="{% url 'user_alert' %}" title="お知らせ"><i class="bi bi-bell"></i></a>
+    <a href="{% url 'user_mypage' %}" title="マイページ"><i class="bi bi-person-fill"></i></a>
+  </div>
 
   <!-- メインコンテンツ -->
   <main>
@@ -144,19 +137,19 @@
 
   <!-- 下部固定ナビ -->
   <nav class="bottom-nav">
-    <a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">
+    <a href="{% url 'user_home' %}" class="{% if 'user_home' in request.path %}active{% endif %}">
       <i class="bi bi-house-fill"></i>
       <span>ホーム</span>
     </a>
-    <a href="{% url 'category' %}" class="{% if 'category' in request.path %}active{% endif %}">
+    <a href="{% url 'user_category' %}" class="{% if 'category' in request.path %}active{% endif %}">
       <i class="bi bi-list"></i>
       <span>カテゴリ</span>
     </a>
-    <a href="{% url 'cart' %}" class="{% if 'cart' in request.path %}active{% endif %}">
+    <a href="{% url 'user_cart' %}" class="{% if 'cart' in request.path %}active{% endif %}">
       <i class="bi bi-cart3"></i>
       <span>カート</span>
     </a>
-    <a href="{% url 'history' %}" class="{% if 'history' in request.path %}active{% endif %}">
+    <a href="{% url 'user_history' %}" class="{% if 'history' in request.path %}active{% endif %}">
       <i class="bi bi-arrow-clockwise"></i>
       <span>履歴</span>
     </a>
