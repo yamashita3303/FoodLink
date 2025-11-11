@@ -1,13 +1,12 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import RegexValidator
 
 # =========================
 # Userモデル（ユーザ情報）
 # =========================
-class User(models.Model): 
-    user_id = models.AutoField(primary_key=True) # 主キー 
-    name = models.CharField(max_length=100, blank=False) # ユーザ名 
-    email = models.EmailField(unique=True, blank=False) # メールアドレス（重複不可）
+class User(AbstractUser):
+    email = models.EmailField(unique=True)  # メールで一意
     phone = models.CharField(
         max_length=15,
         blank=True,
@@ -17,10 +16,33 @@ class User(models.Model):
         )]
     )  # 電話番号（ハイフン付き、日本国内想定）
     postal_code = models.CharField(max_length=10, blank=False)  # 郵便番号
-    address = models.CharField(max_length=255, blank=False)     # 住所
+    postal_code = models.CharField(max_length=10, blank=False, default='000-0000')  # 郵便番号
+    prefecture = models.CharField(max_length=10, blank=False, default='未設定') # 都道府県
+    city = models.CharField(max_length=50, blank=False, default='未設定')   # 市区町村
+    address_line1 = models.CharField(max_length=100, blank=False, default='未設定') # 町名・番地
+    address_line2 = models.CharField(max_length=100, blank=True)    # 建物名・部屋番号
+
+    # groups と user_permissions を上書きして related_name を変える
+    groups = models.ManyToManyField(
+        Group,
+        related_name='customuser_set',  # ← default の user_set と衝突しないように変更
+        blank=True,
+        help_text='ユーザーが所属するグループ',
+        verbose_name='groups'
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='customuser_set',  # ← default の user_set と衝突しないように変更
+        blank=True,
+        help_text='ユーザーが持つ権限',
+        verbose_name='user permissions'
+    )
+
+    USERNAME_FIELD = 'email'  # メールアドレスでログイン
+    REQUIRED_FIELDS = ['username']  # username は必須
 
     def __str__(self):
-        return self.username  # 管理画面などで表示する文字列
+        return self.email
 
 # =========================
 # Storeモデル（店舗情報）

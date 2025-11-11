@@ -77,7 +77,10 @@
   <div class="icon">アイコン</div>
  
   <div class="button super">スーパー</div>
-<div class="button user">一般利用者</div>
+  <form method="post" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" name="user" class="button user">一般利用者</button>
+</form>
  
 </body>
 </html>

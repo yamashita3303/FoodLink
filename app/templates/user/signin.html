@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>サインイン</title>
+<style>
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #fafafa;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+.container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 30px;
+  width: 400px;
+}
+form label {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+}
+form input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 8px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+button {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  width: 100%;
+  cursor: pointer;
+  background: #a7ecf5;
+}
+button:hover {
+  background: #7fd0e2;
+}
+.error {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.text-center {
+  text-align: center;
+  margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>サインイン</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="error">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- next を hidden で渡す -->
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <label for="email">メールアドレス</label>
+        <input type="email" name="email" id="email" required>
+
+        <label for="password">パスワード</label>
+        <input type="password" name="password" id="password" required>
+
+        <button type="submit">ログイン</button>
+    </form>
+
+    <div class="text-center">
+        <a href="{% url 'user_signup' %}">新規登録はこちら</a>
+    </div>
+</div>
+</body>
+</html>

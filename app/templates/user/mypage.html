@@ -1,6 +1,14 @@
 {% extends "user/base.html" %}
 {% block title %}マイページ | FoodLink{% endblock %}
 {% block content %}
-  <h2>マイページ</h2>
-  <p>あああ</p>
+  <div class="mypage-header">
+    <h2>マイページ</h2>
+
+    <!-- サインアウトボタン -->
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="logout">ログアウト</button>
+    </form>
+</div>
+
 {% endblock %}
