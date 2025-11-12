@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>新規登録 - 基本情報</title>
+<style>
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #fafafa;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px;
+}
+
+/* 白いカード */
+.container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 30px;
+  width: 400px;
+}
+
+/* ステップバー */
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+.step {
+  text-align: center;
+  flex: 1;
+}
+.step-number {
+  background: #ddd;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  display: inline-block;
+  color: white;
+}
+.active .step-number {
+  background: #ffd54f;
+  color: black;
+}
+
+/* 入力欄 */
+form label {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+}
+form input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 8px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.phone-split {
+  display: flex;
+  gap: 8px; /* 各入力欄の間隔 */
+}
+.phone-split input {
+  width: 100%;      
+  max-width: 80px;  
+  text-align: center;
+}
+
+button {
+  background: #a7ecf5;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  width: 200px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+button:hover {
+  background: #7fd0e2;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: -8px;
+  margin-bottom: 10px;
+}
+
+/* ボタンとリンクを縦に並べるフッター */
+.form-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+.form-footer a {
+  margin-top: 10px;
+  text-decoration: none;
+  color: #0077cc;
+}
+.form-footer a:hover {
+  text-decoration: underline;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="steps">
+    <div class="step active">
+      <div class="step-number">1</div>
+      <div>基本情報</div>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <div>住所</div>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <div>確認画面</div>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- フォーム全体のエラー -->
+    {% if form.non_field_errors %}
+    <div class="error">
+      <ul>
+      {% for error in form.non_field_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    <label>店舗名</label>
+    {{ form.username }}
+    {% if form.username.errors %}
+      <ul class="error">
+      {% for error in form.username.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+    <label>電話番号</label>
+    <div class="phone-split">
+      {{ form.phone }}
+    </div>
+    {% if form.phone.errors %}
+      <ul class="error">
+      {% for error in form.phone.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+    <label>パスワード</label>
+    {{ form.password }}
+    {% if form.password.errors %}
+      <ul class="error">
+      {% for error in form.password.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+    <label>再確認用パスワード</label>
+    {{ form.password_confirm }}
+    {% if form.password_confirm.errors %}
+      <ul class="error">
+      {% for error in form.password_confirm.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+
+    <!-- ボタンとリンクを縦並びに -->
+    <div class="form-footer">
+      <button type="submit">次へ</button>
+      <a href="{% url 'store_signin' %}">ログインはこちら</a>
+    </div>
+  </form>
+</div>
+</body>
+</html>

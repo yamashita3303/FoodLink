@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>新規登録 - 確認画面</title>
+<style>
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #fafafa;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+.container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 30px;
+  width: 400px;
+}
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+.step {
+  text-align: center;
+  flex: 1;
+  position: relative;
+}
+.step-number {
+  background: #ddd;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  display: inline-block;
+  color: white;
+}
+.active .step-number {
+  background: #ffd54f;
+  color: black;
+}
+.confirm-item {
+  margin-bottom: 15px;
+}
+.confirm-item label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+button {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  width: 45%;
+  cursor: pointer;
+}
+button[name="back"] {
+  background: #ddd;
+}
+button[name="back"]:hover {
+  background: #bbb;
+}
+button[name="confirm"] {
+  background: #a7ecf5;
+}
+button[name="confirm"]:hover {
+  background: #7fd0e2;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="steps">
+    <div class="step">
+      <div class="step-number">1</div>
+      <div>基本情報</div>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <div>住所</div>
+    </div>
+    <div class="step active">
+      <div class="step-number">3</div>
+      <div>確認画面</div>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="confirm-item">
+      <label>ユーザー名</label>
+      <div>{{ signup_data.username }}</div>
+    </div>
+    <div class="confirm-item">
+      <label>電話番号</label>
+      <div>{{ signup_data.phone }}</div>
+    </div>
+    <div class="confirm-item">
+      <label>郵便番号</label>
+      <div>{{ signup_data2.postal_code }}</div>
+    </div>
+    <div class="confirm-item">
+      <label>都道府県</label>
+      <div>{{ signup_data2.prefecture }}</div>
+    </div>
+    <div class="confirm-item">
+      <label>市区町村</label>
+      <div>{{ signup_data2.city }}</div>
+    </div>
+    <div class="confirm-item">
+      <label>番地</label>
+      <div>{{ signup_data2.address_line1 }}</div>
+    </div>
+    <div class="confirm-item">
+      <label>開店時間</label>
+      <div>{{ signup_data2.opening_time }}</div>
+    </div>
+    <div class="confirm-item">
+      <label>閉店時間</label>
+      <div>{{ signup_data2.closing_time }}</div>
+    </div>
+
+    <div class="button-group">
+      <button type="submit" name="back">戻る</button>
+      <button type="submit" name="confirm">登録</button>
+    </div>
+  </form>
+</div>
+</body>
+</html>

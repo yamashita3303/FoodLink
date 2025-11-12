@@ -13,6 +13,8 @@ urlpatterns = [
     path('user_mypage/', views.user_mypage, name='user_mypage'),
     path('user_alert/', views.user_alert, name='user_alert'),
 
+    path('store_signup/', views.store_signup, name='store_signup'),
+    path('store_signin/', views.store_signin, name='store_signin'),
     path('store_home/', views.store_home, name='store_home'),
     path('list/', views.store_list, name='store_list'),
     path('store_mypage/', views.store_mypage, name='store_mypage'),

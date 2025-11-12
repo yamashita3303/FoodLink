@@ -47,7 +47,7 @@
     transform: translateY(2px);
   }
  
-  .super::after {
+  .store::after {
     content: "";
     position: absolute;
     right: -5px;
@@ -76,11 +76,11 @@
  
   <div class="icon">アイコン</div>
  
-  <div class="button super">スーパー</div>
   <form method="post" style="display:inline;">
     {% csrf_token %}
+    <button type="submit" name="store" class="button store">店舗運営者</button><br>
     <button type="submit" name="user" class="button user">一般利用者</button>
-</form>
+  </form>
  
 </body>
 </html>

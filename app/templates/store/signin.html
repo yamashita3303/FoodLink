@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>サインイン</title>
+<style>
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #fafafa;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+.container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 30px;
+  width: 400px;
+}
+form label {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+}
+form input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  padding: 8px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.phone-split {
+  display: flex;
+  gap: 8px; /* 各入力欄の間隔 */
+}
+.phone-split input {
+  width: 100%;      
+  max-width: 80px;  
+  text-align: center;
+}
+
+button {
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  width: 100%;
+  cursor: pointer;
+  background: #a7ecf5;
+}
+button:hover {
+  background: #7fd0e2;
+}
+.error {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.text-center {
+  text-align: center;
+  margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>店舗サインイン</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="error">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <label>電話番号</label>
+        <div class="phone-split">
+          {{ form.phone }}
+        </div>
+        {% if form.phone.errors %}
+          <ul class="error">
+          {% for error in form.phone.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+        <label for="password">パスワード</label>
+        <input type="password" name="password" id="password" required>
+
+        <button type="submit">ログイン</button>
+    </form>
+
+    <div class="text-center">
+        <a href="{% url 'store_signup' %}">新規店舗登録はこちら</a>
+    </div>
+</div>
+</body>
+</html>

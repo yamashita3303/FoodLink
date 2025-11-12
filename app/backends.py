@@ -1,5 +1,5 @@
 from django.contrib.auth.backends import ModelBackend
-from .models import User
+from .models import User, Store
 
 class EmailBackend(ModelBackend):
     """
@@ -14,4 +14,19 @@ class EmailBackend(ModelBackend):
             return None
         if user.check_password(password):
             return user
+        return None
+
+class PhoneBackend(ModelBackend):
+    """
+    店舗用：電話番号でログインするバックエンド
+    """
+    def authenticate(self, request, phone=None, password=None, **kwargs):
+        if phone is None or password is None:
+            return None
+        try:
+            store = Store.objects.get(phone=phone)
+        except Store.DoesNotExist:
+            return None
+        if store.check_password(password):
+            return store
         return None
