@@ -64,7 +64,11 @@ class Product(models.Model):
     expiration_date = models.DateField(blank=False)  # 消費期限
     quantity = models.IntegerField(default=1, blank=False)  # 在庫数量
     origin = models.CharField(max_length=50, blank=True, null=True)  # 産地
-    image = models.ImageField(upload_to='products/', blank=False)   # 商品画像
+    image1 = models.ImageField(upload_to='products/', blank=False)   # 商品画像
+    image2 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image3 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image4 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image5 = models.ImageField(upload_to='products/', blank=True, null=True)
     notes = models.TextField(max_length=100, blank=True, null=True)  # 備考
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name="products")  # 所属店舗
     created_at = models.DateTimeField(auto_now_add=True)

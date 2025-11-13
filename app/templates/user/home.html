@@ -1,10 +1,66 @@
 {% extends "user/base.html" %}
+{% load static %}
 
 {% block title %}ホーム | FoodLink{% endblock %}
 
 {% block content %}
-<div class="text-center mt-4">
-  <h2>ようこそ！</h2>
-  <p>ここにホーム画面の内容を表示します。</p>
+<div class="container mt-3 mb-5">
+
+  <!-- 🔍 検索バー -->
+  <form method="get" action="{% url 'user_home' %}" class="mb-3">
+    <div class="input-group">
+      <input type="text" name="q" class="form-control" placeholder="商品名・カテゴリで検索..." value="{{ request.GET.q }}">
+      <button class="btn btn-outline-secondary" type="submit">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </form>
+
+  <!-- 🛒 商品一覧 -->
+  <div class="row row-cols-3 g-3">
+    {% for product in products %}
+      <div class="col">
+        <div class="product-card border rounded text-center p-2">
+          <a href="{% url 'user_food_detail' pk=product.product_id %}" class="text-decoration-none text-dark">
+
+            <!-- ✅ 画像表示修正版 -->
+            {% if product.image1 %}
+              <img src="{{ product.image1.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+            {% elif product.image2 %}
+              <img src="{{ product.image2.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+            {% elif product.image3 %}
+              <img src="{{ product.image3.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+            {% elif product.image4 %}
+              <img src="{{ product.image4.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+            {% elif product.image5 %}
+              <img src="{{ product.image5.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+            {% else %}
+              <img src="{% static 'images/no_image.png' %}" alt="画像なし" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+            {% endif %}
+
+            <!-- 商品情報 -->
+            <p class="mt-2 mb-0 fw-bold">{{ product.name }}</p>
+            <p class="text-muted small mb-0">¥{{ product.price }}</p>
+
+          </a>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-center mt-4">該当する商品が見つかりません。</p>
+    {% endfor %}
+  </div>
+
 </div>
+
+<!-- 💅 カードホバー効果 -->
+<style>
+  .product-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .product-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+</style>
+
 {% endblock %}
