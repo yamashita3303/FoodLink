@@ -5,7 +5,23 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from .models import User, Store
-from .forms import UserSignupStep1Form, UserSignupStep2Form, UserEditUsernameForm, UserEditEmailForm, UserEditPasswordForm, UserEditPhoneForm, UserEditAddressForm, StoreSignupStep1Form, StoreSignupStep2Form, StoreSigninForm
+from .forms import (
+    UserSignupStep1Form, 
+    UserSignupStep2Form, 
+    UserEditUsernameForm, 
+    UserEditEmailForm, 
+    UserEditPasswordForm, 
+    UserEditPhoneForm, 
+    UserEditAddressForm, 
+    StoreSignupStep1Form, 
+    StoreSignupStep2Form, 
+    StoreEditUsernameForm,
+    StoreEditPhoneForm,
+    StoreEditPasswordForm,
+    StoreEditAddressForm,
+    StoreEditHoursForm,
+    StoreSigninForm
+)
 import datetime
 
 def top(request):
@@ -400,4 +416,95 @@ def store_mypage(request):
 
     return render(request, 'store/mypage.html', {
         'store': store
+    })
+
+@login_required(login_url='store_signin')
+def store_edit_menu(request):
+    return render(request, 'store/mypage_edit_menu.html')
+
+# ===== 個別編集ビュー =====
+@login_required(login_url='store_signin')
+def store_edit_username(request):
+    store = request.user
+    if request.method == 'POST':
+        form = StoreEditUsernameForm(request.POST, instance=store)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '店舗名を更新しました。')
+            return redirect('store_mypage')
+    else:
+        form = StoreEditUsernameForm()
+    return render(request, 'store/mypage_edit_form.html', {
+        'form': form,
+        'title': '店舗名を変更',
+        'current_value': store.username
+    })
+
+@login_required(login_url='store_signin')
+def store_edit_phone(request):
+    store = request.user
+    if request.method == 'POST':
+        form = StoreEditPhoneForm(request.POST, instance=store)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '電話番号を更新しました。')
+            return redirect('store_mypage')
+    else:
+        form = StoreEditPhoneForm()
+    return render(request, 'store/mypage_edit_form.html', {
+        'form': form,
+        'title': '電話番号を変更',
+        'current_value': store.phone or ''
+    })
+
+@login_required(login_url='store_signin')
+def store_edit_password(request):
+    store = request.user
+    if request.method == 'POST':
+        form = StoreEditPasswordForm(store, request.POST)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, store)
+            messages.success(request, 'パスワードを更新しました。')
+            return redirect('store_mypage')
+    else:
+        form = StoreEditPasswordForm(store)
+    return render(request, 'store/mypage_edit_form.html', {
+        'form': form,
+        'title': 'パスワードを変更',
+        'current_value': '●●●●●●'
+    })
+
+@login_required(login_url='store_signin')
+def store_edit_address(request):
+    store = request.user
+    if request.method == 'POST':
+        form = StoreEditAddressForm(request.POST, instance=store)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '住所を更新しました。')
+            return redirect('store_mypage')
+    else:
+        form = StoreEditAddressForm()
+    return render(request, 'store/mypage_edit_form.html', {
+        'form': form,
+        'title': '住所を変更',
+        'current_value': f"{store.postal_code} {store.prefecture} {store.city} {store.address_line1}"
+    })
+
+@login_required(login_url='store_signin')
+def store_edit_hours(request):
+    store = request.user
+    if request.method == 'POST':
+        form = StoreEditHoursForm(request.POST, instance=store)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '営業時間を更新しました。')
+            return redirect('store_mypage')
+    else:
+        form = StoreEditHoursForm()
+    return render(request, 'store/mypage_edit_form.html', {
+        'form': form,
+        'title': '営業時間を変更',
+        'current_value': f"{store.opening_time} - {store.closing_time}"
     })

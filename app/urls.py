@@ -24,5 +24,11 @@ urlpatterns = [
     path('store_home/', views.store_home, name='store_home'),
     path('list/', views.store_list, name='store_list'),
     path('store_mypage/', views.store_mypage, name='store_mypage'),
+    path('store_mypage/edit/', views.store_edit_menu, name='store_edit_menu'),
+    path('store_mypage/edit/username/', views.store_edit_username, name='store_edit_username'),
+    path('store_mypage/edit/phone/', views.store_edit_phone, name='store_edit_phone'),
+    path('store_mypage/edit/password/', views.store_edit_password, name='store_edit_password'),
+    path('store_mypage/edit/address/', views.store_edit_address, name='store_edit_address'),
+    path('mypage/edit/hours/', views.store_edit_hours, name='store_edit_hours'),
     path('store_alert/', views.store_alert, name='store_alert'),
 ]

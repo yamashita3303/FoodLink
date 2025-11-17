@@ -5,13 +5,15 @@
 <div class="mypage-header">
     <h2>マイページ</h2>
     <p>ようこそ、{{ store.username }} さん！</p>
-    <p>登録電話番号: {{ store.phone }}</p>
-    <p>登録住所: {{ store.postal_code }} {{ store.prefecture }} {{ store.city }} {{ store.address_line1 }} {{ store.address_line2 }}</p>
+    <p>電話番号: {{ store.phone }}</p>
+    <p>住所: {{ store.postal_code }} {{ store.prefecture }} {{ store.city }} {{ store.address_line1 }} {{ store.address_line2 }}</p>
+    <p>営業時間: {{ store.opening_time }} 〜 {{ store.closing_time }}</p>
 
-    <!-- サインアウトボタン -->
-    <form method="post">
+    <a href="{% url 'store_edit_menu' %}" class="btn btn-primary mt-2">編集する</a>
+
+    <form method="post" class="mt-2">
         {% csrf_token %}
-        <button type="submit" name="logout">ログアウト</button>
+        <button type="submit" name="logout" class="btn btn-secondary">ログアウト</button>
     </form>
 </div>
 {% endblock %}

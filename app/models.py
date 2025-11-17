@@ -64,10 +64,10 @@ class Store(AbstractUser):
             message="電話番号はハイフン付きで入力してください"
         )]
     )
-    postal_code = models.CharField(max_length=10, blank=False, default='000-0000')
-    prefecture = models.CharField(max_length=10, blank=False, default='未設定')
-    city = models.CharField(max_length=50, blank=False, default='未設定')
-    address_line1 = models.CharField(max_length=100, blank=False, default='未設定')
+    postal_code = models.CharField(max_length=10, blank=False)
+    prefecture = models.CharField(max_length=10, blank=False)
+    city = models.CharField(max_length=50, blank=False)
+    address_line1 = models.CharField(max_length=100, blank=False)
     opening_time = models.TimeField(blank=False)  # 開店時間
     closing_time = models.TimeField(blank=False)  # 閉店時間
     created_at = models.DateTimeField(auto_now_add=True)  # 作成日時

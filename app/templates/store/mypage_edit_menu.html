@@ -1,0 +1,13 @@
+{% extends "store/base.html" %}
+{% block title %}編集メニュー | FoodLink{% endblock %}
+{% block content %}
+<h2>編集メニュー</h2>
+<ul>
+    <li><a href="{% url 'store_edit_username' %}">ユーザネーム変更</a></li>
+    <li><a href="{% url 'store_edit_phone' %}">電話番号変更</a></li>
+    <li><a href="{% url 'store_edit_password' %}">パスワード変更</a></li>
+    <li><a href="{% url 'store_edit_address' %}">住所変更</a></li>
+    <li><a href="{% url 'store_edit_hours' %}">営業時間変更</a></li>
+</ul>
+<a href="{% url 'store_mypage' %}" class="btn btn-secondary mt-2">戻る</a>
+{% endblock %}

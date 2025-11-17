@@ -63,29 +63,6 @@ class UserSignupStep2Form(forms.ModelForm):
         model = User
         fields = ['postal_code', 'prefecture', 'city', 'address_line1', 'address_line2']
 
-class StoreSignupStep1Form(forms.ModelForm):
-    password = forms.CharField(label='パスワード', widget=forms.PasswordInput)
-    password_confirm = forms.CharField(label='再確認用パスワード', widget=forms.PasswordInput)
-    phone = PhoneSplitField(label='電話番号')
-
-    class Meta:
-        model = Store
-        fields = ['username', 'phone', 'password']
-
-    def clean_phone(self):
-        phone = self.cleaned_data.get('phone')
-        if Store.objects.filter(phone=phone).exists():
-            raise ValidationError("この電話番号は既に登録されています。")
-        return phone
-
-    def clean(self):
-        cleaned_data = super().clean()
-        p1 = cleaned_data.get('password')
-        p2 = cleaned_data.get('password_confirm')
-        if p1 and p2 and p1 != p2:
-            raise forms.ValidationError("パスワードが一致しません。")
-        return cleaned_data
-
 # ユーザネーム
 class UserEditUsernameForm(forms.ModelForm):
     class Meta:
@@ -149,10 +126,95 @@ class UserEditAddressForm(forms.ModelForm):
         model = User
         fields = ['postal_code', 'prefecture', 'city', 'address_line1', 'address_line2']
 
+class StoreSignupStep1Form(forms.ModelForm):
+    password = forms.CharField(label='パスワード', widget=forms.PasswordInput)
+    password_confirm = forms.CharField(label='再確認用パスワード', widget=forms.PasswordInput)
+    phone = PhoneSplitField(label='電話番号')
+
+    class Meta:
+        model = Store
+        fields = ['username', 'phone', 'password']
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        if Store.objects.filter(phone=phone).exists():
+            raise ValidationError("この電話番号は既に登録されています。")
+        return phone
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get('password')
+        p2 = cleaned_data.get('password_confirm')
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("パスワードが一致しません。")
+        return cleaned_data
+
 class StoreSignupStep2Form(forms.ModelForm):
     class Meta:
         model = Store
         fields = ['postal_code', 'prefecture', 'city', 'address_line1', 'opening_time', 'closing_time']
+
+# 店舗名（ユーザーネーム）
+class StoreEditUsernameForm(forms.ModelForm):
+    class Meta:
+        model = Store
+        fields = ['username']
+
+# パスワード
+class StoreEditPasswordForm(forms.Form):
+    new_password1 = forms.CharField(
+        label="新しいパスワード",
+        widget=forms.PasswordInput,
+        help_text=password_validation.password_validators_help_text_html()
+    )
+    new_password2 = forms.CharField(
+        label="新しいパスワード（再入力）",
+        widget=forms.PasswordInput
+    )
+
+    def __init__(self, store, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.store = store
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get('new_password1')
+        p2 = cleaned_data.get('new_password2')
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("新しいパスワードが一致しません")
+        return cleaned_data
+
+    def save(self, commit=True):
+        password = self.cleaned_data["new_password1"]
+        self.store.set_password(password)
+        if commit:
+            self.store.save()
+        return self.store
+
+# 電話番号
+class StoreEditPhoneForm(forms.ModelForm):
+    phone = PhoneSplitField(label='電話番号')
+
+    class Meta:
+        model = Store
+        fields = ['phone']
+
+# 住所
+class StoreEditAddressForm(forms.ModelForm):
+    class Meta:
+        model = Store
+        fields = ['postal_code', 'prefecture', 'city', 'address_line1']
+
+# 営業時間
+class StoreEditHoursForm(forms.ModelForm):
+    class Meta:
+        model = Store
+        fields = ['opening_time', 'closing_time']
+        widgets = {
+            'opening_time': forms.TimeInput(format='%H:%M', attrs={'type': 'time'}),
+            'closing_time': forms.TimeInput(format='%H:%M', attrs={'type': 'time'}),
+        }
+
 
 class StoreSigninForm(forms.Form):
     phone = PhoneSplitField(label='電話番号')
