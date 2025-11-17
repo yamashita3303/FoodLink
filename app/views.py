@@ -19,84 +19,85 @@ def top(request):
 def user_signup(request):
     step = request.session.get('signup_step', 1)
 
-    # =============================
-    # ステップ1（基本情報）
-    # =============================
+    # --------------------
+    # Step 1
+    # --------------------
     if step == 1:
         if request.method == "POST":
             form = UserSignupStep1Form(request.POST)
             if form.is_valid():
-                # 入力データをセッションに保存
                 request.session['signup_data'] = form.cleaned_data
                 request.session['signup_step'] = 2
                 return redirect('user_signup')
-            else:
-                print("フォームが無効です")
-                print(form.errors)  # ←ここで何が原因か確認する
         else:
-            print("form is not valid")
-            # セッションから初期値をセット
             initial = request.session.get('signup_data', {})
             form = UserSignupStep1Form(initial=initial)
 
         return render(request, 'user/signup1.html', {'form': form, 'step': 1})
 
-
-    # =============================
-    # ステップ2（住所情報）
-    # =============================
+    # --------------------
+    # Step 2
+    # --------------------
     elif step == 2:
         if request.method == "POST":
+
+            # 戻るボタン
             if 'back' in request.POST:
                 request.session['signup_step'] = 1
                 return redirect('user_signup')
 
+            # 住所フォーム
             form = UserSignupStep2Form(request.POST)
             if form.is_valid():
                 request.session['signup_data2'] = form.cleaned_data
                 request.session['signup_step'] = 3
                 return redirect('user_signup')
+
         else:
             initial = request.session.get('signup_data2', {})
             form = UserSignupStep2Form(initial=initial)
 
         return render(request, 'user/signup2.html', {'form': form, 'step': 2})
 
-
-    # =============================
-    # ステップ3（確認画面）
-    # =============================
+    # --------------------
+    # Step 3 → 登録処理
+    # --------------------
     elif step == 3:
-        signup_data = request.session.get('signup_data', {})
-        signup_data2 = request.session.get('signup_data2', {})
+        data1 = request.session.get('signup_data')
+        data2 = request.session.get('signup_data2')
 
-        if request.method == "POST":
-            if 'back' in request.POST:
-                request.session['signup_step'] = 2
-                return redirect('user_signup')
-            elif 'confirm' in request.POST:
-                # DB保存処理
-                user = User(
-                    username=signup_data['username'],
-                    email=signup_data['email'],
-                    phone=signup_data['phone'],
-                    postal_code=signup_data2.get('postal_code', ''),
-                    prefecture=signup_data2.get('prefecture', ''),
-                    city=signup_data2.get('city', ''),
-                    address_line1=signup_data2.get('address_line1', ''),
-                    address_line2=signup_data2.get('address_line2', ''),
-                )
-                # パスワードをハッシュ化して保存
-                user.set_password(signup_data['password'])
-                user.save()
-                request.session.flush()  # セッションをクリア
-                return redirect('user_home')
+        if not data1 or not data2:
+            return redirect('user_signup')
 
-        return render(request, 'user/signup3.html', {
-            'signup_data': signup_data,
-            'signup_data2': signup_data2,
-            'step': 3
-        })
+        # パスワードを取り出す
+        password = data1.pop('password')
+
+        # User を作成
+        user = User.objects.create(
+            username=data1['username'],
+            email=data1['email'],
+            phone=data1['phone'],
+            postal_code=data2['postal_code'],
+            prefecture=data2['prefecture'],
+            city=data2['city'],
+            address_line1=data2['address_line1'],
+            address_line2=data2.get('address_line2'),
+        )
+        user.set_password(password)
+        user.save()
+
+        # セッション消す
+        request.session.flush()
+
+        # ログイン
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        return redirect('user_mypage')
+
+        # return render(request, 'user/signup3.html', {
+        #     'signup_data': signup_data,
+        #     'signup_data2': signup_data2,
+        #     'step': 3
+        # })
     
 def user_signin(request):
     if request.method == 'POST':
@@ -133,12 +134,15 @@ def user_cart(request):
 def user_history(request):
     return render(request, 'user/history.html')
 
-
 def user_mypage(request):
+    user = request.user  # ログイン中のユーザーを取得
+    print(user)
     if request.method == 'POST' and 'logout' in request.POST:
         logout(request)
         return redirect('top')
-    return render(request, 'user/mypage.html')
+    return render(request, 'user/mypage.html',{
+        'user': user
+    })
 
 def user_alert(request):
     return render(request, 'user/alert.html')
@@ -265,11 +269,10 @@ def store_signin(request):
 
             store = authenticate(request, phone=phone, password=password)
             if store is not None:
-                login(request, store)
+                login(request, store)  # ここで Django の認証は実行されるが request.user は User 型
+                request.session['store_id'] = store.id  # ← store_id をセッションに保存
                 return redirect(next_url)
             else:
-                print(phone, password)
-                print(store)
                 messages.error(request, '電話番号かパスワードが間違っています')
         else:
             messages.error(request, '電話番号とパスワードを入力してください')
@@ -288,10 +291,20 @@ def store_list(request):
     return render(request, 'store/list.html')
 
 def store_mypage(request):
+    store_id = request.session.get('store_id')
+    if not store_id:
+        return redirect('store_signin')  # セッションがなければ再ログイン
+
+    store = Store.objects.get(id=store_id)  # DBから Store を取得
+
     if request.method == 'POST' and 'logout' in request.POST:
         logout(request)
+        request.session.pop('store_id', None)  # セッションも削除
         return redirect('top')
-    return render(request, 'store/mypage.html')
+
+    return render(request, 'store/mypage.html', {
+        'store': store
+    })
 
 def store_alert(request):
     return render(request, 'store/alert.html')

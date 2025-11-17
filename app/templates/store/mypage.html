@@ -3,12 +3,15 @@
 {% block title %}ストアマイページ | FoodLink{% endblock %}
 {% block content %}
 <div class="mypage-header">
-  <h2>マイページ</h2>
+    <h2>マイページ</h2>
+    <p>ようこそ、{{ store.username }} さん！</p>
+    <p>登録電話番号: {{ store.phone }}</p>
+    <p>登録住所: {{ store.postal_code }} {{ store.prefecture }} {{ store.city }} {{ store.address_line1 }} {{ store.address_line2 }}</p>
 
-  <!-- サインアウトボタン -->
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit" name="logout">ログアウト</button>
-  </form>
+    <!-- サインアウトボタン -->
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="logout">ログアウト</button>
+    </form>
 </div>
 {% endblock %}

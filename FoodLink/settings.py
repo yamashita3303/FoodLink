@@ -128,3 +128,5 @@ AUTHENTICATION_BACKENDS = [
     'app.backends.PhoneBackend',  # 店舗用バックエンド
     'django.contrib.auth.backends.ModelBackend',  # デフォルト
 ]
+
+AUTH_USER_MODEL = 'app.User'  # カスタムユーザーモデルを指定
