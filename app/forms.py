@@ -1,6 +1,7 @@
 from django import forms
 from .models import User, Store
 from django.core.exceptions import ValidationError
+from django.contrib.auth import password_validation
 
 class PhoneSplitWidget(forms.MultiWidget):
     """電話番号を3分割で入力するウィジェット"""
@@ -84,6 +85,69 @@ class StoreSignupStep1Form(forms.ModelForm):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("パスワードが一致しません。")
         return cleaned_data
+
+# ユーザネーム
+class UserEditUsernameForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username']
+
+# メールアドレス
+class UserEditEmailForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['email']
+
+# パスワード
+class UserEditPasswordForm(forms.Form):
+    new_password1 = forms.CharField(
+        label="新しいパスワード",
+        widget=forms.PasswordInput,
+        help_text=password_validation.password_validators_help_text_html()
+    )
+    new_password2 = forms.CharField(
+        label="新しいパスワード（再入力）",
+        widget=forms.PasswordInput
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get('new_password1')
+        p2 = cleaned_data.get('new_password2')
+        # パスワードの一致チェックのみ行う(バリデーションは行わないvar)
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("新しいパスワードが一致しません")
+        return cleaned_data
+    # バリデーションを外す場合は validate_password を呼ばない(パスワードを8文字以上にする等の制約を付ける場合はコメントアウトを外す)
+        # if p1 and p2 and p1 != p2:
+        #     raise forms.ValidationError("新しいパスワードが一致しません")
+        # if p1:
+        #     password_validation.validate_password(p1, self.user)
+        # return cleaned_data
+
+    def save(self, commit=True):
+        password = self.cleaned_data["new_password1"]
+        self.user.set_password(password)
+        if commit:
+            self.user.save()
+        return self.user
+
+# 電話番号
+class UserEditPhoneForm(forms.ModelForm):
+    phone = PhoneSplitField(label='電話番号')
+    class Meta:
+        model = User
+        fields = ['phone']
+
+# 住所
+class UserEditAddressForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['postal_code', 'prefecture', 'city', 'address_line1', 'address_line2']
 
 class StoreSignupStep2Form(forms.ModelForm):
     class Meta:

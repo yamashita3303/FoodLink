@@ -8,6 +8,10 @@
     <p>登録電話番号: {{ user.phone }}</p>
     <p>登録住所: {{ user.postal_code }} {{ user.prefecture }} {{ user.city }} {{ user.address_line1 }} {{ user.address_line2 }}</p>
 
+    <p>
+      <a href="{% url 'user_edit_menu' %}" class="btn btn-primary">編集する</a>
+    </p>
+
     <!-- サインアウトボタン -->
     <form method="post">
         {% csrf_token %}

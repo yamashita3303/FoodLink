@@ -11,6 +11,12 @@ urlpatterns = [
     path('cart/', views.user_cart, name='user_cart'),
     path('history/', views.user_history, name='user_history'),
     path('user_mypage/', views.user_mypage, name='user_mypage'),
+    path('user_mypage/edit/', views.user_edit_menu, name='user_edit_menu'),
+    path('user_mypage/edit/username/', views.user_edit_username, name='user_edit_username'),
+    path('user_mypage/edit/email/', views.user_edit_email, name='user_edit_email'),
+    path('user_mypage/edit/password/', views.user_edit_password, name='user_edit_password'),
+    path('user_mypage/edit/phone/', views.user_edit_phone, name='user_edit_phone'),
+    path('user_mypage/edit/address/', views.user_edit_address, name='user_edit_address'),
     path('user_alert/', views.user_alert, name='user_alert'),
 
     path('store_signup/', views.store_signup, name='store_signup'),

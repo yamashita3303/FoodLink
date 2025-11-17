@@ -1,0 +1,51 @@
+{% extends "user/base.html" %}
+{% block title %}{{ title }} | FoodLink{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ title }}</h2>
+
+  <!-- 現在の値 -->
+  <p>現在の値: <strong>{{ current_value }}</strong></p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% for field in form %}
+      <div class="mb-3">
+        {{ field.label_tag }} (更新後)
+        {{ field }}
+        {% if field.errors %}
+          <div class="text-danger mt-1">
+            {% for error in field.errors %}{{ error }}<br>{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary">更新</button>
+    <a href="{% url 'user_edit_menu' %}" class="btn btn-secondary ms-2">戻る</a>
+  </form>
+</div>
+
+{% if form.fields.postal_code %}
+<script>
+document.getElementById('id_postal_code').insertAdjacentHTML('afterend', '<button type="button" id="search_address">住所検索</button>');
+document.getElementById('search_address').addEventListener('click', async () => {
+    const postalCode = document.getElementById('id_postal_code').value.replace('-', '');
+    if(!postalCode) return alert("郵便番号を入力してください");
+    const url = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if(data.status === 200 && data.results) {
+            const r = data.results[0];
+            document.getElementById('id_prefecture').value = r.address1;
+            document.getElementById('id_city').value = r.address2;
+            document.getElementById('id_address_line1').value = r.address3;
+        } else alert("住所が見つかりません");
+    } catch(e) { alert("住所検索に失敗しました"); }
+});
+</script>
+{% endif %}
+
+{% endblock %}

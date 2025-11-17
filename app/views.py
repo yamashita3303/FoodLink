@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from .models import User, Store
-from .forms import UserSignupStep1Form, UserSignupStep2Form, StoreSignupStep1Form, StoreSignupStep2Form, StoreSigninForm
+from .forms import UserSignupStep1Form, UserSignupStep2Form, UserEditUsernameForm, UserEditEmailForm, UserEditPasswordForm, UserEditPhoneForm, UserEditAddressForm, StoreSignupStep1Form, StoreSignupStep2Form, StoreSigninForm
 import datetime
 
 def top(request):
@@ -120,6 +120,102 @@ def user_signin(request):
     # GET の場合
     next_url = request.GET.get('next', '')
     return render(request, 'user/signin.html', {'next': next_url})
+
+def user_edit_menu(request):
+    # 単に編集メニューを表示する
+    return render(request, 'user/mypage_edit_menu.html')
+
+@login_required(login_url='user_signin')
+def user_edit_username(request):
+    user = request.user
+    if request.method == 'POST':
+        form = UserEditUsernameForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'ユーザネームを更新しました。')
+            return redirect('user_mypage')
+    else:
+        form = UserEditUsernameForm()
+    return render(request, 'user/mypage_edit_form.html', {
+        'form': form,
+        'title': 'ユーザネームを変更',
+        'current_value': user.username
+    })
+
+@login_required(login_url='user_signin')
+def user_edit_email(request):
+    user = request.user
+    if request.method == 'POST':
+        form = UserEditEmailForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'メールアドレスを更新しました。')
+            return redirect('user_mypage')
+    else:
+        form = UserEditEmailForm()
+    return render(request, 'user/mypage_edit_form.html', {
+        'form': form,
+        'title': 'メールアドレスを変更',
+        'current_value': user.email
+    })
+
+@login_required(login_url='user_signin')
+def user_edit_password(request):
+    user = request.user
+    if request.method == 'POST':
+        form = UserEditPasswordForm(user, request.POST)
+        print(form)
+        print("-----")
+        print(form.errors)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, user)  # ログイン状態維持
+            messages.success(request, 'パスワードを更新しました。')
+            return redirect('user_mypage')
+    else:
+        form = UserEditPasswordForm(user)
+    return render(request, 'user/mypage_edit_form.html', {
+        'form': form,
+        'title': 'パスワードを変更',
+        'current_value': '●●●●●●'
+    })
+
+@login_required(login_url='user_signin')
+def user_edit_phone(request):
+    user = request.user
+    if request.method == 'POST':
+        form = UserEditPhoneForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '電話番号を更新しました。')
+            return redirect('user_mypage')
+    else:
+        form = UserEditPhoneForm()
+    return render(request, 'user/mypage_edit_form.html', {
+        'form': form,
+        'title': '電話番号を変更',
+        'current_value': user.phone
+    })
+
+@login_required(login_url='user_signin')
+def user_edit_address(request):
+    user = request.user
+    if request.method == 'POST':
+        form = UserEditAddressForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '住所を更新しました。')
+            return redirect('user_mypage')
+    else:
+        form = UserEditAddressForm()
+    return render(request, 'user/mypage_edit_form.html', {
+        'form': form,
+        'title': '住所を変更',
+        'current_value': f"{user.postal_code} {user.prefecture} {user.city} {user.address_line1} {user.address_line2}"
+    })
+
+def store_alert(request):
+    return render(request, 'store/alert.html')
 
 # @login_required
 def user_home(request):
@@ -305,6 +401,3 @@ def store_mypage(request):
     return render(request, 'store/mypage.html', {
         'store': store
     })
-
-def store_alert(request):
-    return render(request, 'store/alert.html')

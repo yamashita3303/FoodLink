@@ -16,10 +16,9 @@ class User(AbstractUser):
         )]
     )  # 電話番号（ハイフン付き、日本国内想定）
     postal_code = models.CharField(max_length=10, blank=False)  # 郵便番号
-    postal_code = models.CharField(max_length=10, blank=False, default='000-0000')  # 郵便番号
-    prefecture = models.CharField(max_length=10, blank=False, default='未設定') # 都道府県
-    city = models.CharField(max_length=50, blank=False, default='未設定')   # 市区町村
-    address_line1 = models.CharField(max_length=100, blank=False, default='未設定') # 町名・番地
+    prefecture = models.CharField(max_length=10, blank=False) # 都道府県
+    city = models.CharField(max_length=50, blank=False)   # 市区町村
+    address_line1 = models.CharField(max_length=100, blank=False) # 町名・番地
     address_line2 = models.CharField(max_length=100, blank=True)    # 建物名・部屋番号
     created_at = models.DateTimeField(auto_now_add=True)  # 作成日時
     updated_at = models.DateTimeField(auto_now=True)      # 更新日時

@@ -1,0 +1,15 @@
+{% extends "user/base.html" %}
+{% block title %}プロフィール編集 | FoodLink{% endblock %}
+{% block content %}
+<div class="container">
+  <h2>編集したい項目を選んでください</h2>
+  <ul class="list-group">
+    <li class="list-group-item"><a href="{% url 'user_edit_username' %}">ユーザ名を変更</a></li>
+    <li class="list-group-item"><a href="{% url 'user_edit_email' %}">メールアドレスを変更</a></li>
+    <li class="list-group-item"><a href="{% url 'user_edit_password' %}">パスワードを変更</a></li>
+    <li class="list-group-item"><a href="{% url 'user_edit_phone' %}">電話番号を変更</a></li>
+    <li class="list-group-item"><a href="{% url 'user_edit_address' %}">住所を変更</a></li>
+  </ul>
+  <p><a href="{% url 'user_mypage' %}">マイページに戻る</a></p>
+</div>
+{% endblock %}
