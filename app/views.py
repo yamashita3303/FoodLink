@@ -137,6 +137,34 @@ def user_signin(request):
     next_url = request.GET.get('next', '')
     return render(request, 'user/signin.html', {'next': next_url})
 
+def store_alert(request):
+    return render(request, 'store/alert.html')
+
+# @login_required
+def user_home(request):
+    return render(request, 'user/home.html')
+
+def user_category(request):
+    return render(request, 'user/category.html')
+
+def user_cart(request):
+    return render(request, 'user/cart.html')
+
+def user_history(request):
+    return render(request, 'user/history.html')
+
+@login_required(login_url='user_signin')
+def user_mypage(request):
+    user = request.user  # ログイン中のユーザーを取得
+    print(user)
+    if request.method == 'POST' and 'logout' in request.POST:
+        logout(request)
+        return redirect('top')
+    return render(request, 'user/mypage.html',{
+        'user': user
+    })
+
+@login_required(login_url='user_signin')
 def user_edit_menu(request):
     # 単に編集メニューを表示する
     return render(request, 'user/mypage_edit_menu.html')
@@ -228,32 +256,6 @@ def user_edit_address(request):
         'form': form,
         'title': '住所を変更',
         'current_value': f"{user.postal_code} {user.prefecture} {user.city} {user.address_line1} {user.address_line2}"
-    })
-
-def store_alert(request):
-    return render(request, 'store/alert.html')
-
-# @login_required
-def user_home(request):
-    return render(request, 'user/home.html')
-
-def user_category(request):
-    return render(request, 'user/category.html')
-
-def user_cart(request):
-    return render(request, 'user/cart.html')
-
-def user_history(request):
-    return render(request, 'user/history.html')
-
-def user_mypage(request):
-    user = request.user  # ログイン中のユーザーを取得
-    print(user)
-    if request.method == 'POST' and 'logout' in request.POST:
-        logout(request)
-        return redirect('top')
-    return render(request, 'user/mypage.html',{
-        'user': user
     })
 
 def user_alert(request):
@@ -402,6 +404,7 @@ def store_home(request):
 def store_list(request):
     return render(request, 'store/list.html')
 
+@login_required(login_url='store_signin')
 def store_mypage(request):
     store_id = request.session.get('store_id')
     if not store_id:
