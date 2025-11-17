@@ -80,11 +80,11 @@ def user_signup(request):
                     username=signup_data['username'],
                     email=signup_data['email'],
                     phone=signup_data['phone'],
-                    postal_code=signup_data.get('postal_code', ''),
-                    prefecture=signup_data.get('prefecture', ''),
-                    city=signup_data.get('city', ''),
-                    address_line1=signup_data.get('address_line1', ''),
-                    address_line2=signup_data.get('address_line2', ''),
+                    postal_code=signup_data2.get('postal_code', ''),
+                    prefecture=signup_data2.get('prefecture', ''),
+                    city=signup_data2.get('city', ''),
+                    address_line1=signup_data2.get('address_line1', ''),
+                    address_line2=signup_data2.get('address_line2', ''),
                 )
                 # パスワードをハッシュ化して保存
                 user.set_password(signup_data['password'])
