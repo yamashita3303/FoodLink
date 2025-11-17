@@ -1,0 +1,63 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}商品検索{% endblock %}
+
+{% block content %}
+<div class="container mt-3 mb-5">
+
+  <!-- 🔍 検索フォーム -->
+  <form method="get" action="{% url 'user_search' %}" class="mb-3">
+    <div class="input-group">
+      <input type="text" name="q" class="form-control" placeholder="商品名で検索" value="{{ query }}">
+      <button class="btn btn-dark" type="submit">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </form>
+
+  <!-- 🏷️ カテゴリ一覧（名前だけ） -->
+  <h6 class="fw-bold text-muted mb-2">カテゴリで検索</h6>
+  <div class="d-flex flex-wrap mb-4">
+    {% for c in categories %}
+      <a href="{% url 'user_category_results' c.id %}" 
+         class="btn btn-outline-secondary btn-sm me-2 mb-2">
+        {{ c.name }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <hr class="my-4">
+
+  <!-- 🔽 検索結果 -->
+  <h6 class="fw-bold mb-3">検索結果</h6>
+  <div class="row g-3">
+    {% if products %}
+      {% for product in products %}
+        <div class="col-6 col-md-3">
+          <a href="{% url 'user_food_detail' product.product_id %}" class="text-decoration-none text-dark">
+            <div class="card h-100 text-center">
+
+              {% if product.image1 %}
+                <img src="{{ product.image1.url }}" class="card-img-top" style="height:150px; object-fit: cover;" alt="{{ product.name }}">
+              {% else %}
+                <img src="{% static 'user/noimage.png' %}" class="card-img-top" style="height:150px; object-fit: cover;" alt="No image">
+              {% endif %}
+
+              <div class="card-body p-2">
+                <h6 class="card-title small mb-1">{{ product.name }}</h6>
+                <p class="text-muted small mb-1">{{ product.origin }}</p>
+                <p class="fw-bold small">¥{{ product.price }}</p>
+              </div>
+
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">検索結果はありません。</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

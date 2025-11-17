@@ -11,24 +11,18 @@
     <a href="javascript:history.back()" class="text-dark fs-4"><i class="bi bi-arrow-left"></i></a>
   </div>
 
-  <!-- 🖼 横スクロールギャラリー（左右にボタン配置） -->
+  <!-- 🖼 横スクロールギャラリー -->
   <div class="gallery-container d-flex justify-content-center align-items-center mb-4">
-    <!-- ◀左ボタン -->
     <button class="scroll-btn left-btn"></button>
-
-    <!-- スクロール部分 -->
     <div class="scroll-gallery">
-      {% if product.image1 %}<img src="{{ product.image1.url }}" alt="{{ product.name }}">{% endif %}
-      {% if product.image2 %}<img src="{{ product.image2.url }}" alt="{{ product.name }}">{% endif %}
-      {% if product.image3 %}<img src="{{ product.image3.url }}" alt="{{ product.name }}">{% endif %}
-      {% if product.image4 %}<img src="{{ product.image4.url }}" alt="{{ product.name }}">{% endif %}
-      {% if product.image5 %}<img src="{{ product.image5.url }}" alt="{{ product.name }}">{% endif %}
-      {% if not product.image1 and not product.image2 and not product.image3 and not product.image4 and not product.image5 %}
+      {% for img in images %}
+        {% if img %}
+          <img src="{{ img.url }}" alt="{{ product.name }}">
+        {% endif %}
+      {% empty %}
         <img src="{% static 'images/no_image.png' %}" alt="画像なし">
-      {% endif %}
+      {% endfor %}
     </div>
-
-    <!-- ▶右ボタン -->
     <button class="scroll-btn right-btn"></button>
   </div>
 
@@ -48,54 +42,61 @@
     </div>
   </div>
 
-  <!-- ➕➖ 数量選択 -->
-  <div class="d-flex align-items-center justify-content-center mb-3 mt-3">
-    <button class="btn btn-outline-secondary me-2" id="minusBtn">−</button>
-    <input type="number" id="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control text-center" style="width:60px;">
-    <button class="btn btn-outline-secondary ms-2" id="plusBtn">＋</button>
-  </div>
-
-  <!-- 🛒 カートに追加 -->
-  <div class="text-center mb-5">
-    <button class="btn btn-warning px-5 py-2 fw-bold rounded-pill">カートに追加</button>
-  </div>
+  <!-- 🛒 カート追加フォーム -->
+  <form method="post">
+    {% csrf_token %}
+    <div class="d-flex align-items-center justify-content-center mb-3 mt-3">
+      <button type="button" class="btn btn-outline-secondary me-2" id="minusBtn">−</button>
+      <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control text-center" style="width:60px;">
+      <button type="button" class="btn btn-outline-secondary ms-2" id="plusBtn">＋</button>
+    </div>
+    <div class="text-center mb-5">
+      <button type="submit" class="btn btn-warning px-5 py-2 fw-bold rounded-pill">カートに追加</button>
+    </div>
+  </form>
 
 </div>
 
+<!-- ポップアップアラート（スタイリッシュ版） -->
+{% if added %}
+<div id="popup-alert" class="popup-alert">
+  <i class="bi bi-check-circle-fill me-2"></i> カートに追加されました！
+</div>
+{% endif %}
+
 <!-- 💅 CSS -->
 <style>
+/* ギャラリー */
 .gallery-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
+  gap: 10px;
 }
 
-/* スクロールギャラリー */
 .scroll-gallery {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  width: 300px;
+  width: 100%;
+  max-width: 300px;
   height: 300px;
   border-radius: 10px;
-  scrollbar-width: none; /* Firefox非表示 */
+  gap: 10px;
+  scrollbar-width: none;
 }
-.scroll-gallery::-webkit-scrollbar {
-  display: none; /* Chrome非表示 */
-}
+.scroll-gallery::-webkit-scrollbar { display: none; }
 .scroll-gallery img {
-  width: 300px;
-  height: 300px;
-  flex: 0 0 auto;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   scroll-snap-align: center;
   border-radius: 10px;
-  margin-right: 10px;
+  flex-shrink: 0;
 }
 
-/* ▶/◀ボタン（丸みのある三角形） */
+/* スクロールボタン */
 .scroll-btn {
   width: 35px;
   height: 60px;
@@ -106,16 +107,14 @@
   box-shadow: 0 3px 10px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 }
-.left-btn {
-  clip-path: polygon(80% 0%, 20% 50%, 80% 100%);
-}
+.left-btn { clip-path: polygon(80% 0%, 20% 50%, 80% 100%); }
 .scroll-btn:hover {
   background: rgba(255,255,255,1);
   transform: scale(1.1);
   box-shadow: 0 5px 14px rgba(0,0,0,0.25);
 }
 
-/* 商品情報ボックス */
+/* 商品情報 */
 .product-info-box {
   display: flex;
   justify-content: space-between;
@@ -127,6 +126,29 @@
 .left-info hr { border: none; border-top: 1px solid #ccc; margin: 8px 0; }
 .price-display { font-size: 2rem; font-weight: bold; color: #000; }
 
+/* ポップアップアラート */
+.popup-alert {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background-color: #28a745;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 10000;
+  opacity: 1;
+  transform: translateX(100%);
+  animation: slideIn 0.5s forwards, fadeOut 0.5s 2s forwards;
+}
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* スマホ対応 */
 @media (max-width: 767px) {
   .scroll-gallery, .scroll-gallery img { width: 250px; height: 250px; }
   .price-display { font-size: 1.6rem; }
@@ -145,16 +167,13 @@ document.getElementById("plusBtn").addEventListener("click", function() {
   if (parseInt(input.value) < parseInt(input.max)) input.value++;
 });
 
-// ギャラリースクロール
 const scrollGallery = document.querySelector(".scroll-gallery");
 const leftBtn = document.querySelector(".left-btn");
 const rightBtn = document.querySelector(".right-btn");
-
 function getImageWidth() {
   const img = scrollGallery.querySelector("img");
-  return img ? img.clientWidth + 10 : 310; // 画像+余白
+  return img ? img.clientWidth + 10 : 310;
 }
-
 leftBtn.addEventListener("click", () => {
   scrollGallery.scrollBy({ left: -getImageWidth(), behavior: "smooth" });
 });

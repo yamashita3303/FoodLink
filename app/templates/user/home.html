@@ -6,36 +6,32 @@
 {% block content %}
 <div class="container mt-3 mb-5">
 
-  <!-- 🔍 検索バー -->
-  <form method="get" action="{% url 'user_home' %}" class="mb-3">
-    <div class="input-group">
-      <input type="text" name="q" class="form-control" placeholder="商品名・カテゴリで検索..." value="{{ request.GET.q }}">
-      <button class="btn btn-outline-secondary" type="submit">
-        <i class="bi bi-search"></i>
-      </button>
-    </div>
-  </form>
+  <!-- 🔍 シンプル＆おしゃれな下線リンク検索 -->
+  <div class="text-center mb-4">
+    <a href="{% url 'user_search' %}" class="search-link">
+      <i class="bi bi-search me-1"></i> 商品を検索
+    </a>
+  </div>
 
   <!-- 🛒 商品一覧 -->
-  <div class="row row-cols-3 g-3">
+  <div class="row row-cols-2 row-cols-md-3 g-3">
     {% for product in products %}
       <div class="col">
         <div class="product-card border rounded text-center p-2">
           <a href="{% url 'user_food_detail' pk=product.product_id %}" class="text-decoration-none text-dark">
 
-            <!-- ✅ 画像表示修正版 -->
             {% if product.image1 %}
-              <img src="{{ product.image1.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+              <img src="{{ product.image1.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px; object-fit:cover; width:100%;">
             {% elif product.image2 %}
-              <img src="{{ product.image2.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+              <img src="{{ product.image2.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px; object-fit:cover; width:100%;">
             {% elif product.image3 %}
-              <img src="{{ product.image3.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+              <img src="{{ product.image3.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px; object-fit:cover; width:100%;">
             {% elif product.image4 %}
-              <img src="{{ product.image4.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+              <img src="{{ product.image4.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px; object-fit:cover; width:100%;">
             {% elif product.image5 %}
-              <img src="{{ product.image5.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+              <img src="{{ product.image5.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="height:150px; object-fit:cover; width:100%;">
             {% else %}
-              <img src="{% static 'images/no_image.png' %}" alt="画像なし" class="img-fluid rounded" style="height:150px;object-fit:cover;width:100%;">
+              <img src="{% static 'images/no_image.png' %}" alt="画像なし" class="img-fluid rounded" style="height:150px; object-fit:cover; width:100%;">
             {% endif %}
 
             <!-- 商品情報 -->
@@ -46,14 +42,15 @@
         </div>
       </div>
     {% empty %}
-      <p class="text-center mt-4">該当する商品が見つかりません。</p>
+      <p class="text-center mt-4">商品が登録されていません。</p>
     {% endfor %}
   </div>
 
 </div>
 
-<!-- 💅 カードホバー効果 -->
+<!-- ホバー効果 & シンプルおしゃれ検索リンク -->
 <style>
+  /* 商品カードホバー */
   .product-card {
     transition: transform 0.2s, box-shadow 0.2s;
   }
@@ -61,6 +58,22 @@
     transform: scale(1.03);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   }
+
+  /* シンプル下線リンク */
+  .search-link {
+    font-weight: 500;
+    font-size: 1.25rem;
+    color: #333; /* 落ち着いた濃いグレー */
+    text-decoration: none;
+    border-bottom: 1px solid #333; /* 細い下線 */
+    padding-bottom: 2px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .search-link:hover {
+    color: #555; /* 少し明るめに */
+    border-color: #555;
+  }
 </style>
 
 {% endblock %}
+

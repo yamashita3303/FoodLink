@@ -51,6 +51,15 @@ class Store(models.Model):
         return self.name
 
 # =========================
+# Categoryモデル（カテゴリ情報）
+# =========================
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="カテゴリ名")
+
+    def __str__(self):
+        return self.name
+
+# =========================
 # Productモデル（商品情報）
 # =========================
 class Product(models.Model):
@@ -59,7 +68,7 @@ class Product(models.Model):
     """
     product_id = models.AutoField(primary_key=True) # 主キー 
     name = models.CharField(max_length=100, blank=False)  # 商品名
-    category = models.CharField(max_length=50, blank=False)  # カテゴリ
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="カテゴリ")  # カテゴリ
     price = models.IntegerField(blank=False)  # 価格
     expiration_date = models.DateField(blank=False)  # 消費期限
     quantity = models.IntegerField(default=1, blank=False)  # 在庫数量
@@ -76,7 +85,7 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-
+    
 # =========================
 # Cartモデル（カート情報）
 # =========================
