@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+<<<<<<< HEAD
 from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -23,7 +24,15 @@ from .forms import (
     StoreSigninForm
 )
 import datetime
+=======
+from django.http import JsonResponse
+from .forms import ProductForm
+from .models import Product
+>>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 
+# =========================
+# トップページ
+# =========================
 def top(request):
     if request.method == 'POST' and 'store' in request.POST:
         return redirect('store_signin')
@@ -31,6 +40,7 @@ def top(request):
         return redirect('user_signin')
     return render(request, 'top.html')
 
+<<<<<<< HEAD
 # user側のビュー
 def user_signup(request):
     step = request.session.get('signup_step', 1)
@@ -141,8 +151,14 @@ def store_alert(request):
     return render(request, 'store/alert.html')
 
 # @login_required
+=======
+# =========================
+# user側ビュー
+# =========================
+>>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 def user_home(request):
-    return render(request, 'user/home.html')
+    products = Product.objects.all()
+    return render(request, 'user/home.html', {'products': products})
 
 def user_category(request):
     return render(request, 'user/category.html')
@@ -153,7 +169,10 @@ def user_cart(request):
 def user_history(request):
     return render(request, 'user/history.html')
 
+<<<<<<< HEAD
 @login_required(login_url='user_signin')
+=======
+>>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 def user_mypage(request):
     user = request.user  # ログイン中のユーザーを取得
     print(user)
@@ -261,6 +280,7 @@ def user_edit_address(request):
 def user_alert(request):
     return render(request, 'user/alert.html')
 
+<<<<<<< HEAD
 # store側のビュー
 # =============================
 # ヘルパー関数
@@ -398,6 +418,11 @@ def store_signin(request):
     form = StoreSigninForm()
     return render(request, 'store/signin.html', {'form': form, 'next': next_url})
 
+=======
+# =========================
+# store側ビュー
+# =========================
+>>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 def store_home(request):
     return render(request, 'store/home.html')
 
@@ -410,6 +435,7 @@ def store_mypage(request):
     if not store_id:
         return redirect('store_signin')  # セッションがなければ再ログイン
 
+<<<<<<< HEAD
     store = Store.objects.get(id=store_id)  # DBから Store を取得
 
     if request.method == 'POST' and 'logout' in request.POST:
@@ -511,3 +537,65 @@ def store_edit_hours(request):
         'title': '営業時間を変更',
         'current_value': f"{store.opening_time} - {store.closing_time}"
     })
+=======
+def store_alert(request):
+    return render(request, 'store/alert.html')
+
+# =========================
+# 商品登録フォーム
+# =========================
+def store_registar(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save(commit=False)
+            # 必要であれば店舗情報を紐付け
+            # product.store = request.user.store
+            product.save()
+            return redirect('user_home')
+        else:
+            print(form.errors)  # エラー確認用
+    else:
+        form = ProductForm()
+
+    return render(request, 'store/registar.html', {'form': form})
+
+# =========================
+# Ajax / JSON対応用の登録
+# =========================
+def product_create(request):
+    if request.method == "POST":
+        form = ProductForm(request.POST, request.FILES)
+        images = request.FILES.getlist("images")
+
+        if len(images) > 5:
+            return JsonResponse({"success": False, "error": "最大5枚までです"}, status=400)
+
+        if form.is_valid():
+            product = form.save(commit=False)
+            # 必要であれば店舗情報を紐付け
+            # product.store = request.user.store
+
+            # 画像を順番に image1〜image5 にセット
+            for idx, img in enumerate(images):
+                if idx == 0:
+                    product.image1 = img
+                elif idx == 1:
+                    product.image2 = img
+                elif idx == 2:
+                    product.image3 = img
+                elif idx == 3:
+                    product.image4 = img
+                elif idx == 4:
+                    product.image5 = img
+
+            product.save()
+            return JsonResponse({"success": True})
+        else:
+            return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
+    else:
+        form = ProductForm()
+
+    return render(request, "store/product_create.html", {"form": form})
+>>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
