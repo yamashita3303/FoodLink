@@ -1,6 +1,5 @@
 from django import forms
-<<<<<<< HEAD
-from .models import User, Store
+from .models import User, Store, Product
 from django.core.exceptions import ValidationError
 from django.contrib.auth import password_validation
 
@@ -220,8 +219,7 @@ class StoreEditHoursForm(forms.ModelForm):
 class StoreSigninForm(forms.Form):
     phone = PhoneSplitField(label='電話番号')
     password = forms.CharField(label='パスワード', widget=forms.PasswordInput)
-=======
-from .models import Product
+
 
 # 複数ファイルアップロード用カスタムウィジェット
 class MultiFileInput(forms.ClearableFileInput):
@@ -300,4 +298,3 @@ class ProductForm(forms.ModelForm):
             product.save()  # DB保存
 
         return product
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a

@@ -1,11 +1,10 @@
 from django.shortcuts import render, redirect
-<<<<<<< HEAD
 from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from .models import User, Store
+from .models import User, Store, Product
 from .forms import (
     UserSignupStep1Form, 
     UserSignupStep2Form, 
@@ -21,14 +20,11 @@ from .forms import (
     StoreEditPasswordForm,
     StoreEditAddressForm,
     StoreEditHoursForm,
-    StoreSigninForm
+    StoreSigninForm,
+    ProductForm
 )
 import datetime
-=======
 from django.http import JsonResponse
-from .forms import ProductForm
-from .models import Product
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 
 # =========================
 # トップページ
@@ -40,7 +36,6 @@ def top(request):
         return redirect('user_signin')
     return render(request, 'top.html')
 
-<<<<<<< HEAD
 # user側のビュー
 def user_signup(request):
     step = request.session.get('signup_step', 1)
@@ -151,11 +146,6 @@ def store_alert(request):
     return render(request, 'store/alert.html')
 
 # @login_required
-=======
-# =========================
-# user側ビュー
-# =========================
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 def user_home(request):
     products = Product.objects.all()
     return render(request, 'user/home.html', {'products': products})
@@ -169,10 +159,7 @@ def user_cart(request):
 def user_history(request):
     return render(request, 'user/history.html')
 
-<<<<<<< HEAD
 @login_required(login_url='user_signin')
-=======
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 def user_mypage(request):
     user = request.user  # ログイン中のユーザーを取得
     print(user)
@@ -280,7 +267,6 @@ def user_edit_address(request):
 def user_alert(request):
     return render(request, 'user/alert.html')
 
-<<<<<<< HEAD
 # store側のビュー
 # =============================
 # ヘルパー関数
@@ -418,11 +404,6 @@ def store_signin(request):
     form = StoreSigninForm()
     return render(request, 'store/signin.html', {'form': form, 'next': next_url})
 
-=======
-# =========================
-# store側ビュー
-# =========================
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 def store_home(request):
     return render(request, 'store/home.html')
 
@@ -435,7 +416,6 @@ def store_mypage(request):
     if not store_id:
         return redirect('store_signin')  # セッションがなければ再ログイン
 
-<<<<<<< HEAD
     store = Store.objects.get(id=store_id)  # DBから Store を取得
 
     if request.method == 'POST' and 'logout' in request.POST:
@@ -537,7 +517,6 @@ def store_edit_hours(request):
         'title': '営業時間を変更',
         'current_value': f"{store.opening_time} - {store.closing_time}"
     })
-=======
 def store_alert(request):
     return render(request, 'store/alert.html')
 
@@ -598,4 +577,3 @@ def product_create(request):
         form = ProductForm()
 
     return render(request, "store/product_create.html", {"form": form})
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a

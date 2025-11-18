@@ -4,12 +4,8 @@ from . import views
 urlpatterns = [
     path('', views.top, name='top'),
 
-<<<<<<< HEAD
     path('user_signup/', views.user_signup, name='user_signup'),
     path('user_signin/', views.user_signin, name='user_signin'),
-=======
-    # user
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
     path('user_home/', views.user_home, name='user_home'),
     path('category/', views.user_category, name='user_category'),
     path('cart/', views.user_cart, name='user_cart'),
@@ -23,12 +19,8 @@ urlpatterns = [
     path('user_mypage/edit/address/', views.user_edit_address, name='user_edit_address'),
     path('user_alert/', views.user_alert, name='user_alert'),
 
-<<<<<<< HEAD
     path('store_signup/', views.store_signup, name='store_signup'),
     path('store_signin/', views.store_signin, name='store_signin'),
-=======
-    # store
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
     path('store_home/', views.store_home, name='store_home'),
     path('list/', views.store_list, name='store_list'),
     path('store_mypage/', views.store_mypage, name='store_mypage'),

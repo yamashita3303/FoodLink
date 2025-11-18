@@ -5,15 +5,8 @@ from django.core.validators import RegexValidator
 # =========================
 # Userモデル（ユーザ情報）
 # =========================
-<<<<<<< HEAD
 class User(AbstractUser):
     email = models.EmailField(unique=True)  # メールで一意
-=======
-class User(models.Model): 
-    user_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, blank=False)
-    email = models.EmailField(unique=True, blank=False)
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
     phone = models.CharField(
         max_length=15,
         blank=True,
@@ -21,7 +14,6 @@ class User(models.Model):
             regex=r'^\d{2,4}-\d{2,4}-\d{4}$',
             message="電話番号はハイフン付きで入力してください"
         )]
-<<<<<<< HEAD
     )  # 電話番号（ハイフン付き、日本国内想定）
     postal_code = models.CharField(max_length=10, blank=False)  # 郵便番号
     prefecture = models.CharField(max_length=10, blank=False) # 都道府県
@@ -52,19 +44,10 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
-=======
-    )
-    postal_code = models.CharField(max_length=10, blank=False)
-    address = models.CharField(max_length=255, blank=False)
-
-    def __str__(self):
-        return self.name  # 修正済み
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 
 # =========================
 # Storeモデル（店舗情報）
 # =========================
-<<<<<<< HEAD
 class Store(AbstractUser):
     """
     商品を販売する店舗を表すモデル。
@@ -72,11 +55,6 @@ class Store(AbstractUser):
     # username = models.CharField(max_length=100, blank=False)  # 店舗名
     email = models.EmailField(blank=True, null=True)  # メールアドレス（任意）
     # 電話番号（ログインIDとして使用）
-=======
-class Store(models.Model):
-    store_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, blank=False)
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
     phone = models.CharField(
         max_length=15,
         blank=False,  # ← "break" は誤り。ここは blank=False に。
@@ -86,7 +64,6 @@ class Store(models.Model):
             message="電話番号はハイフン付きで入力してください"
         )]
     )
-<<<<<<< HEAD
     postal_code = models.CharField(max_length=10, blank=False)
     prefecture = models.CharField(max_length=10, blank=False)
     city = models.CharField(max_length=50, blank=False)
@@ -95,15 +72,6 @@ class Store(models.Model):
     closing_time = models.TimeField(blank=False)  # 閉店時間
     created_at = models.DateTimeField(auto_now_add=True)  # 作成日時
     updated_at = models.DateTimeField(auto_now=True)      # 更新日時
-=======
-    password = models.CharField(max_length=255, blank=False)  # ハッシュ化推奨
-    postal_code = models.CharField(max_length=10, blank=False)
-    address = models.CharField(max_length=255, blank=False)
-    opening_time = models.TimeField(blank=False)
-    closing_time = models.TimeField(blank=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 
     # groups と user_permissions を上書きして related_name を変える（AbstractUserと衝突回避）
     groups = models.ManyToManyField(
