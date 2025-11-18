@@ -40,6 +40,7 @@
     text-align: center;
     background-color: #fff;
     transition: transform 0.1s;
+    position: relative;
   }
 
   /* スーパー：青の影 */
@@ -54,7 +55,6 @@
 
   /* 押したとき（影も一体で下がる） */
   .button:active {
-<<<<<<< HEAD
     transform: translateY(2px);
   }
  
@@ -80,10 +80,6 @@
     background-color: #ffd966;
     border-radius: 20px;
     z-index: -1;
-=======
-    transform: translate(2px, 2px);
-    box-shadow: 3px 3px 0px rgba(0,0,0,0);
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
   }
 
 </style>
@@ -91,7 +87,6 @@
 <body>
 
   <div class="icon">アイコン</div>
-<<<<<<< HEAD
  
   <form method="post" style="display:inline;">
     {% csrf_token %}
@@ -99,11 +94,5 @@
     <button type="submit" name="user" class="button user">一般利用者</button>
   </form>
  
-=======
-
-  <div class="button super">スーパー</div>
-  <div class="button user">一般利用者</div>
-
->>>>>>> 4c3b15c720816b242db2e206801ec7b9834ac12a
 </body>
 </html>

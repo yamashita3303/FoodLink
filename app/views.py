@@ -112,7 +112,7 @@ def user_signup(request):
 
         # ログイン
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        return redirect('user_mypage')
+        return redirect('user_home')
 
         # return render(request, 'user/signup3.html', {
         #     'signup_data': signup_data,
