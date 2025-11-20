@@ -106,24 +106,18 @@ class Product(models.Model):
     expiration_date = models.DateField(blank=False)
     quantity = models.IntegerField(default=1, blank=False)
     origin = models.CharField(max_length=50, blank=True, null=True)
-    image = models.ImageField(upload_to='products/', blank=True, null=True)  # メイン画像1枚
+    image1 = models.ImageField(upload_to='products/', blank=False)
+    image2 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image3 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image4 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image5 = models.ImageField(upload_to='products/', blank=True, null=True)
     notes = models.TextField(max_length=100, blank=True, null=True)
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name="products")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.username} ({self.phone})"
-
-# =========================
-# ProductImageモデル（追加画像用）
-# =========================
-class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
-    image = models.ImageField(upload_to='products/additional/')
-
-    def __str__(self):
-        return f"{self.product.name} の画像"
+        return self.name
 
 # =========================
 # Cartモデル

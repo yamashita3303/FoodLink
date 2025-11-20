@@ -243,7 +243,6 @@ class ProductForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
-    # ここで required=False にしているので、画像が無くてもエラーにならない
     images = forms.FileField(
         required=False,
         widget=MultiFileInput(attrs={
@@ -273,28 +272,39 @@ class ProductForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-    # 保存処理をオーバーライド
-    def save(self, commit=True):
-        product = super().save(commit=False)
-        images = self.files.getlist('images')  # POSTされたファイルを取得
+    # =====================================
+    # 保存処理をオーバーライド（Store 必須）
+    # =====================================
+    def save(self, commit=True, store=None):
+        if store is None:
+            # store を渡さなければ保存できない
+            raise ValueError("Store インスタンスを必ず渡してください")
 
-        # 画像は最大5枚まで
+        product = super().save(commit=False)
+
+        # Store をセット
+        product.store = store
+
+        images = self.files.getlist('images')
+
+        # 最大5枚チェック
         if len(images) > 5:
             raise forms.ValidationError("アップロードは最大5枚までです。")
 
+        # 画像を順番に image1〜image5 にセット
+        for idx, img in enumerate(images):
+            if idx == 0:
+                product.image1 = img
+            elif idx == 1:
+                product.image2 = img
+            elif idx == 2:
+                product.image3 = img
+            elif idx == 3:
+                product.image4 = img
+            elif idx == 4:
+                product.image5 = img
+
         if commit:
-            # images を順番に image1〜image5 にセット
-            for idx, img in enumerate(images):
-                if idx == 0:
-                    product.image1 = img
-                elif idx == 1:
-                    product.image2 = img
-                elif idx == 2:
-                    product.image3 = img
-                elif idx == 3:
-                    product.image4 = img
-                elif idx == 4:
-                    product.image5 = img
-            product.save()  # DB保存
+            product.save()
 
         return product

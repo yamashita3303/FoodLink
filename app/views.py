@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+import pytesseract
 from .models import User, Store, Product
 from .forms import (
     UserSignupStep1Form, 
@@ -527,13 +528,11 @@ def store_registar(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            product = form.save(commit=False)
-            # 必要であれば店舗情報を紐付け
-            # product.store = request.user.store
-            product.save()
+            # request.user は Store インスタンス
+            form.save(store=request.user)
             return redirect('user_home')
         else:
-            print(form.errors)  # エラー確認用
+            print(form.errors)
     else:
         form = ProductForm()
 
@@ -551,24 +550,7 @@ def product_create(request):
             return JsonResponse({"success": False, "error": "最大5枚までです"}, status=400)
 
         if form.is_valid():
-            product = form.save(commit=False)
-            # 必要であれば店舗情報を紐付け
-            # product.store = request.user.store
-
-            # 画像を順番に image1〜image5 にセット
-            for idx, img in enumerate(images):
-                if idx == 0:
-                    product.image1 = img
-                elif idx == 1:
-                    product.image2 = img
-                elif idx == 2:
-                    product.image3 = img
-                elif idx == 3:
-                    product.image4 = img
-                elif idx == 4:
-                    product.image5 = img
-
-            product.save()
+            form.save(store=request.user)
             return JsonResponse({"success": True})
         else:
             return JsonResponse({"success": False, "errors": form.errors}, status=400)
@@ -577,3 +559,34 @@ def product_create(request):
         form = ProductForm()
 
     return render(request, "store/product_create.html", {"form": form})
+
+from PIL import Image
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from .models import Product
+
+def product_ocr(request, product_id):
+    # 商品データ取得
+    product = get_object_or_404(Product, pk=product_id)
+
+    # # 画像がない場合
+    # if not product.image:
+    #     return HttpResponse("画像がありません")
+
+    # # 実際のファイルパス
+    # image_path = product.image.path
+
+    images = [product.image1, product.image2, product.image3, product.image4, product.image5]
+
+    for img in images:
+        if img:
+            img_path = img.path
+
+    # OCR 実行
+    img = Image.open(img_path)
+    extracted_text = pytesseract.image_to_string(img, lang="jpn")  # ★日本語OCR
+
+    print("=== OCR結果 ===")
+    print(extracted_text)
+
+    return HttpResponse("OCR 完了！コンソールを確認してください")
