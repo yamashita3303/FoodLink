@@ -117,11 +117,32 @@ def user_food_detail(request, pk):
     return render(request, 'user/user_food_detail.html', {'product': product})
 
 
+def user_store_search(request):
+    """
+    地方 → 都道府県 → 市区町村 の検索画面
+    & 検索結果の表示を 1 つのビューで処理
+    """
 
+    if request.method == "GET" and (
+        request.GET.get("region") or
+        request.GET.get("prefecture") or
+        request.GET.get("city")
+    ):
+        # --- 検索結果を表示 ---
+        region = request.GET.get("region")
+        prefecture = request.GET.get("prefecture")
+        city = request.GET.get("city")
 
+        context = {
+            "region": region,
+            "prefecture": prefecture,
+            "city": city,
+            "mode": "result",   # 結果表示モード
+        }
+        return render(request, "search_area.html", context)
 
-def user_category(request):
-    return render(request, 'user/category.html')
+    # --- 初期表示（検索フォーム） ---
+    return render(request, "user/user_store_search.html", {"mode": "form"})
 
 def user_cart(request):
     cart = request.session.get('cart', {})
