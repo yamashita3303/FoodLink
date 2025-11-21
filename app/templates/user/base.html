@@ -64,10 +64,12 @@
       flex-direction: column;
       align-items: center;
       transition: all 0.2s ease;
+      position: relative;
     }
 
     .bottom-nav a i {
       font-size: 22px;
+      line-height: 1;
     }
 
     .bottom-nav a.active {
@@ -75,13 +77,28 @@
       transform: scale(1.1);
     }
 
-    /* ===== メインコンテンツ ===== */
-    main {
-      padding: 15px;
-      margin-bottom: 80px;
+    /* 店舗検索アイコン重ねデザイン */
+    .icon-stack {
+      position: relative;
+      width: 22px;
+      height: 22px;
+    }
+    .icon-stack .bi-shop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-size: 22px;
+    }
+    .icon-stack .bi-search {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      font-size: 14px;
+      background: #e9f4f7;
+      border-radius: 50%;
     }
 
-    /* ===== スマホ対応調整 ===== */
+    /* ===== スマホ対応 ===== */
     @media (max-width: 768px) {
       .top-bar {
         height: 50px;
@@ -92,8 +109,8 @@
         margin-left: 12px;
       }
       .top-bar a.active {
-      color: #46569b; /* アイコンの色を変える */
-      transform: scale(1.1);
+        color: #46569b;
+        transform: scale(1.1);
       }
       .bottom-nav {
         height: 60px;
@@ -105,18 +122,20 @@
         font-size: 10px;
       }
       .bottom-nav a.active {
-      color: #46569b; /* アイコンの色を変える */
-      transform: scale(1.1);
+        color: #46569b;
+        transform: scale(1.1);
       }
+    }
 
-      main {
-        padding: 10px;
-      }
+    /* ===== メインコンテンツ ===== */
+    main {
+      padding: 15px;
+      margin-bottom: 80px;
     }
 
     /* ===== タップしやすさを上げる ===== */
     a, button {
-      -webkit-tap-highlight-color: transparent; /* タップ時の青枠防止 */
+      -webkit-tap-highlight-color: transparent;
     }
   </style>
 </head>
@@ -131,7 +150,6 @@
   <!-- メインコンテンツ -->
   <main>
     {% block content %}
-    <!-- 各ページの内容 -->
     {% endblock %}
   </main>
 
@@ -141,14 +159,22 @@
       <i class="bi bi-house-fill"></i>
       <span>ホーム</span>
     </a>
-    <a href="{% url 'user_category' %}" class="{% if 'category' in request.path %}active{% endif %}">
-      <i class="bi bi-list"></i>
-      <span>カテゴリ</span>
-    </a>
+
+   <!-- 🏪 店舗検索 -->
+<a href="{% url 'user_store_search' %}" class="{% if 'user_store_search' in request.path %}active{% endif %}">
+  <div class="icon-stack">
+    <i class="bi bi-shop"></i>
+    <i class="bi bi-search"></i>
+  </div>
+  <span>店舗検索</span>
+</a>
+
+
     <a href="{% url 'user_cart' %}" class="{% if 'cart' in request.path %}active{% endif %}">
       <i class="bi bi-cart3"></i>
       <span>カート</span>
     </a>
+
     <a href="{% url 'user_history' %}" class="{% if 'history' in request.path %}active{% endif %}">
       <i class="bi bi-arrow-clockwise"></i>
       <span>履歴</span>
