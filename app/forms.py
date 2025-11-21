@@ -219,3 +219,12 @@ class StoreEditHoursForm(forms.ModelForm):
 class StoreSigninForm(forms.Form):
     phone = PhoneSplitField(label='電話番号')
     password = forms.CharField(label='パスワード', widget=forms.PasswordInput)
+
+
+class ProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = [
+            'name', 'category', 'price', 'expiration_date', 'quantity',
+            'origin', 'image1', 'image2', 'image3', 'image4', 'image5', 'notes'
+        ]

@@ -31,13 +31,19 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="カテゴリ名")
+
+    def __str__(self):
+        return self.name
+
 # =========================
 # Productモデル（商品情報）
 # =========================
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, blank=False)
-    category = models.CharField(max_length=50, blank=False)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
     price = models.IntegerField(blank=False)
     expiration_date = models.DateField(blank=False)
     quantity = models.IntegerField(default=1, blank=False)
