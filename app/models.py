@@ -1,13 +1,12 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import RegexValidator
 
 # =========================
 # Userモデル（ユーザ情報）
 # =========================
-class User(models.Model): 
-    user_id = models.AutoField(primary_key=True) # 主キー 
-    name = models.CharField(max_length=100, blank=False) # ユーザ名 
-    email = models.EmailField(unique=True, blank=False) # メールアドレス（重複不可）
+class User(AbstractUser):
+    email = models.EmailField(unique=True)  # メールで一意
     phone = models.CharField(
         max_length=15,
         blank=True,
@@ -17,38 +16,84 @@ class User(models.Model):
         )]
     )  # 電話番号（ハイフン付き、日本国内想定）
     postal_code = models.CharField(max_length=10, blank=False)  # 郵便番号
-    address = models.CharField(max_length=255, blank=False)     # 住所
-
+    prefecture = models.CharField(max_length=10, blank=False) # 都道府県
+    city = models.CharField(max_length=50, blank=False)   # 市区町村
+    address_line1 = models.CharField(max_length=100, blank=False) # 町名・番地
+    address_line2 = models.CharField(max_length=100, blank=True)    # 建物名・部屋番号
+    created_at = models.DateTimeField(auto_now_add=True)  # 作成日時
+    updated_at = models.DateTimeField(auto_now=True)      # 更新日時
+ 
+    # groups と user_permissions を上書きして related_name を変える
+    groups = models.ManyToManyField(
+        Group,
+        related_name='customuser_set',  # ← default の user_set と衝突しないように変更
+        blank=True,
+        help_text='ユーザーが所属するグループ',
+        verbose_name='groups'
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='customuser_set',  # ← default の user_set と衝突しないように変更
+        blank=True,
+        help_text='ユーザーが持つ権限',
+        verbose_name='user permissions'
+    )
+ 
+    USERNAME_FIELD = 'email'  # メールアドレスでログイン
+    REQUIRED_FIELDS = ['username']  # username は必須
+ 
     def __str__(self):
-        return self.username  # 管理画面などで表示する文字列
-
+        return self.username
+ 
 # =========================
 # Storeモデル（店舗情報）
 # =========================
-class Store(models.Model):
+class Store(AbstractUser):
     """
     商品を販売する店舗を表すモデル。
     """
-    store_id = models.AutoField(primary_key=True) # 主キー 
-    name = models.CharField(max_length=100, blank=False)  # 店舗名
+    # username = models.CharField(max_length=100, blank=False)  # 店舗名
+    email = models.EmailField(blank=True, null=True)  # メールアドレス（任意）
+    # 電話番号（ログインIDとして使用）
     phone = models.CharField(
         max_length=15,
-        blank=False,
+        blank=False,  # ← "break" は誤り。ここは blank=False に。
+        unique=True,  # 一意制約（ログインIDなので必須）
         validators=[RegexValidator(
             regex=r'^\d{2,4}-\d{2,4}-\d{4}$',
             message="電話番号はハイフン付きで入力してください"
         )]
-    )  # 店舗電話番号
-    password = models.CharField(max_length=255, blank=False)  # パスワード（ハッシュ化推奨）
-    postal_code = models.CharField(max_length=10, blank=False)  # 郵便番号
-    address = models.CharField(max_length=255, blank=False)      # 住所
+    )
+    postal_code = models.CharField(max_length=10, blank=False)
+    prefecture = models.CharField(max_length=10, blank=False)
+    city = models.CharField(max_length=50, blank=False)
+    address_line1 = models.CharField(max_length=100, blank=False)
     opening_time = models.TimeField(blank=False)  # 開店時間
     closing_time = models.TimeField(blank=False)  # 閉店時間
     created_at = models.DateTimeField(auto_now_add=True)  # 作成日時
     updated_at = models.DateTimeField(auto_now=True)      # 更新日時
-
+ 
+    # groups と user_permissions を上書きして related_name を変える（AbstractUserと衝突回避）
+    groups = models.ManyToManyField(
+        Group,
+        related_name='customstore_set',
+        blank=True,
+        help_text='店舗が所属するグループ',
+        verbose_name='groups'
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='customstore_set',
+        blank=True,
+        help_text='店舗が持つ権限',
+        verbose_name='user permissions'
+    )
+ 
+    USERNAME_FIELD = 'phone'  # ← 電話番号でログイン
+    REQUIRED_FIELDS = ['username']  # ← AbstractUserは username が必須なのでそのまま
+ 
     def __str__(self):
-        return self.name
+        return f"{self.username} ({self.phone})"
 
 # =========================
 # Categoryモデル（カテゴリ情報）

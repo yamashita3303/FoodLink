@@ -1,64 +1,64 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>地域検索</title>
+{% extends "user/base.html" %}
+{% load static %}
 
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+{% block title %}店舗検索{% endblock %}
 
-  <style>
-    .custom-select {
-      border-radius: 50px;
-      padding: 10px 16px;
-    }
-
-    .btn-search {
-      background-color: #d9f4f2;
-      border-radius: 50px;
-      border: 1px solid #c3e8e5;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="container mt-4">
-
-    <!-- 地方 -->
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">地域検索</h2>
+  <form id="searchForm" method="get">
     <label class="form-label">地方</label>
-    <select id="region" class="form-select custom-select mb-3">
+    <select id="region" name="region" class="form-select custom-select mb-3">
       <option value="">選択してください</option>
-      <option value="hokkaido">北海道地方</option>
-      <option value="tohoku">東北地方</option>
-      <option value="kanto">関東地方</option>
-      <option value="chubu">中部地方</option>
-      <option value="kinki">近畿地方</option>
-      <option value="chugoku">中国地方</option>
-      <option value="shikoku">四国地方</option>
-      <option value="kyushu">九州地方</option>
+      <option value="hokkaido" {% if selected_region == "hokkaido" %}selected{% endif %}>北海道地方</option>
+      <option value="tohoku" {% if selected_region == "tohoku" %}selected{% endif %}>東北地方</option>
+      <option value="kanto" {% if selected_region == "kanto" %}selected{% endif %}>関東地方</option>
+      <option value="chubu" {% if selected_region == "chubu" %}selected{% endif %}>中部地方</option>
+      <option value="kinki" {% if selected_region == "kinki" %}selected{% endif %}>近畿地方</option>
+      <option value="chugoku" {% if selected_region == "chugoku" %}selected{% endif %}>中国地方</option>
+      <option value="shikoku" {% if selected_region == "shikoku" %}selected{% endif %}>四国地方</option>
+      <option value="kyushu" {% if selected_region == "kyushu" %}selected{% endif %}>九州・沖縄地方</option>
     </select>
 
-    <!-- 都道府県 -->
     <label class="form-label">都道府県</label>
-    <select id="prefecture" class="form-select custom-select mb-3">
+    <select id="prefecture" name="prefecture" class="form-select custom-select mb-3">
       <option value="">選択してください</option>
     </select>
 
-    <!-- 市区町村 -->
-    <label class="form-label">市区町村</label>
-    <select id="city" class="form-select custom-select mb-4">
+    <label class="form-label">市区</label>
+    <select id="city" name="city" class="form-select custom-select mb-4">
       <option value="">選択してください</option>
     </select>
 
-    <!-- ボタン -->
     <div class="text-center">
-      <button class="btn btn-search px-4 py-2">探す</button>
+      <button type="submit" class="btn btn-search px-4 py-2">検索</button>
     </div>
-  </div>
+  </form>
 
-  <!-- JavaScript：地方 → 都道府県 → 市区町村 連動 -->
-  <script>
+  {% if mode == "result" %}
+    <div class="result-box mt-4">
+      <h5>検索結果 ({{ stores.count }} 件)</h5>
+      {% if stores.exists %}
+        <div class="row row-cols-1 row-cols-md-2 g-3 mt-2">
+          {% for store in stores %}
+            <div class="col">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title">{{ store.username }}</h6>
+                  <p class="card-text">{{ store.prefecture }} {{ store.city }}<br>{{ user.address }}</p>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>該当する店舗は見つかりませんでした。</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<script>
     const data = {
       hokkaido: {
         "北海道": [
@@ -192,6 +192,29 @@
       },
       kanto: {
         "東京都": [
+  "千代田区",
+  "中央区",
+  "港区",
+  "新宿区",
+  "文京区",
+  "台東区",
+  "墨田区",
+  "江東区",
+  "品川区",
+  "目黒区",
+  "大田区",
+  "世田谷区",
+  "渋谷区",
+  "中野区",
+  "杉並区",
+  "豊島区",
+  "北区",
+  "荒川区",
+  "板橋区",
+  "練馬区",
+  "足立区",
+  "葛飾区",
+  "江戸川区",
   "八王子市",
   "立川市",
   "武蔵野市",
@@ -242,86 +265,86 @@
 ]
 ,
         "埼玉県": [
-  "千葉市",
-  "銚子市",
-  "市川市",
-  "船橋市",
-  "館山市",
-  "木更津市",
-  "松戸市",
-  "野田市",
-  "茂原市",
-  "成田市",
-  "佐倉市",
-  "東金市",
-  "旭市",
-  "習志野市",
-  "柏市",
-  "勝浦市",
-  "市原市",
-  "流山市",
-  "八千代市",
-  "我孫子市",
-  "鴨川市",
-  "鎌ケ谷市",
-  "君津市",
-  "富津市",
-  "浦安市",
-  "四街道市",
-  "袖ケ浦市",
-  "八街市",
-  "印西市",
-  "白井市",
-  "富里市",
-  "南房総市",
-  "匝瑳市",
-  "香取市",
-  "山武市",
-  "いすみ市",
-  "大網白里市"
-]
-,
+            "さいたま市",
+            "川越市",
+            "熊谷市",
+            "川口市",
+            "行田市",
+            "秩父市",
+            "所沢市",
+            "飯能市",
+            "加須市",
+            "本庄市",
+            "東松山市",
+            "春日部市",
+            "狭山市",
+            "羽生市",
+            "鴻巣市",
+            "深谷市",
+            "上尾市",
+            "草加市",
+            "越谷市",
+            "蕨市",
+            "戸田市",
+            "入間市",
+            "朝霞市",
+            "志木市",
+            "和光市",
+            "新座市",
+            "桶川市",
+            "久喜市",
+            "北本市",
+            "八潮市",
+            "富士見市",
+            "三郷市",
+            "蓮田市",
+            "坂戸市",
+            "幸手市",
+            "鶴ヶ島市",
+            "日高市",
+            "吉川市",
+            "ふじみ野市",
+            "白岡市"
+        ]
+        ,
         "千葉県": [
-  "さいたま市",
-  "川越市",
-  "熊谷市",
-  "川口市",
-  "行田市",
-  "秩父市",
-  "所沢市",
-  "飯能市",
-  "加須市",
-  "本庄市",
-  "東松山市",
-  "春日部市",
-  "狭山市",
-  "羽生市",
-  "鴻巣市",
-  "深谷市",
-  "上尾市",
-  "草加市",
-  "越谷市",
-  "蕨市",
-  "戸田市",
-  "入間市",
-  "朝霞市",
-  "志木市",
-  "和光市",
-  "新座市",
-  "桶川市",
-  "久喜市",
-  "北本市",
-  "八潮市",
-  "富士見市",
-  "三郷市",
-  "蓮田市",
-  "坂戸市",
-  "幸手市",
-  "鶴ヶ島市",
-  "日高市",
-  "吉川市",
-  "ふじみ野市",
-  "白岡市"
+            "千葉市",
+            "銚子市",
+            "市川市",
+            "船橋市",
+            "館山市",
+            "木更津市",
+            "松戸市",
+            "野田市",
+            "茂原市",
+            "成田市",
+            "佐倉市",
+            "東金市",
+            "旭市",
+            "習志野市",
+            "柏市",
+            "勝浦市",
+            "市原市",
+            "流山市",
+            "八千代市",
+            "我孫子市",
+            "鴨川市",
+            "鎌ケ谷市",
+            "君津市",
+            "富津市",
+            "浦安市",
+            "四街道市",
+            "袖ケ浦市",
+            "八街市",
+            "印西市",
+            "白井市",
+            "富里市",
+            "南房総市",
+            "匝瑳市",
+            "香取市",
+            "山武市",
+            "いすみ市",
+            "大網白里市"
 ]
 ,
         "茨城県": [
@@ -1031,36 +1054,43 @@
 
       }
     };
+// 選択保持
+const regionSelect = document.getElementById("region");
+const prefSelect = document.getElementById("prefecture");
+const citySelect = document.getElementById("city");
 
-    document.getElementById("region").addEventListener("change", function () {
-      const region = this.value;
-      const prefectureSelect = document.getElementById("prefecture");
-      const citySelect = document.getElementById("city");
+function populatePrefecture() {
+  const regionVal = regionSelect.value;
+  prefSelect.innerHTML = "<option value=''>選択してください</option>";
+  citySelect.innerHTML = "<option value=''>選択してください</option>";
 
-      prefectureSelect.innerHTML = "<option value=''>選択してください</option>";
-      citySelect.innerHTML = "<option value=''>選択してください</option>";
-
-      if (region && data[region]) {
-        Object.keys(data[region]).forEach(pref => {
-          prefectureSelect.innerHTML += `<option value="${pref}">${pref}</option>`;
-        });
-      }
+  if(regionVal && data[regionVal]) {
+    Object.keys(data[regionVal]).forEach(pref => {
+      // 初期表示で selected_prefecture が空の場合は選ばれない
+      const selected = ("{{ selected_prefecture }}" !== "" && pref === "{{ selected_prefecture }}") ? "selected" : "";
+      prefSelect.innerHTML += `<option value="${pref}" ${selected}>${pref}</option>`;
     });
+  }
+}
 
-    document.getElementById("prefecture").addEventListener("change", function () {
-      const region = document.getElementById("region").value;
-      const prefecture = this.value;
-      const citySelect = document.getElementById("city");
 
-      citySelect.innerHTML = "<option value=''>選択してください</option>";
-
-      if (region && prefecture) {
-        data[region][prefecture].forEach(city => {
-          citySelect.innerHTML += `<option value="${city}">${city}</option>`;
-        });
-      }
+function populateCity() {
+  const regionVal = regionSelect.value;
+  const prefVal = prefSelect.value;
+  citySelect.innerHTML = "<option value=''>選択してください</option>";
+  if(regionVal && prefVal && data[regionVal][prefVal]) {
+    data[regionVal][prefVal].forEach(c => {
+      const selected = c === "{{ selected_city }}" ? "selected" : "";
+      citySelect.innerHTML += `<option value="${c}" ${selected}>${c}</option>`;
     });
-  </script>
+  }
+}
 
-</body>
-</html>
+regionSelect.addEventListener("change", populatePrefecture);
+prefSelect.addEventListener("change", populateCity);
+
+// 初期表示時に選択を復元
+populatePrefecture();
+populateCity();
+</script>
+{% endblock %}

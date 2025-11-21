@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import  Product, Category
+from .models import  Product, Category,Store
 from django.db.models import Q  # ← 検索に便利な「OR検索」= どちらかが一方が当てはまったらおk
 from django.shortcuts import render, get_object_or_404 ,redirect
 
@@ -89,60 +89,32 @@ def user_food_detail(request, pk):
     }
     return render(request, 'user/user_food_detail.html', context)
 
-    product = get_object_or_404(Product, pk=pk)
-
-    if request.method == 'POST':
-        # POSTで送られた数量を取得
-        quantity = int(request.POST.get('quantity', 1))
-
-        # セッションからカート取得、なければ空のdict
-        cart = request.session.get('cart', {})
-
-        # すでにカートに入っている場合は数量を加算
-        if str(product.pk) in cart:
-            cart[str(product.pk)]['quantity'] += quantity
-        else:
-            cart[str(product.pk)] = {
-                'name': product.name,
-                'price': float(product.price),
-                'quantity': quantity,
-            }
-
-        request.session['cart'] = cart
-
-        # カートページにリダイレクト（ここを修正）
-        return redirect('user_food_detail', pk=product.pk)  
-
-    # GETの場合は商品詳細表示
-    return render(request, 'user/user_food_detail.html', {'product': product})
-
 
 def user_store_search(request):
-    """
-    地方 → 都道府県 → 市区町村 の検索画面
-    & 検索結果の表示を 1 つのビューで処理
-    """
+    region = request.GET.get('region', '')
+    prefecture = request.GET.get('prefecture', '')
+    city = request.GET.get('city', '')
 
-    if request.method == "GET" and (
-        request.GET.get("region") or
-        request.GET.get("prefecture") or
-        request.GET.get("city")
-    ):
-        # --- 検索結果を表示 ---
-        region = request.GET.get("region")
-        prefecture = request.GET.get("prefecture")
-        city = request.GET.get("city")
+    stores = Store.objects.none()  # 初期は空
+    mode = ""  # 表示モード
 
-        context = {
-            "region": region,
-            "prefecture": prefecture,
-            "city": city,
-            "mode": "result",   # 結果表示モード
-        }
-        return render(request, "search_area.html", context)
+    # 都道府県＋市区が両方選ばれている場合のみ検索
+    if prefecture and city:
+        stores = Store.objects.filter(prefecture=prefecture, city=city)
+        mode = "result"  # 結果表示用
 
-    # --- 初期表示（検索フォーム） ---
-    return render(request, "user/user_store_search.html", {"mode": "form"})
+    return render(request, "user/user_store_search.html", {
+        "stores": stores,
+        "selected_region": region,
+        "selected_prefecture": prefecture,
+        "selected_city": city,
+        "mode": mode,
+    })
+
+
+
+
+
 
 def user_cart(request):
     cart = request.session.get('cart', {})
