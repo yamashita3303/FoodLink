@@ -34,7 +34,7 @@ urlpatterns = [
     path('store_registar/', views.store_registar, name='store_registar'),
 
     # 複数画像登録用
-    path('product_create/', views.product_create, name='product_create'),
+    # path('product_create/', views.product_create, name='product_create'),
     path('product/<int:product_id>/ocr/', views.product_ocr, name='product_ocr'),
 
 ]

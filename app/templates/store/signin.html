@@ -77,17 +77,13 @@ button:hover {
 
     <form method="post">
         {% csrf_token %}
-        <label>電話番号</label>
-        <div class="phone-split">
-          {{ form.phone }}
-        </div>
-        {% if form.phone.errors %}
-          <ul class="error">
-          {% for error in form.phone.errors %}
-            <li>{{ error }}</li>
-          {% endfor %}
-          </ul>
-        {% endif %}
+
+        <!-- next を hidden で渡す -->
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <label for="email">メールアドレス</label>
+        <input type="email" name="email" id="email" required>
+
         <label for="password">パスワード</label>
         <input type="password" name="password" id="password" required>
 
@@ -95,7 +91,7 @@ button:hover {
     </form>
 
     <div class="text-center">
-        <a href="{% url 'store_signup' %}">新規店舗登録はこちら</a>
+        <a href="{% url 'store_signup' %}">新規登録はこちら</a>
     </div>
 </div>
 </body>

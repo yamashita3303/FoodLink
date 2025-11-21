@@ -228,3 +228,11 @@ class ProductForm(forms.ModelForm):
             'name', 'category', 'price', 'expiration_date', 'quantity',
             'origin', 'image1', 'image2', 'image3', 'image4', 'image5', 'notes'
         ]
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['image1'].required = False
+        self.fields['image2'].required = False
+        self.fields['image3'].required = False
+        self.fields['image4'].required = False
+        self.fields['image5'].required = False
