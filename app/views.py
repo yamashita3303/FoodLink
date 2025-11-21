@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 import pytesseract
-from .models import User, Store, Product
+from .models import User, Product
 from .forms import (
     UserSignupStep1Form, 
     UserSignupStep2Form, 
@@ -31,10 +31,11 @@ from django.http import JsonResponse
 # トップページ
 # =========================
 def top(request):
-    if request.method == 'POST' and 'store' in request.POST:
-        return redirect('store_signin')
-    elif request.method == 'POST' and 'user' in request.POST:
-        return redirect('user_signin')
+    if request.method == 'POST':
+        if 'store' in request.POST:
+            return redirect('store_signup')
+        elif 'user' in request.POST:
+            return redirect('user_signup')
     return render(request, 'top.html')
 
 # user側のビュー
@@ -104,15 +105,17 @@ def user_signup(request):
             city=data2['city'],
             address_line1=data2['address_line1'],
             address_line2=data2.get('address_line2'),
+            is_store=False
         )
         user.set_password(password)
         user.save()
 
+        # ログイン
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
         # セッション消す
         request.session.flush()
 
-        # ログイン
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect('user_home')
 
         # return render(request, 'user/signup3.html', {
@@ -351,8 +354,9 @@ def store_signup(request):
                 ).time()
 
                 # DB 保存
-                store = Store(
+                store = User(
                     username=signup_data['username'],
+                    email=signup_data['email'],
                     phone=signup_data['phone'],
                     postal_code=signup_data2.get('postal_code', ''),
                     prefecture=signup_data2.get('prefecture', ''),
@@ -360,13 +364,18 @@ def store_signup(request):
                     address_line1=signup_data2.get('address_line1', ''),
                     opening_time=opening_time,
                     closing_time=closing_time,
+                    is_store=True
                 )
                 # パスワードハッシュ化
                 store.set_password(signup_data['password'])
                 store.save()
 
+                login(request, store, backend='django.contrib.auth.backends.ModelBackend')
+
                 # セッションをクリア
-                request.session.flush()
+                for key in ['signup_data', 'signup_data2', 'signup_step']:
+                    request.session.pop(key, None)
+
                 return redirect('store_home')
 
         return render(request, 'store/signup3.html', {
@@ -413,19 +422,13 @@ def store_list(request):
 
 @login_required(login_url='store_signin')
 def store_mypage(request):
-    store_id = request.session.get('store_id')
-    if not store_id:
-        return redirect('store_signin')  # セッションがなければ再ログイン
-
-    store = Store.objects.get(id=store_id)  # DBから Store を取得
-
+    user = request.user  # ログイン中のユーザーを取得
+    print(user)
     if request.method == 'POST' and 'logout' in request.POST:
         logout(request)
-        request.session.pop('store_id', None)  # セッションも削除
         return redirect('top')
-
-    return render(request, 'store/mypage.html', {
-        'store': store
+    return render(request, 'store/mypage.html',{
+        'store': user
     })
 
 @login_required(login_url='store_signin')
@@ -550,6 +553,7 @@ def product_create(request):
             return JsonResponse({"success": False, "error": "最大5枚までです"}, status=400)
 
         if form.is_valid():
+            # store 情報を渡して保存
             form.save(store=request.user)
             return JsonResponse({"success": True})
         else:
@@ -559,7 +563,6 @@ def product_create(request):
         form = ProductForm()
 
     return render(request, "store/product_create.html", {"form": form})
-
 from PIL import Image
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
