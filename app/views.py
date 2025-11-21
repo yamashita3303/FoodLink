@@ -86,25 +86,25 @@ def user_signup(request):
     # Step 3 → 登録処理
     # --------------------
     elif step == 3:
-        data1 = request.session.get('signup_data')
-        data2 = request.session.get('signup_data2')
+        signup_data = request.session.get('signup_data')
+        signup_data2 = request.session.get('signup_data2')
 
-        if not data1 or not data2:
+        if not signup_data or not signup_data2:
             return redirect('user_signup')
 
         # パスワードを取り出す
-        password = data1.pop('password')
+        password = signup_data.pop('password')
 
         # User を作成
         user = User.objects.create(
-            username=data1['username'],
-            email=data1['email'],
-            phone=data1['phone'],
-            postal_code=data2['postal_code'],
-            prefecture=data2['prefecture'],
-            city=data2['city'],
-            address_line1=data2['address_line1'],
-            address_line2=data2.get('address_line2'),
+            username=signup_data['username'],
+            email=signup_data['email'],
+            phone=signup_data['phone'],
+            postal_code=signup_data2['postal_code'],
+            prefecture=signup_data2['prefecture'],
+            city=signup_data2['city'],
+            address_line1=signup_data2['address_line1'],
+            address_line2=signup_data2.get('address_line2'),
             is_store=False
         )
         user.set_password(password)
@@ -113,8 +113,9 @@ def user_signup(request):
         # ログイン
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-        # セッション消す
-        request.session.flush()
+        # セッションをクリア
+        for key in ['signup_data', 'signup_data2', 'signup_step']:
+            request.session.pop(key, None)
 
         return redirect('user_home')
 
