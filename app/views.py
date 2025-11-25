@@ -349,6 +349,7 @@ def entry_tran(request, order_id):
         "ShopPass": settings.GMO_SHOP_PASS,
         "SiteID": settings.GMO_SITE_ID,
         "SitePass": settings.GMO_SITE_PASS,
+
         "OrderID": str(order.order_id),
         "JobCd": "CAPTURE",
         "Amount": str(int(order.total_price)),  # 整数に変換
@@ -389,7 +390,6 @@ def exec_tran(request, order_id):
             "detail": "AccessID または AccessPass がありません"
         })
 
-    # ExecTran用フォームに全必要パラメータをセット
     return render(request, "user/payment_page.html", {
         "order": order,
         "ShopID": settings.GMO_SHOP_ID,
@@ -398,7 +398,6 @@ def exec_tran(request, order_id):
         "OrderID": order.order_id,
         "JobCd": "CAPTURE",
         "Amount": int(order.total_price),
-        "RetURL": settings.GMO_RESULT_URL,
     })
 
 

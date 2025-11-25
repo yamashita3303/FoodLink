@@ -1,29 +1,30 @@
-<!-- templates/user/payment_page.html -->
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>GMO決済ページへ</title>
-</head>
-<body>
-    <h2>GMO決済テスト</h2>
-    <p>注文ID: {{ order.order_id }}</p>
-    <p>合計金額: {{ Amount }}円</p>
+<form method="post" action="https://pt01.mul-pay.jp/payment/ExecTran.idPass">
+    {% csrf_token %}
 
-    <form id="gmoForm" action="https://pt01.mul-pay.jp/payment/ExecTran.idPass" method="post">
-        <input type="hidden" name="ShopID" value="{{ ShopID }}">
-        <input type="hidden" name="AccessID" value="{{ AccessID }}">
-        <input type="hidden" name="AccessPass" value="{{ AccessPass }}">
-        <input type="hidden" name="OrderID" value="{{ order.order_id }}">
-        <input type="hidden" name="JobCd" value="CAPTURE">
-        <input type="hidden" name="Amount" value="{{ Amount }}">
-        <input type="hidden" name="RetURL" value="{{ RetURL }}">
-        <button type="submit">テスト決済へ進む</button>
-    </form>
+    <!-- 必須パラメータ -->
+    <input type="hidden" name="ShopID" value="{{ ShopID }}">
+    <input type="hidden" name="AccessID" value="{{ AccessID }}">
+    <input type="hidden" name="AccessPass" value="{{ AccessPass }}">
+    <input type="hidden" name="OrderID" value="{{ OrderID }}">
+    <input type="hidden" name="JobCd" value="CAPTURE">
+    <input type="hidden" name="Amount" value="{{ Amount }}">
+    <input type="hidden" name="RetURL" value="{{ RetURL }}">
 
-    <script>
-        // 自動送信（不要ならコメントアウト）
-        // document.getElementById('gmoForm').submit();
-    </script>
-</body>
-</html>
+    <label>カード番号</label><br>
+    <input type="text" name="CardNo" placeholder="4111111111111111" required><br><br>
+
+    <label>有効期限（YYMM）</label><br>
+    <input type="text" name="Expire" placeholder="2605" required><br><br>
+
+    <label>セキュリティコード</label><br>
+    <input type="text" name="SecurityCode" placeholder="123" required><br><br>
+
+    <label>支払方法</label><br>
+    <select name="Method" required>
+        <option value="1">一括払い</option>
+        <option value="2">分割</option>
+        <option value="3">ボーナス一括</option>
+    </select><br><br>
+
+    <button type="submit">決済する</button>
+</form>
