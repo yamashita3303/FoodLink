@@ -131,3 +131,13 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 AUTH_USER_MODEL = 'app.User'  # カスタムユーザーモデルを指定
+
+# =========================
+# GMO PG マルチペイメント設定（テスト用）
+# =========================
+GMO_SHOP_ID = "tshop00074881"              # テストアカウントのショップID
+GMO_SHOP_PASS = "prfp8eff"          # テストアカウントのショップパス
+GMO_SITE_ID = "tsite00059761"              # テストアカウントのサイトID
+GMO_SITE_PASS = "y21ey86t"          # テストアカウント
+# 支払いの結果を受け取るURL（GMO管理画面に設定）
+GMO_RESULT_URL = "https://jorge-cacographic-samual.ngrok-free.dev/payment/result/"

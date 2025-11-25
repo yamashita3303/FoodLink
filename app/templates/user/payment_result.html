@@ -1,0 +1,12 @@
+{% extends "user/base.html" %}
+{% block title %}決済結果 | FoodLink{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>{{ message }}</h2>
+  <p>注文ID: {{ order.order_id }}</p>
+  <p>合計金額: ¥{{ order.total_price }}</p>
+
+  <a href="{% url 'user_home' %}" class="btn btn-primary mt-3">ホームへ戻る</a>
+</div>
+{% endblock %}

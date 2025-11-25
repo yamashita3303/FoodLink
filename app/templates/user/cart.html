@@ -38,7 +38,7 @@
       <div class="text-end mt-3">
         <button type="submit" class="btn btn-primary me-2">数量を更新</button>
         <a href="{% url 'user_home' %}" class="btn btn-secondary me-2">買い物を続ける</a>
-        <a href="#" class="btn btn-warning">購入手続きへ</a>
+        <a href="{% url 'create_order_from_session' %}" class="btn btn-warning">購入手続きへ</a>
       </div>
     </form>
   {% else %}

@@ -1,0 +1,12 @@
+{% extends "user/base.html" %}
+{% block title %}決済エラー | FoodLink{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-danger">決済処理でエラーが発生しました</h2>
+  <p><strong>エラー内容:</strong> {{ error }}</p>
+  <p><strong>詳細:</strong> {{ detail }}</p>
+
+  <a href="{% url 'user_cart' %}" class="btn btn-secondary mt-3">カートに戻る</a>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+<!-- templates/user/payment_page.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>GMO決済ページへ</title>
+</head>
+<body>
+    <h2>GMO決済テスト</h2>
+    <p>注文ID: {{ order.order_id }}</p>
+    <p>合計金額: {{ Amount }}円</p>
+
+    <form id="gmoForm" action="https://pt01.mul-pay.jp/payment/ExecTran.idPass" method="post">
+        <input type="hidden" name="ShopID" value="{{ ShopID }}">
+        <input type="hidden" name="AccessID" value="{{ AccessID }}">
+        <input type="hidden" name="AccessPass" value="{{ AccessPass }}">
+        <input type="hidden" name="OrderID" value="{{ order.order_id }}">
+        <input type="hidden" name="JobCd" value="CAPTURE">
+        <input type="hidden" name="Amount" value="{{ Amount }}">
+        <input type="hidden" name="RetURL" value="{{ RetURL }}">
+        <button type="submit">テスト決済へ進む</button>
+    </form>
+
+    <script>
+        // 自動送信（不要ならコメントアウト）
+        // document.getElementById('gmoForm').submit();
+    </script>
+</body>
+</html>

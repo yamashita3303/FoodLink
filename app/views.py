@@ -1,3 +1,5 @@
+import hashlib
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.db.models import Q  # ← 検索に便利な「OR検索」= どちらかが一方が当てはまったらおk
@@ -6,8 +8,18 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.urls import reverse
 import pytesseract
-from .models import User, Product, Category
+import requests
+from .models import (
+    User, 
+    Product, 
+    Category, 
+    Cart, 
+    CartItem, 
+    Order, 
+    OrderItem
+)
 from .forms import (
     UserSignupStep1Form, 
     UserSignupStep2Form, 
@@ -257,54 +269,163 @@ def user_store_search(request):
     })
 
 
-
-
-
-
+# -------------------------
+# カート画面（Session）
+# -------------------------
+@login_required
 def user_cart(request):
     cart = request.session.get('cart', {})
 
     if request.method == 'POST':
-        for pk in cart.keys():
+        for pk, item in cart.items():
             key = f'quantity_{pk}'
             if key in request.POST:
-                quantity = int(request.POST[key])
-                cart[pk]['quantity'] = max(1, quantity)
+                cart[pk]["quantity"] = max(1, int(request.POST[key]))
+        request.session["cart"] = cart
+        return redirect("user_cart")
 
-        request.session['cart'] = cart
-        return redirect('/cart/?updated=1')  # GETパラメータでフラグ
-
-    total = 0
+    total = sum(item["price"] * item["quantity"] for item in cart.values())
     for pk, item in cart.items():
-        item['subtotal'] = item['price'] * item['quantity']
-        total += item['subtotal']
+        item["subtotal"] = item["price"] * item["quantity"]
 
-    updated = request.GET.get('updated', '')
-    return render(request, 'user/cart.html', {'cart': cart, 'total': total, 'updated': updated})
+    return render(request, "user/cart.html", {
+        "cart": cart,
+        "total": total,
+    })
 
+
+# -------------------------
+# カート → Order作成
+# -------------------------
+@login_required
+def create_order_from_session(request):
     cart = request.session.get('cart', {})
+    if not cart:
+        return redirect("user_cart")
 
-    if request.method == 'POST':
-        # 各商品の数量を更新
-        for pk in cart.keys():
-            key = f'quantity_{pk}'
-            if key in request.POST:
-                quantity = int(request.POST[key])
-                cart[pk]['quantity'] = max(1, quantity)  # 1以上に制限
+    # 店舗を最初の商品から取得
+    first_pk = next(iter(cart))
+    product = Product.objects.get(pk=first_pk)
+    store = product.store
 
-        request.session['cart'] = cart
-        return redirect('user_cart')  # 更新後リロード
+    # GMO用ユニークOrderID
+    order_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + f"_{request.user.id}"
 
-    # GET時に小計と合計を計算
-    total = 0
+    # Order作成
+    order = Order.objects.create(
+        order_id=order_id,
+        user=request.user,
+        store=store,
+    )
+
+    # OrderItem作成
     for pk, item in cart.items():
-        item['subtotal'] = item['price'] * item['quantity']
-        total += item['subtotal']
+        prod = Product.objects.get(pk=pk)
+        OrderItem.objects.create(
+            order=order,
+            product=prod,
+            quantity=item["quantity"]
+        )
 
-    return render(request, 'user/cart.html', {'cart': cart, 'total': total})
+    # 合計計算
+    order.update_total_price()
+
+    # セッションカートクリア
+    request.session["cart"] = {}
+
+    return redirect("entry_tran", order_id=order.order_id)
 
 
+# -------------------------
+# EntryTran（注文登録 → AccessID/Pass取得）
+# -------------------------
+@login_required
+def entry_tran(request, order_id):
+    order = get_object_or_404(Order, order_id=order_id)
 
+    # EntryTran用ペイロード
+    payload = {
+        "ShopID": settings.GMO_SHOP_ID,
+        "ShopPass": settings.GMO_SHOP_PASS,
+        "SiteID": settings.GMO_SITE_ID,
+        "SitePass": settings.GMO_SITE_PASS,
+        "OrderID": str(order.order_id),
+        "JobCd": "CAPTURE",
+        "Amount": str(int(order.total_price)),  # 整数に変換
+    }
+
+    url = "https://pt01.mul-pay.jp/payment/EntryTran.idPass"
+    response = requests.post(url, data=payload)
+
+    print("==== EntryTran Debug ====")
+    print("Payload:", payload)
+    print("Response:", response.text)
+
+    if "ErrCode" in response.text:
+        return render(request, "user/payment_error.html", {
+            "error": "EntryTran failed",
+            "detail": response.text
+        })
+
+    result = dict(x.split("=") for x in response.text.split("&"))
+
+    # ExecTranページへリダイレクト
+    return redirect(
+        reverse("exec_tran", args=[order_id])
+        + f"?AccessID={result['AccessID']}&AccessPass={result['AccessPass']}"
+    )
+
+
+@login_required
+def exec_tran(request, order_id):
+    order = get_object_or_404(Order, order_id=order_id)
+
+    access_id = request.GET.get("AccessID")
+    access_pass = request.GET.get("AccessPass")
+
+    if not access_id or not access_pass:
+        return render(request, "user/payment_error.html", {
+            "error": "決済情報が取得できません",
+            "detail": "AccessID または AccessPass がありません"
+        })
+
+    # ExecTran用フォームに全必要パラメータをセット
+    return render(request, "user/payment_page.html", {
+        "order": order,
+        "ShopID": settings.GMO_SHOP_ID,
+        "AccessID": access_id,
+        "AccessPass": access_pass,
+        "OrderID": order.order_id,
+        "JobCd": "CAPTURE",
+        "Amount": int(order.total_price),
+        "RetURL": settings.GMO_RESULT_URL,
+    })
+
+
+# -------------------------
+# 決済結果受け取り
+# -------------------------
+@login_required
+def payment_result(request):
+    order_id = request.POST.get("OrderID")
+    status = request.POST.get("Status")
+
+    order = get_object_or_404(Order, order_id=order_id)
+
+    if status == "Success":
+        order.status = "completed"
+        order.ready = True
+        message = "決済が完了しました！"
+    else:
+        order.status = "canceled"
+        message = "決済に失敗しました…"
+
+    order.save()
+
+    return render(request, "user/payment_result.html", {
+        "order": order,
+        "message": message
+    })
 
 def user_history(request):
     return render(request, 'user/history.html')
