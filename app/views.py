@@ -337,83 +337,100 @@ def create_order_from_session(request):
 
 
 # -------------------------
-# EntryTran（注文登録 → AccessID/Pass取得）
+# EntryTran
 # -------------------------
 @login_required
 def entry_tran(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
 
-    # EntryTran用ペイロード
     payload = {
         "ShopID": settings.GMO_SHOP_ID,
         "ShopPass": settings.GMO_SHOP_PASS,
         "SiteID": settings.GMO_SITE_ID,
         "SitePass": settings.GMO_SITE_PASS,
-
         "OrderID": str(order.order_id),
         "JobCd": "CAPTURE",
-        "Amount": str(int(order.total_price)),  # 整数に変換
+        "Amount": str(int(order.total_price)),
     }
 
-    url = "https://pt01.mul-pay.jp/payment/EntryTran.idPass"
-    response = requests.post(url, data=payload)
-
-    print("==== EntryTran Debug ====")
-    print("Payload:", payload)
-    print("Response:", response.text)
-
-    if "ErrCode" in response.text:
-        return render(request, "user/payment_error.html", {
-            "error": "EntryTran failed",
-            "detail": response.text
-        })
-
+    response = requests.post("https://pt01.mul-pay.jp/payment/EntryTran.idPass", data=payload)
     result = dict(x.split("=") for x in response.text.split("&"))
 
-    # ExecTranページへリダイレクト
     return redirect(
-        reverse("exec_tran", args=[order_id])
+        reverse("test_exec_tran", args=[order_id])
         + f"?AccessID={result['AccessID']}&AccessPass={result['AccessPass']}"
     )
 
-
+# -------------------------
+# テスト用 ExecTran
+# -------------------------
 @login_required
-def exec_tran(request, order_id):
+def test_exec_tran(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
 
-    access_id = request.GET.get("AccessID")
-    access_pass = request.GET.get("AccessPass")
+    if request.method == "POST":
+        cardno = request.POST.get("CardNo")
+        expire = request.POST.get("Expire")
+        security = request.POST.get("SecurityCode")
+        method = request.POST.get("Method")
+        access_id = request.POST.get("AccessID")
+        access_pass = request.POST.get("AccessPass")
 
-    if not access_id or not access_pass:
-        return render(request, "user/payment_error.html", {
-            "error": "決済情報が取得できません",
-            "detail": "AccessID または AccessPass がありません"
+        payload = {
+            "ShopID": settings.GMO_SHOP_ID,
+            "ShopPass": settings.GMO_SHOP_PASS,
+            "AccessID": access_id,
+            "AccessPass": access_pass,
+            "OrderID": str(order.order_id),
+            "JobCd": "CAPTURE",
+            "Amount": str(int(order.total_price)),
+            "Method": method,
+            "CardNo": cardno,
+            "Expire": expire,
+            "SecurityCode": security,
+        }
+
+        response = requests.post("https://pt01.mul-pay.jp/payment/ExecTran.idPass", data=payload)
+        result = dict(x.split("=") for x in response.text.split("&"))
+
+        approve = result.get("Approve")
+        if approve:
+            order.status = "completed"
+            order.ready = True
+            message = "決済完了"
+        else:
+            order.status = "canceled"
+            message = "決済失敗"
+
+        order.save()
+
+        return render(request, "user/payment_result.html", {
+            "order": order,
+            "message": message,
+            "result": result,
         })
 
+    # GET → フォーム表示
     return render(request, "user/payment_page.html", {
         "order": order,
         "ShopID": settings.GMO_SHOP_ID,
-        "AccessID": access_id,
-        "AccessPass": access_pass,
+        "AccessID": request.GET.get("AccessID"),
+        "AccessPass": request.GET.get("AccessPass"),
         "OrderID": order.order_id,
         "JobCd": "CAPTURE",
         "Amount": int(order.total_price),
-        "RetURL": request.build_absolute_uri(reverse("payment_result")),
     })
 
-
 # -------------------------
-# 決済結果受け取り
+# 決済結果表示（本番用 RetURL 向け）
 # -------------------------
 from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def payment_result(request):
     order_id = request.POST.get("OrderID")
     approve = request.POST.get("Approve")
-
     order = get_object_or_404(Order, order_id=order_id)
 
-    # Approve は成功時に必ず入る（失敗時は空）
     if approve:
         order.status = "completed"
         order.ready = True
@@ -426,9 +443,9 @@ def payment_result(request):
 
     return render(request, "user/payment_result.html", {
         "order": order,
-        "message": message
+        "message": message,
+        "result": request.POST,
     })
-
 def user_history(request):
     return render(request, 'user/history.html')
 

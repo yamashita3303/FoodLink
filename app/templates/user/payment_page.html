@@ -1,14 +1,8 @@
-<form method="post" action="https://pt01.mul-pay.jp/payment/ExecTran.idPass">
+<form method="post" action="{% url 'test_exec_tran' order.order_id %}">
     {% csrf_token %}
-
-    <!-- 必須パラメータ -->
-    <input type="hidden" name="ShopID" value="{{ ShopID }}">
     <input type="hidden" name="AccessID" value="{{ AccessID }}">
     <input type="hidden" name="AccessPass" value="{{ AccessPass }}">
     <input type="hidden" name="OrderID" value="{{ OrderID }}">
-    <input type="hidden" name="JobCd" value="CAPTURE">
-    <input type="hidden" name="Amount" value="{{ Amount }}">
-    <input type="hidden" name="RetURL" value="{{ RetURL }}">
 
     <label>カード番号</label><br>
     <input type="text" name="CardNo" placeholder="4111111111111111" required><br><br>
