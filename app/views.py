@@ -401,7 +401,16 @@ def test_exec_tran(request, order_id):
             order.ready = True
             message = "決済完了"
             # --- 店舗に通知を作成 ---
-            send_store_notification(order)
+            # 注文の各商品ごとに通知作成
+            for item in order.items.all():
+                Notification.objects.create(
+                    type="order",
+                    message=f"{item.product.name} が購入されました（数量: {item.quantity}）",
+                    recipient_type="store",
+                    store=order.store,
+                    order=order,
+                    product=item.product
+                )
         else:
             order.status = "canceled"
             message = "決済失敗"
@@ -460,19 +469,6 @@ def user_history(request):
     return render(request, 'user/history.html', {
         'orders': orders
     })
-
-def send_store_notification(order):
-    try:
-        Notification.objects.create(
-            type="order",
-            message=f"新しい注文が入りました。注文ID: {order.order_id}、合計: ¥{order.total_price}",
-            recipient_type="store",
-            user=order.user,
-            store=order.store,
-            order=order
-        )
-    except ValidationError as e:
-        print(f"通知作成エラー: {e}")
 
 @login_required(login_url='user_signin')
 def user_mypage(request):

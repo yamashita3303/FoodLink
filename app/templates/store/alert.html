@@ -10,6 +10,9 @@
     <li>
         <strong>{{ n.created_at|date:"Y/m/d H:i" }}</strong>：
         {{ n.message }}
+        {% if n.product %}
+            （商品: {{ n.product.name }}）
+        {% endif %}
         {% if not n.read %}
             <span style="color:red;">（新着）</span>
         {% endif %}
