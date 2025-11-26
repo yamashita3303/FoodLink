@@ -398,26 +398,29 @@ def exec_tran(request, order_id):
         "OrderID": order.order_id,
         "JobCd": "CAPTURE",
         "Amount": int(order.total_price),
+        "RetURL": request.build_absolute_uri(reverse("payment_result")),
     })
 
 
 # -------------------------
 # 決済結果受け取り
 # -------------------------
-@login_required
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
 def payment_result(request):
     order_id = request.POST.get("OrderID")
-    status = request.POST.get("Status")
+    approve = request.POST.get("Approve")
 
     order = get_object_or_404(Order, order_id=order_id)
 
-    if status == "Success":
+    # Approve は成功時に必ず入る（失敗時は空）
+    if approve:
         order.status = "completed"
         order.ready = True
-        message = "決済が完了しました！"
+        message = "決済完了"
     else:
         order.status = "canceled"
-        message = "決済に失敗しました…"
+        message = "決済失敗"
 
     order.save()
 
