@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 import pytesseract
 import requests
 from .models import (
@@ -18,7 +19,8 @@ from .models import (
     Cart, 
     CartItem, 
     Order, 
-    OrderItem
+    OrderItem,
+    Notification
 )
 from .forms import (
     UserSignupStep1Form, 
@@ -398,6 +400,8 @@ def test_exec_tran(request, order_id):
             order.status = "completed"
             order.ready = True
             message = "決済完了"
+            # --- 店舗に通知を作成 ---
+            send_store_notification(order)
         else:
             order.status = "canceled"
             message = "決済失敗"
@@ -435,6 +439,8 @@ def payment_result(request):
         order.status = "completed"
         order.ready = True
         message = "決済完了"
+        # --- 店舗に通知を作成 ---
+        # send_store_notification(order)
     else:
         order.status = "canceled"
         message = "決済失敗"
@@ -454,6 +460,19 @@ def user_history(request):
     return render(request, 'user/history.html', {
         'orders': orders
     })
+
+def send_store_notification(order):
+    try:
+        Notification.objects.create(
+            type="order",
+            message=f"新しい注文が入りました。注文ID: {order.order_id}、合計: ¥{order.total_price}",
+            recipient_type="store",
+            user=order.user,
+            store=order.store,
+            order=order
+        )
+    except ValidationError as e:
+        print(f"通知作成エラー: {e}")
 
 @login_required(login_url='user_signin')
 def user_mypage(request):
@@ -815,8 +834,15 @@ def store_edit_hours(request):
         'title': '営業時間を変更',
         'current_value': f"{store.opening_time} - {store.closing_time}"
     })
+
+@login_required(login_url='store_signin')
 def store_alert(request):
-    return render(request, 'store/alert.html')
+    # ログインしているユーザーが店舗の場合の通知
+    notifications = Notification.objects.filter(store=request.user).order_by('-created_at')
+
+    return render(request, "store/alert.html", {
+        "notifications": notifications
+    })
 
 @login_required(login_url='store_signin')
 def store_registar(request):

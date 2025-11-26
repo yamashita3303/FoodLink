@@ -2,6 +2,21 @@
 {% extends "store/base.html" %}
 {% block title %}ストアアラート | FoodLink{% endblock %}
 {% block content %}
-  <h2>ストアアラート</h2>
-  <p>あああ</p>
+<h2>通知一覧</h2>
+
+{% if notifications %}
+<ul>
+    {% for n in notifications %}
+    <li>
+        <strong>{{ n.created_at|date:"Y/m/d H:i" }}</strong>：
+        {{ n.message }}
+        {% if not n.read %}
+            <span style="color:red;">（新着）</span>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>通知はありません。</p>
+{% endif %}
 {% endblock %}
