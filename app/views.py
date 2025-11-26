@@ -446,8 +446,14 @@ def payment_result(request):
         "message": message,
         "result": request.POST,
     })
+
+@login_required
 def user_history(request):
-    return render(request, 'user/history.html')
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    print(orders)  # デバッグ用
+    return render(request, 'user/history.html', {
+        'orders': orders
+    })
 
 @login_required(login_url='user_signin')
 def user_mypage(request):

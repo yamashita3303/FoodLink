@@ -2,6 +2,25 @@
 {% extends "user/base.html" %}
 {% block title %}履歴 | FoodLink{% endblock %}
 {% block content %}
-  <h2>履歴</h2>
-  <p>あああ</p>
+<h2>注文履歴</h2>
+
+{% if orders %}
+    <ul>
+    {% for order in orders %}
+        <li>
+            注文ID: {{ order.order_id }} |
+            合計: {{ order.total_price }}円 |
+            ステータス: {{ order.status }} |
+            注文日時: {{ order.created_at }}
+            <ul>
+            {% for item in order.items.all %}
+                <li>{{ item.product.name }} x {{ item.quantity }} = {{ item.subtotal }}円</li>
+            {% endfor %}
+            </ul>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>注文履歴はありません。</p>
+{% endif %}
 {% endblock %}
