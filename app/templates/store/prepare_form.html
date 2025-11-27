@@ -1,0 +1,23 @@
+{% extends "store/base.html" %}
+{% block title %}商品準備 | FoodLink{% endblock %}
+
+{% block content %}
+<h2>商品の準備</h2>
+
+<p>商品：{{ notification.product.name }}</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <label>ロッカー番号</label>
+    <input type="text" name="locker" required class="form-control">
+
+    <label>暗証番号</label>
+    <input type="text" name="pin" required class="form-control">
+
+    <button type="submit" class="btn btn-success" style="margin-top:10px;">
+        準備完了として通知
+    </button>
+</form>
+
+{% endblock %}

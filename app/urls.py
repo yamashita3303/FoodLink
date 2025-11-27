@@ -38,6 +38,7 @@ urlpatterns = [
     path('store_mypage/edit/address/', views.store_edit_address, name='store_edit_address'),
     path('mypage/edit/hours/', views.store_edit_hours, name='store_edit_hours'),
     path('store_alert/', views.store_alert, name='store_alert'),
+    path('prepare/<int:notification_id>/', views.prepare_product, name='prepare_product'),
     path('store_registar/', views.store_registar, name='store_registar'),
 
     # 複数画像登録用

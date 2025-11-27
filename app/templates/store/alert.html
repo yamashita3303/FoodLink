@@ -1,9 +1,8 @@
-<!-- templates/cart.html -->
-{% extends "store/base.html" %}
-{% block title %}ストアアラート | FoodLink{% endblock %}
-{% block content %}
-<h2>通知一覧</h2>
 
+{% extends "store/base.html" %}
+{% block title %}ストア通知 | FoodLink{% endblock %}
+
+{% block content %}
 {% if notifications %}
 <ul>
     {% for n in notifications %}
@@ -12,6 +11,8 @@
         {{ n.message }}
         {% if n.product %}
             （商品: {{ n.product.name }}）
+            <!-- 準備開始ボタン -->
+            <a href="{% url 'prepare_product' n.notification_id %}">準備開始</a>
         {% endif %}
         {% if not n.read %}
             <span style="color:red;">（新着）</span>

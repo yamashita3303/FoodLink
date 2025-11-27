@@ -576,7 +576,14 @@ def user_edit_address(request):
     })
 
 def user_alert(request):
-    return render(request, 'user/alert.html')
+    notifications = Notification.objects.filter(
+        recipient_type="user",
+        user=request.user
+    ).order_by('-created_at')
+
+    return render(request, "user/alert.html", {
+        "notifications": notifications
+    })
 
 # store側のビュー
 # =============================
@@ -838,6 +845,39 @@ def store_alert(request):
 
     return render(request, "store/alert.html", {
         "notifications": notifications
+    })
+
+@login_required
+def prepare_product(request, notification_id):
+    notification = get_object_or_404(Notification, notification_id=notification_id)
+
+    # 店舗本人以外アクセス禁止
+    if notification.store != request.user:
+        return HttpResponse("権限がありません", status=403)
+
+    if request.method == "POST":
+        locker = request.POST.get("locker")
+        pin = request.POST.get("pin")
+
+        # --- 購入者に通知を送る ---
+        Notification.objects.create(
+            type="ready",
+            message=f"商品の準備が完了しました。ロッカー番号：{locker} 暗証番号：{pin}",
+            recipient_type="user",
+            user=notification.order.user,  # ← 購入者
+            store=notification.store,
+            product=notification.product,
+            order=notification.order,
+        )
+
+        # --- 店舗側の通知を既読 or 更新 ---
+        # notification.read = True
+        notification.save()
+
+        return redirect("store_alert")
+
+    return render(request, "store/prepare_form.html", {
+        "notification": notification
     })
 
 @login_required(login_url='store_signin')
