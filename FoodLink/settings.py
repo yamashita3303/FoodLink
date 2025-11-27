@@ -141,3 +141,11 @@ GMO_SITE_ID = "tsite00059761"              # テストアカウントのサイ�
 GMO_SITE_PASS = "y21ey86t"          # テストアカウント
 # 支払いの結果を受け取るURL（GMO管理画面に設定）
 GMO_RESULT_URL = "https://jorge-cacographic-samual.ngrok-free.dev/payment/result/"
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'rain31058@gmail.com'
+EMAIL_HOST_PASSWORD = 'qpkk komy byeg hbgg'
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'FoodLink <noreply@example.com>'

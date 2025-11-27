@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
 import pytesseract
 import requests
 from .models import (
@@ -862,7 +863,12 @@ def prepare_product(request, notification_id):
         # --- 購入者に通知を送る ---
         Notification.objects.create(
             type="ready",
-            message=f"商品の準備が完了しました。ロッカー番号：{locker} 暗証番号：{pin}",
+            message = (
+                f"ご注文の「{notification.product}」の準備が完了しました。\n"
+                f"受け取りロッカー番号：{locker}\n"
+                f"暗証番号：{pin}\n"
+                f"ご来店の上、お受け取りください。"
+            ),
             recipient_type="user",
             user=notification.order.user,  # ← 購入者
             store=notification.store,
@@ -873,6 +879,22 @@ def prepare_product(request, notification_id):
         # --- 店舗側の通知を既読 or 更新 ---
         # notification.read = True
         notification.save()
+
+        # ---- 購入者へメール送信 ----
+        # EmailMessage のインスタンスを作成する
+        # emailMessage = EmailMessage(
+        #     subject='【FoodLink】商品の準備が完了しました',
+        #     body=(
+        #         f"ご注文の「{notification.product}」の準備が完了しました。\n"
+        #         f"受け取りロッカー番号：{locker}\n"
+        #         f"暗証番号：{pin}\n"
+        #         f"ご来店の上、お受け取りください。"
+        #     ),
+        #     from_email='FoodLink <noreply@example.com>',  # ← ここで Gmail アドレスを隠す
+        #     to=[notification.order.user.email],
+        # )
+        # # send 関数を呼び出してメールを送信する
+        # emailMessage.send()
 
         return redirect("store_alert")
 
