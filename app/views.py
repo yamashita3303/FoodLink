@@ -398,7 +398,7 @@ def test_exec_tran(request, order_id):
 
         approve = result.get("Approve")
         if approve:
-            order.status = "completed"
+            order.status = "pending"
             order.ready = True
             message = "決済完了"
             # --- 店舗に通知を作成 ---
@@ -446,7 +446,7 @@ def payment_result(request):
     order = get_object_or_404(Order, order_id=order_id)
 
     if approve:
-        order.status = "completed"
+        order.status = "pending"
         order.ready = True
         message = "決済完了"
         # --- 店舗に通知を作成 ---
@@ -470,6 +470,44 @@ def user_history(request):
     return render(request, 'user/history.html', {
         'orders': orders
     })
+
+@login_required
+def order_item_cancel(request, order_item_id):
+    item = get_object_or_404(OrderItem, order_item_id=order_item_id)
+    order = item.order
+
+    # 購入者本人しかキャンセルできない
+    if order.user != request.user:
+        messages.error(request, "権限がありません")
+        return redirect("user_history")
+
+    # 注文がまだ完了していない場合のみキャンセル可能
+    if order.status == "pending":
+        product_name = item.product.name
+        item.delete()  # 注文アイテム削除
+        order.update_total_price()  # 合計更新
+
+        # 店舗側に通知を送信
+        Notification.objects.create(
+            type="cancel",
+            message=f"注文の商品「{product_name}」がキャンセルされました。",
+            recipient_type="store",
+            store=order.store,
+            order=order,
+        )
+
+        # Order にアイテムが残っていなければ注文自体をキャンセル
+        if not order.items.exists():
+            order.status = "canceled"
+            order.save()
+            messages.success(request, "全てのアイテムがキャンセルされ、注文自体もキャンセルされました。")
+        else:
+            messages.success(request, f"{product_name} をキャンセルしました")
+
+    else:
+        messages.error(request, "この注文はキャンセルできません")
+
+    return redirect("user_history")
 
 @login_required(login_url='user_signin')
 def user_mypage(request):

@@ -1,26 +1,46 @@
-<!-- templates/history.html -->
 {% extends "user/base.html" %}
-{% block title %}履歴 | FoodLink{% endblock %}
+{% block title %}注文履歴{% endblock %}
 {% block content %}
+
 <h2>注文履歴</h2>
 
-{% if orders %}
-    <ul>
-    {% for order in orders %}
-        <li>
-            注文ID: {{ order.order_id }} |
-            合計: {{ order.total_price }}円 |
-            ステータス: {{ order.status }} |
-            注文日時: {{ order.created_at }}
-            <ul>
-            {% for item in order.items.all %}
-                <li>{{ item.product.name }} x {{ item.quantity }} = {{ item.subtotal }}円</li>
-            {% endfor %}
-            </ul>
-        </li>
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
     {% endfor %}
-    </ul>
-{% else %}
-    <p>注文履歴はありません。</p>
+</ul>
 {% endif %}
+
+{% if orders %}
+<ul>
+    {% for order in orders %}
+    <li>
+        <strong>{{ order.created_at|date:"Y/m/d H:i" }}</strong>：
+        合計: {{ order.total_price }}円
+        <ul>
+            {% for item in order.items.all %}
+            <li>
+                商品: {{ item.product.name }} × {{ item.quantity }}（小計: {{ item.subtotal }}円）
+                <br>
+                ステータス: {{ order.get_status_display }}
+
+                {% if order.status == "pending" %}
+                <form action="{% url 'order_item_cancel' item.order_item_id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">キャンセル</button>
+                </form>
+                {% else %}
+                <span style="color:red;">キャンセル済み</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>注文履歴はありません。</p>
+{% endif %}
+
 {% endblock %}
