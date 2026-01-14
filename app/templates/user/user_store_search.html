@@ -35,27 +35,31 @@
     </div>
   </form>
 
-  {% if mode == "result" %}
-    <div class="result-box mt-4">
-      <h5>検索結果 ({{ stores.count }} 件)</h5>
-      {% if stores.exists %}
-        <div class="row row-cols-1 row-cols-md-2 g-3 mt-2">
-          {% for store in stores %}
-            <div class="col">
-              <div class="card h-100">
-                <div class="card-body">
-                  <h6 class="card-title">{{ store.username }}</h6>
-                  <p class="card-text">{{ store.prefecture }} {{ store.city }}<br>{{ user.address }}</p>
-                </div>
+{% if mode == "result" %}
+<div class="result-box mt-4">
+  <h5>検索結果 ({{ user_search.count }} 件)</h5>
+  {% if user_search.exists %}
+    <div class="row row-cols-1 row-cols-md-2 g-3 mt-2">
+      {% for user in user_search %}
+        <div class="col">
+          <!-- ここをリンク化 -->
+          <a href="{% url 'user_store_detail' user.id %}" class="text-decoration-none text-dark">
+            <div class="card h-100">
+              <div class="card-body">
+                <h6 class="card-title">{{ user.username }}</h6>
+                <p class="card-text">{{ user.prefecture }} {{ user.city }}<br>{{ user.address_line1 }} {{ user.address_line2 }}</p>
               </div>
             </div>
-          {% endfor %}
+          </a>
         </div>
-      {% else %}
-        <p>該当する店舗は見つかりませんでした。</p>
-      {% endif %}
+      {% endfor %}
     </div>
+  {% else %}
+    <p>該当する店舗は見つかりませんでした。</p>
   {% endif %}
+</div>
+{% endif %}
+
 </div>
 
 <script>

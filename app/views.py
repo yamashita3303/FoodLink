@@ -165,10 +165,39 @@ def store_alert(request):
     return render(request, 'store/alert.html')
 
 # @login_required
+from django.db.models import Case, When, Value, IntegerField
+
 def user_home(request):
-    # ホームの既存処理（一覧表示など）
-    products = Product.objects.all()[:9]  # 例：トップ表示用の少数
-    return render(request, 'user/home.html', {'products': products})
+    user = request.user
+
+    products = (
+        Product.objects
+        .select_related('store')
+        .order_by('-created_at')
+    )
+
+    store_products = {}
+    MAX_PER_STORE = 10
+
+    for product in products:
+        store = product.store
+
+        # ▼ 同じ市の店舗だけ通す
+        if user.is_authenticated and user.city:
+            if store.city != user.city:
+                continue
+
+        if store not in store_products:
+            store_products[store] = []
+
+        if len(store_products[store]) < MAX_PER_STORE:
+            store_products[store].append(product)
+
+    return render(request, 'user/home.html', {
+        'store_products': store_products
+    })
+
+
 
 
 
@@ -197,21 +226,20 @@ def user_search(request):
 
 
 def user_category_results(request, category_id):
-    # 全カテゴリ（ヘッダ等で表示するため）
     categories = Category.objects.all()
-
-    # 指定カテゴリを取得（無ければ 404）
     category = get_object_or_404(Category, id=category_id)
 
-    # そのカテゴリの全商品（必要なら追加フィルタを適用）
-    products = Product.objects.filter(category_id=category_id)
+    products = Product.objects.filter(category=category)  # ← 修正ポイント
 
     context = {
         'categories': categories,
         'category': category,
         'products': products,
+        'selected_category_id': category.id,
     }
-    return render(request, 'user/category_results.html', context)
+    return render(request, 'user/search.html', context)
+
+
 
 
 def user_food_detail(request, pk):
@@ -252,21 +280,97 @@ def user_store_search(request):
     prefecture = request.GET.get('prefecture', '')
     city = request.GET.get('city', '')
 
-    stores = User.objects.none()  # 初期は空
-    mode = ""  # 表示モード
+    user_search = User.objects.none()
+    mode = ""
 
-    # 都道府県＋市区が両方選ばれている場合のみ検索
+    # 都道府県＋市区が選択されている場合のみ検索
     if prefecture and city:
-        stores = User.objects.filter(prefecture=prefecture, city=city)
-        mode = "result"  # 結果表示用
+        user_search = User.objects.filter(
+            is_store=True,
+            prefecture__icontains=prefecture,
+            city__icontains=city
+        )
+        mode = "result"
 
     return render(request, "user/user_store_search.html", {
-        "stores": stores,
+        "user_search": user_search,
         "selected_region": region,
         "selected_prefecture": prefecture,
         "selected_city": city,
         "mode": mode,
     })
+
+
+from django.utils import timezone
+from datetime import date
+
+
+def user_store_detail(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    today = date.today()
+
+    # 新着順（作成日が新しい順）で、期限が切れていないもの
+    new_products = Product.objects.filter(
+        store=user,
+        expiration_date__gte=today
+    ).order_by('-created_at')
+
+    # 期限が近い順（expiration_dateが近い順）で、期限が切れていないもの
+    soon_expire_products = Product.objects.filter(
+        store=user,
+        expiration_date__gte=today
+    ).order_by('expiration_date')
+
+    # 残り日数を計算してテンプレートに渡す
+    for product in new_products:
+        product.days_remaining = (product.expiration_date - today).days
+
+    for product in soon_expire_products:
+        product.days_remaining = (product.expiration_date - today).days
+
+    context = {
+        'user': user,
+        'new_products': new_products,
+        'soon_expire_products': soon_expire_products,
+    }
+    return render(request, 'user/user_store_detail.html', context)
+
+
+
+from django.utils import timezone
+from datetime import date
+
+
+def user_store_detail(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    today = date.today()
+
+    # 新着順（作成日が新しい順）で、期限が切れていないもの
+    new_products = Product.objects.filter(
+        store=user,
+        expiration_date__gte=today
+    ).order_by('-created_at')
+
+    # 期限が近い順（expiration_dateが近い順）で、期限が切れていないもの
+    soon_expire_products = Product.objects.filter(
+        store=user,
+        expiration_date__gte=today
+    ).order_by('expiration_date')
+
+    # 残り日数を計算してテンプレートに渡す
+    for product in new_products:
+        product.days_remaining = (product.expiration_date - today).days
+
+    for product in soon_expire_products:
+        product.days_remaining = (product.expiration_date - today).days
+
+    context = {
+        'user': user,
+        'new_products': new_products,
+        'soon_expire_products': soon_expire_products,
+    }
+    return render(request, 'user/user_store_detail.html', context)
+
 
 
 # -------------------------
