@@ -9,6 +9,8 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.urls import reverse
+from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
 import pytesseract
 import requests
 from .models import (
@@ -18,7 +20,8 @@ from .models import (
     Cart, 
     CartItem, 
     Order, 
-    OrderItem
+    OrderItem,
+    Notification
 )
 from .forms import (
     UserSignupStep1Form, 
@@ -499,9 +502,20 @@ def test_exec_tran(request, order_id):
 
         approve = result.get("Approve")
         if approve:
-            order.status = "completed"
+            order.status = "pending"
             order.ready = True
             message = "決済完了"
+            # --- 店舗に通知を作成 ---
+            # 注文の各商品ごとに通知作成
+            for item in order.items.all():
+                Notification.objects.create(
+                    type="order",
+                    message=f"{item.product.name} が購入されました（数量: {item.quantity}）",
+                    recipient_type="store",
+                    store=order.store,
+                    order=order,
+                    product=item.product
+                )
         else:
             order.status = "canceled"
             message = "決済失敗"
@@ -536,9 +550,11 @@ def payment_result(request):
     order = get_object_or_404(Order, order_id=order_id)
 
     if approve:
-        order.status = "completed"
+        order.status = "pending"
         order.ready = True
         message = "決済完了"
+        # --- 店舗に通知を作成 ---
+        # send_store_notification(order)
     else:
         order.status = "canceled"
         message = "決済失敗"
@@ -558,6 +574,44 @@ def user_history(request):
     return render(request, 'user/history.html', {
         'orders': orders
     })
+
+@login_required
+def order_item_cancel(request, order_item_id):
+    item = get_object_or_404(OrderItem, order_item_id=order_item_id)
+    order = item.order
+
+    # 購入者本人しかキャンセルできない
+    if order.user != request.user:
+        messages.error(request, "権限がありません")
+        return redirect("user_history")
+
+    # 注文がまだ完了していない場合のみキャンセル可能
+    if order.status == "pending":
+        product_name = item.product.name
+        item.delete()  # 注文アイテム削除
+        order.update_total_price()  # 合計更新
+
+        # 店舗側に通知を送信
+        Notification.objects.create(
+            type="cancel",
+            message=f"注文の商品「{product_name}」がキャンセルされました。",
+            recipient_type="store",
+            store=order.store,
+            order=order,
+        )
+
+        # Order にアイテムが残っていなければ注文自体をキャンセル
+        if not order.items.exists():
+            order.status = "canceled"
+            order.save()
+            messages.success(request, "全てのアイテムがキャンセルされ、注文自体もキャンセルされました。")
+        else:
+            messages.success(request, f"{product_name} をキャンセルしました")
+
+    else:
+        messages.error(request, "この注文はキャンセルできません")
+
+    return redirect("user_history")
 
 @login_required(login_url='user_signin')
 def user_mypage(request):
@@ -665,7 +719,14 @@ def user_edit_address(request):
     })
 
 def user_alert(request):
-    return render(request, 'user/alert.html')
+    notifications = Notification.objects.filter(
+        recipient_type="user",
+        user=request.user
+    ).order_by('-created_at')
+
+    return render(request, "user/alert.html", {
+        "notifications": notifications
+    })
 
 # store側のビュー
 # =============================
@@ -919,8 +980,69 @@ def store_edit_hours(request):
         'title': '営業時間を変更',
         'current_value': f"{store.opening_time} - {store.closing_time}"
     })
+
+@login_required(login_url='store_signin')
 def store_alert(request):
-    return render(request, 'store/alert.html')
+    # ログインしているユーザーが店舗の場合の通知
+    notifications = Notification.objects.filter(store=request.user).order_by('-created_at')
+
+    return render(request, "store/alert.html", {
+        "notifications": notifications
+    })
+
+@login_required
+def prepare_product(request, notification_id):
+    notification = get_object_or_404(Notification, notification_id=notification_id)
+
+    # 店舗本人以外アクセス禁止
+    if notification.store != request.user:
+        return HttpResponse("権限がありません", status=403)
+
+    if request.method == "POST":
+        locker = request.POST.get("locker")
+        pin = request.POST.get("pin")
+
+        # --- 購入者に通知を送る ---
+        Notification.objects.create(
+            type="ready",
+            message = (
+                f"ご注文の「{notification.product}」の準備が完了しました。\n"
+                f"受け取りロッカー番号：{locker}\n"
+                f"暗証番号：{pin}\n"
+                f"ご来店の上、お受け取りください。"
+            ),
+            recipient_type="user",
+            user=notification.order.user,  # ← 購入者
+            store=notification.store,
+            product=notification.product,
+            order=notification.order,
+        )
+
+        # --- 店舗側の通知を既読 or 更新 ---
+        # notification.read = True
+        notification.save()
+
+        # ---- 購入者へメール送信 ----
+        # EmailMessage のインスタンスを作成する
+        # emailMessage = EmailMessage(
+        #     subject='【FoodLink】商品の準備が完了しました',
+        #     body=(
+        #         f"ご注文の「{notification.product}」の準備が完了しました。\n"
+        #         f"受け取りロッカー番号：{locker}\n"
+        #         f"暗証番号：{pin}\n"
+        #         f"ご来店の上、お受け取りください。"
+        #     ),
+        #     from_email='FoodLink <noreply@example.com>',  # ← ここで Gmail アドレスを隠す
+        #     to=[notification.order.user.email],
+        # )
+        # # send 関数を呼び出してメールを送信する
+        # emailMessage.send()
+
+        return redirect("store_alert")
+
+    return render(request, "store/prepare_form.html", {
+        "notification": notification
+    })
 
 @login_required(login_url='store_signin')
 def store_registar(request):

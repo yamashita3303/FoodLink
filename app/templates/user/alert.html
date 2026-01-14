@@ -1,6 +1,36 @@
 {% extends "user/base.html" %}
-{% block title %}お知らせ | FoodLink{% endblock %}
+{% block title %}通知一覧 | FoodLink{% endblock %}
+
 {% block content %}
-  <h2>お知らせ</h2>
-  <p>あああ</p>
+<h2>通知一覧</h2>
+
+{% if notifications %}
+<ul>
+    {% for n in notifications %}
+    <li style="margin-bottom: 10px;">
+
+        <!-- 日付 -->
+        <strong>{{ n.created_at|date:"Y/m/d H:i" }}</strong><br>
+
+        <!-- メッセージ -->
+        {{ n.message }}<br>
+
+        <!-- 商品名 -->
+        {% if n.product %}
+            <span>商品：{{ n.product.name }}</span><br>
+        {% endif %}
+
+        <!-- 新着表示 -->
+        {% if not n.read %}
+            <span style="color:red;">（新着）</span>
+        {% endif %}
+
+
+        <hr>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>通知はありません。</p>
+{% endif %}
 {% endblock %}

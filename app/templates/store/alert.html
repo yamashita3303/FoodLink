@@ -1,7 +1,26 @@
-<!-- templates/cart.html -->
+
 {% extends "store/base.html" %}
-{% block title %}ストアアラート | FoodLink{% endblock %}
+{% block title %}ストア通知 | FoodLink{% endblock %}
+
 {% block content %}
-  <h2>ストアアラート</h2>
-  <p>あああ</p>
+{% if notifications %}
+<ul>
+    {% for n in notifications %}
+    <li>
+        <strong>{{ n.created_at|date:"Y/m/d H:i" }}</strong>：
+        {{ n.message }}
+        {% if n.product %}
+            （商品: {{ n.product.name }}）
+            <!-- 準備開始ボタン -->
+            <a href="{% url 'prepare_product' n.notification_id %}">準備開始</a>
+        {% endif %}
+        {% if not n.read %}
+            <span style="color:red;">（新着）</span>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>通知はありません。</p>
+{% endif %}
 {% endblock %}

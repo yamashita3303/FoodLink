@@ -18,6 +18,7 @@ urlpatterns = [
     path("payment/exec/<str:order_id>/", views.test_exec_tran, name="test_exec_tran"),
     path("payment/result/", views.payment_result, name="payment_result"),
     path('user_history/', views.user_history, name='user_history'),
+    path('order/cancel/<int:order_item_id>/', views.order_item_cancel, name='order_item_cancel'),
     path('user_mypage/', views.user_mypage, name='user_mypage'),
     path('user_mypage/edit/', views.user_edit_menu, name='user_edit_menu'),
     path('user_mypage/edit/username/', views.user_edit_username, name='user_edit_username'),
@@ -39,6 +40,7 @@ urlpatterns = [
     path('store_mypage/edit/address/', views.store_edit_address, name='store_edit_address'),
     path('mypage/edit/hours/', views.store_edit_hours, name='store_edit_hours'),
     path('store_alert/', views.store_alert, name='store_alert'),
+    path('prepare/<int:notification_id>/', views.prepare_product, name='prepare_product'),
     path('store_registar/', views.store_registar, name='store_registar'),
 
     # 複数画像登録用
