@@ -10,6 +10,7 @@ urlpatterns = [
     path('search/', views.user_search, name='user_search'),  # 検索ページ
     path('food/<int:pk>/', views.user_food_detail, name='user_food_detail'),
     path('user_store_search/', views.user_store_search, name='user_store_search'),
+    path('store/<int:user_id>/', views.user_store_detail, name='user_store_detail'),# 店舗詳細ページ
     path('category/<int:category_id>/', views.user_category_results, name='user_category_results'),
     path('cart/', views.user_cart, name='user_cart'),
     path('history/', views.user_history, name='user_history'),

@@ -1,0 +1,127 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}カテゴリ検索 | FoodLink{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ===== 検索ヘッダー ===== */
+  .search-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .search-header .back-btn {
+    font-size: 1.4rem;
+    color: #333;
+    text-decoration: none;
+  }
+
+  .search-box {
+    flex: 1;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 10px 38px 10px 12px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+  }
+
+  .search-box i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #777;
+  }
+
+  /* ===== カテゴリ ===== */
+  .category-title {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 15px 0 8px;
+  }
+
+  .category-list {
+    border-top: 1px solid #ddd;
+  }
+
+  .category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 6px;
+    border-bottom: 1px solid #ddd;
+    text-decoration: none;
+    color: #333;
+    font-size: 0.95rem;
+  }
+
+  .category-item i {
+    color: #999;
+    font-size: 1rem;
+  }
+
+  .category-item:active {
+    background-color: #f1f5ff;
+  }
+</style>
+
+<!-- ===== 検索エリア ===== -->
+<div class="search-header">
+  <a href="javascript:history.back()" class="back-btn">
+    <i class="bi bi-chevron-left"></i>
+  </a>
+
+  <form method="get" action="{% url 'user_search' %}" class="search-box">
+    <input type="text" name="q" placeholder="検索">
+    <i class="bi bi-search"></i>
+  </form>
+</div>
+
+<!-- ===== カテゴリ ===== -->
+<div class="category-title">カテゴリで検索</div>
+
+<div class="category-list">
+
+  <a href="{% url 'user_category' 'vegetable' %}" class="category-item">
+    野菜 <i class="bi bi-chevron-right"></i>
+  </a>
+
+  <a href="{% url 'user_category' 'fruit' %}" class="category-item">
+    果物 <i class="bi bi-chevron-right"></i>
+  </a>
+
+  <a href="{% url 'user_category' 'meat' %}" class="category-item">
+    肉 <i class="bi bi-chevron-right"></i>
+  </a>
+
+  <a href="{% url 'user_category' 'dairy' %}" class="category-item">
+    乳製品 <i class="bi bi-chevron-right"></i>
+  </a>
+
+  <a href="{% url 'user_category' 'meal' %}" class="category-item">
+    主食 <i class="bi bi-chevron-right"></i>
+  </a>
+
+  <a href="{% url 'user_category' 'side' %}" class="category-item">
+    惣菜 <i class="bi bi-chevron-right"></i>
+  </a>
+
+  <a href="{% url 'user_category' 'snack' %}" class="category-item">
+    お菓子 <i class="bi bi-chevron-right"></i>
+  </a>
+
+  <a href="{% url 'user_category' 'other' %}" class="category-item">
+    その他 <i class="bi bi-chevron-right"></i>
+  </a>
+
+</div>
+
+{% endblock %}
