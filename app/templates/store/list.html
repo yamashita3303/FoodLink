@@ -1,7 +1,254 @@
-<!-- templates/cart.html -->
 {% extends "store/base.html" %}
-{% block title %}ストアリスト | FoodLink{% endblock %}
+{% load static %}
+ 
+{% block title %}ホーム | FoodLink{% endblock %}
+ 
 {% block content %}
-  <h2>ストアリスト</h2>
-  <p>あああ</p>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+ 
+  <style>
+    body {
+      background-color: #fff;
+      padding-bottom: 70px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+ 
+    .item-card {
+      width: 100%;
+      border: 2px solid #d0d0d0;
+      border-radius: 30px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+      margin-bottom: 20px;
+    }
+ 
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+ 
+    .item-image {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      border: 2px solid #ccc;
+      border-radius: 15px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+ 
+    .item-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+ 
+    .price-tag {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+ 
+    .item-info h5 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+ 
+    .item-info p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+ 
+    .item-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+ 
+    .edit-btn {
+      background: #e3f8f9;
+      border: 1px solid #9ed1d4;
+      padding: 7px 35px;
+      border-radius: 20px;
+      font-size: 14px;
+      text-decoration: none;
+      color: #000;
+    }
+ 
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #dc3545;
+      font-size: 22px;
+      cursor: pointer;
+    }
+ 
+    /* ＋ボタン */
+    .fab {
+      position: fixed;
+      bottom: 80px;
+      right: 25px;
+      width: 60px;
+      height: 60px;
+      background-color: #FFD54F;
+      border-radius: 50%;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1100;
+    }
+ 
+    .fab::before,
+    .fab::after {
+      content: '';
+      position: absolute;
+      background-color: white;
+      border-radius: 2px;
+    }
+ 
+    .fab::before {
+      width: 24px;
+      height: 4px;
+    }
+ 
+    .fab::after {
+      width: 4px;
+      height: 24px;
+    }
+ 
+    /* 下部ナビ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 65px;
+      background-color: #e9f4f7;
+      border-top: 1px solid #ccc;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+    }
+ 
+    .bottom-nav a {
+      color: #000;
+      text-decoration: none;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+ 
+    .bottom-nav a.active {
+      color: #46569b;
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+ 
+<body>
+ 
+<div class="container my-4">
+  <h2 class="mb-3">ようこそ、{{ store.username }} 様！</h2>
+  <p>現在登録されている商品一覧です。</p>
+ 
+  <a href="{% url 'store_registar' %}" class="btn btn-primary mb-4">
+    ＋ 新しい商品を登録する
+  </a>
+ 
+  {% for product in products %}
+  <div class="item-card">
+ 
+    <div class="item-left">
+      <div class="item-image">
+        {% if product.image1 %}
+          <img src="{{ product.image1.url }}">
+        {% else %}
+          <img src="{% static 'images/placeholder_store.png' %}">
+        {% endif %}
+        <div class="price-tag">¥{{ product.price|floatformat:0 }}</div>
+      </div>
+ 
+      <div class="item-info">
+        <h5>{{ product.name }}</h5>
+        <p>
+          {{ product.quantity }} 個 {{ product.price }} 円<br>
+          {{ product.origin }}<br>
+          消費期限 {{ product.expiration_date|date:"Y/m/d" }}
+        </p>
+      </div>
+    </div>
+
+ 
+      
+ 
+  </div>
+  {% empty %}
+  <div class="alert alert-info">登録された商品はありません。</div>
+  {% endfor %}
+</div>
+ 
+<a href="{% url 'store_registar' %}" class="fab"></a>
+ 
+<nav class="bottom-nav">
+  <a href="{% url 'store_home' %}" class="{% if 'store_home' in request.path %}active{% endif %}">
+    <i class="bi bi-house-fill"></i><span>ホーム</span>
+  </a>
+  <a href="{% url 'store_list' %}" class="{% if 'list' in request.path %}active{% endif %}">
+    <i class="bi bi-list"></i><span>出品一覧</span>
+  </a>
+  <a href="{% url 'store_alert' %}">
+    <i class="bi bi-bell"></i><span>通知</span>
+  </a>
+  <a href="{% url 'store_mypage' %}">
+    <i class="bi bi-person-fill"></i><span>マイページ</span>
+  </a>
+</nav>
+ 
+<h2 class="text-center my-4">出品一覧</h2>
+ 
+<div class="container">
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                {% if product.image1 %}
+                <img src="{{ product.image1.url }}" class="card-img-top" alt="{{ product.name }}">
+                {% else %}
+                <img src="{% static 'store/no_image.png' %}" class="card-img-top" alt="no image">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">¥{{ product.price }}</p>
+                    {% if product.store %}
+                    <p class="card-text"><small class="text-muted">{{ product.store.username }}</small></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>出品中の商品はありません。</p>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}
+ 

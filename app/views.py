@@ -873,11 +873,27 @@ def store_signin(request):
     form = StoreSigninForm()
     return render(request, 'store/signin.html', {'form': form, 'next': next_url})
 
+@login_required(login_url='store_signin')
 def store_home(request):
-    return render(request, 'store/home.html')
+    # 1. ログイン中のユーザー（店舗アカウント）を取得
+    store = request.user
+   
+    # 2. その店舗が登録した商品のみをデータベースから取得
+    #    新しいもの順に並べ替えることが多いです
+    products = Product.objects.filter(store=store.id).order_by('-created_at')
+   
+    # 3. テンプレートにデータを渡す
+    context = {
+        'store': store,    # 店舗情報（ヘッダーなどに使う可能性）
+        'products': products # 登録商品の一覧
+    }
+   
+    return render(request, 'store/home.html', context)
 
+@login_required(login_url='store_signin')
 def store_list(request):
-    return render(request, 'store/list.html')
+    products = Product.objects.all()
+    return render(request, 'store/list.html', {'products': products})
 
 @login_required(login_url='store_signin')
 def store_mypage(request):
@@ -1049,22 +1065,26 @@ def store_registar(request):
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
         images = request.FILES.getlist("images")  # HTMLのmultiple inputから取得
-
+ 
+        # 画像を image1～5 に順番にセット
+        for i in range(min(5, len(images))):
+            setattr(form.instance, f'image{i+1}', images[i])
+ 
         if form.is_valid():
             product = form.save(commit=False)
             product.store = request.user
-
-            # images を image1～5 に順番にセット
-            for i in range(min(5, len(images))):
-                setattr(product, f'image{i+1}', images[i])
-
             product.save()
+            print("フォーム成功:", product)
             return JsonResponse({"success": True})
         else:
+            # ここでフォームエラーを確認
+            print("フォームエラー:", form.errors)
+            print("POSTデータ:", request.POST)
+            print("FILESデータ:", request.FILES)
             return JsonResponse({"success": False, "errors": form.errors}, status=400)
     else:
         form = ProductForm()
-
+ 
     return render(request, "store/registar.html", {"form": form})
 
 from PIL import Image

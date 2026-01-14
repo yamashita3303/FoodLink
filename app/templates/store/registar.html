@@ -1,18 +1,27 @@
 {% extends "store/base.html" %}
 {% load static %}
-
+ 
 {% block title %}商品登録 | FoodLink{% endblock %}
-
+ 
 {% block content %}
 <style>
-  .form-container {
+/* ---------------------------------------------------------------------- */
+/* 既存のフォームCSS（変更なし） */
+/* ---------------------------------------------------------------------- */
+/* 既存のフォームCSSの form-container 部分を修正 */
+.form-container {
     max-width: 420px;
     margin: 30px auto;
+    /* 修正: paddingを維持しつつ、背景、角丸、影を削除 */
     padding: 30px;
-    background-color: #fff;
-  }
-
-  .upload-btn {
+    /* 削除: background-color: #fff; */
+    background-color: transparent; /* 背景を透明に */
+    /* 削除: border-radius: 12px; */
+    border-radius: 0;
+    /* 削除: box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+    box-shadow: none;
+}
+.upload-btn {
     display: block;
     background-color: #f6f6f6;
     border: 1px solid #ccc;
@@ -26,67 +35,58 @@
     width: 100%;
     max-width: 360px;
     transition: all 0.2s ease;
-  }
-
-  .upload-btn:hover {
+    font-weight: bold;
+}
+.upload-btn:hover {
     background-color: #f0f0f0;
     border-color: #999;
-  }
-
-  input[type="file"] {
-    display: none;
-  }
-
-  .preview-container {
+}
+input[type="file"] { display: none; }
+.preview-container {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
     margin-bottom: 20px;
-  }
-
-  .preview-item {
+}
+.preview-item {
     position: relative;
     width: 100px;
     height: 100px;
     border-radius: 10px;
     overflow: hidden;
     border: 1px solid #ccc;
-  }
-
-  .preview-item img {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.preview-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-
-  .remove-btn {
+}
+.remove-btn {
     position: absolute;
     top: 4px;
     right: 4px;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: #e74c3c;
     color: white;
     border: none;
     border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
     padding: 0;
-  }
-
-  label {
-    font-size: 14px;
-    color: #333;
-    display: block;
-    margin-bottom: 4px;
-  }
-
-  .form-control {
+    transition: background-color 0.2s;
+}
+.remove-btn:hover {
+    background-color: #c0392b;
+}
+label { font-size: 14px; color: #333; display: block; margin-bottom: 4px; font-weight: 500;}
+.form-control {
     border: 2px solid #ccc;
     border-radius: 12px;
     padding: 10px;
@@ -95,34 +95,25 @@
     font-size: 16px;
     margin-bottom: 15px;
     background-color: #fff;
-  }
-
-  select.form-control {
+}
+select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 16px 16px;
-  }
-
-  .form-control:focus,
-  select.form-control:focus {
-    border-color: #f7c600;
-    outline: none;
-  }
-
-  .form-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .form-row .form-control {
-    flex: 1;
-  }
-
-  .submit-btn {
+    cursor: pointer;
+}
+.form-control:focus,
+select.form-control:focus { border-color: #f7c600; outline: none; box-shadow: 0 0 0 3px rgba(247, 198, 0, 0.2); }
+.form-row { display: flex; justify-content: space-between; gap: 10px; }
+.form-row > div { flex: 1; }
+.submit-btn {
     width: 100%;
     background-color: #BAE8E8;
+    color: #333;
     border: none;
     border-radius: 30px;
     padding: 12px;
@@ -131,132 +122,175 @@
     cursor: pointer;
     transition: 0.3s;
     margin-top: 10px;
-  }
-
-  .submit-btn:hover {
-    background-color: #a9dcdc;
-  }
-
-  textarea {
-    resize: none;
-  }
+}
+.submit-btn:hover { background-color: #a9dcdc; }
+textarea { resize: vertical; min-height: 100px;}
+ 
+/* カレンダーアイコンのCSS（画像再現用） */
+.date-input-wrapper {
+    position: relative;
+}
+.calendar-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 18px;
+    color: #555;
+}
+/* `select.form-control`でドロップダウンのアイコンが定義されているため、
+ここでは通常のテキスト入力フィールドのスタイル調整のみを行います。 */
+ 
+/* ---------------------------------------------------------------------- */
 </style>
-
+ 
 <div class="form-container">
-  <form id="product-form" method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <label for="id_image" class="upload-btn">
-      📷 写真アップロード
-    </label>
-    <input type="file" id="id_image" name="images" accept="image/*" multiple>
-
-    <div class="preview-container" id="preview"></div>
-
-    <!-- 商品名 -->
-    <label for="{{ form.name.id_for_label }}">商品名</label>
-    {{ form.name }}
-
-    <div class="form-row">
-      <div style="flex: 1;">
-        <label for="{{ form.price.id_for_label }}">価格(円)</label>
-        {{ form.price }}
-      </div>
-      <div style="flex: 1;">
-        <label for="{{ form.expiration_date.id_for_label }}">消費期限</label>
-        {{ form.expiration_date }}
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div style="flex: 1;">
+    <form id="product-form" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+ 
+        <label for="id_image" class="upload-btn">📷 写真アップロード</label>
+        <input type="file" id="id_image" accept="image/*" multiple>
+        <div class="preview-container" id="preview"></div>
+ 
+        <label for="{{ form.name.id_for_label }}">商品名</label>
+        <input type="text" id="{{ form.name.id_for_label }}" name="{{ form.name.name }}" class="form-control" value="{{ form.name.value|default:'' }}" placeholder="">
+ 
+        <div class="form-row">
+            <div>
+                <label for="{{ form.price.id_for_label }}">価格(円)</label>
+                <input type="number" id="{{ form.price.id_for_label }}" name="{{ form.price.name }}" class="form-control" value="{{ form.price.value|default:'0' }}" placeholder="">
+            </div>
+            <div>
+                <label for="{{ form.expiration_date.id_for_label }}">消費期限</label>
+               
+                <div class="date-input-wrapper">
+                    <input type="date" id="{{ form.expiration_date.id_for_label }}" name="{{ form.expiration_date.name }}" class="form-control" value="{{ form.expiration_date.value|default:'' }}">
+                    <span class="calendar-icon">📅</span>
+                </div>
+                </div>
+        </div>
+ 
+        <div class="form-row">
+    <div>
         <label for="{{ form.quantity.id_for_label }}">数量</label>
-        {{ form.quantity }}
-      </div>
-      <div style="flex: 1;">
-        <label for="{{ form.category.id_for_label }}">カテゴリー</label>
-        {{ form.category }}
-      </div>
+        <input type="number" id="{{ form.quantity.id_for_label }}" name="{{ form.quantity.name }}" class="form-control" value="{{ form.quantity.value|default:'' }}" placeholder="">
     </div>
-    
-    <label for="{{ form.origin.id_for_label }}">産地</label>
-    {{ form.origin }}
-
-    <label for="{{ form.notes.id_for_label }}">備考</label>
-    {{ form.notes }}
-
-    <button type="submit" class="submit-btn">登録</button>
-  </form>
+    <div>
+        <label for="{{ form.category.id_for_label }}">カテゴリー</label>
+       
+        <select id="{{ form.category.id_for_label }}" name="{{ form.category.name }}" class="form-control">
+            {% for value, text in form.category.field.choices %}
+                <option value="{{ value }}"{% if value == form.category.value %} selected{% endif %}>{{ text }}</option>
+            {% endfor %}
+        </select>
+       
+    </div>
 </div>
-
-<a href="javascript:history.back()" 
-   style="position: fixed; top: 15px; left: 15px; color: #000; font-size: 24px; text-decoration: none; z-index: 1200;">
-   <i class="bi bi-arrow-left"></i>
+       
+        <label for="{{ form.origin.id_for_label }}">産地</label>
+        <input type="text" id="{{ form.origin.id_for_label }}" name="{{ form.origin.name }}" class="form-control" value="{{ form.origin.value|default:'' }}" placeholder="">
+ 
+        <label for="{{ form.notes.id_for_label }}">備考欄</label>
+        <textarea id="{{ form.notes.id_for_label }}" name="{{ form.notes.name }}" class="form-control" placeholder="">{{ form.notes.value|default:'' }}</textarea>
+ 
+        <button type="submit" class="submit-btn">登録</button>
+    </form>
+</div>
+ 
+<a href="javascript:history.back()" style="position: fixed; top: 15px; left: 15px; color: #000; font-size: 24px; text-decoration: none; z-index: 1200;">
+    <i class="bi bi-arrow-left"></i>
 </a>
-
+ 
 <script>
-  const fileInput = document.getElementById('id_image');
-  const previewContainer = document.getElementById('preview');
-  const form = document.getElementById('product-form');
-  let filesArray = [];
-
-  fileInput.addEventListener('change', (event) => {
+const fileInput = document.getElementById('id_image');
+const previewContainer = document.getElementById('preview');
+const form = document.getElementById('product-form');
+let filesArray = [];
+ 
+// 画像プレビュー
+fileInput.addEventListener('change', (event) => {
     const newFiles = Array.from(event.target.files);
     if (filesArray.length + newFiles.length > 5) {
-      alert('アップロードできるのは最大5枚までです。');
-      return;
+        alert('最大5枚までアップロード可能です。');
+        event.target.value = null;
+        return;
     }
-    newFiles.forEach((file) => {
-      filesArray.push(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const item = document.createElement('div');
-        item.classList.add('preview-item');
-        item.innerHTML = `
-          <img src="${e.target.result}" alt="preview">
-          <button type="button" class="remove-btn">&times;</button>
-        `;
-        previewContainer.appendChild(item);
-
-        item.querySelector('.remove-btn').addEventListener('click', () => {
-          const index = Array.from(previewContainer.children).indexOf(item);
-          filesArray.splice(index, 1);
-          item.remove();
-          updateFileInput();
-        });
-      };
-      reader.readAsDataURL(file);
+    newFiles.forEach(file => {
+        filesArray.push(file);
+        const reader = new FileReader();
+        reader.onload = e => {
+            const item = document.createElement('div');
+            item.classList.add('preview-item');
+            item.innerHTML = `<img src="${e.target.result}" alt="preview"><button type="button" class="remove-btn">&times;</button>`;
+            previewContainer.appendChild(item);
+ 
+            item.querySelector('.remove-btn').addEventListener('click', () => {
+                const index = Array.from(previewContainer.children).indexOf(item);
+                filesArray.splice(index, 1);
+                item.remove();
+            });
+        };
+        reader.readAsDataURL(file);
     });
-    updateFileInput();
-  });
-
-  function updateFileInput() {
-    const dataTransfer = new DataTransfer();
-    filesArray.forEach((f) => dataTransfer.items.add(f));
-    fileInput.files = dataTransfer.files;
-  }
-
-  form.addEventListener('submit', (e) => {
+    event.target.value = null;
+});
+ 
+// CSRFトークン取得
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+ 
+// フォーム送信
+form.addEventListener('submit', e => {
     e.preventDefault();
-    const formData = new FormData(form);
-
+    const formData = new FormData();
+ 
+    // 登録ボタンを無効化
+    const submitBtn = e.target.querySelector('.submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '登録中...';
+ 
+    // テキスト・数値フィールド追加
+    new FormData(form).forEach((value, key) => formData.append(key, value));
+ 
+    // 画像を image1〜5 に割り当て
+    filesArray.forEach((file, index) => formData.append(`image${index+1}`, file, file.name));
+ 
     fetch("", {
-      method: "POST",
-      body: formData,
+        method: "POST",
+        headers: { "X-CSRFToken": getCSRFToken() },
+        body: formData
     })
-    .then(response => {
-      if (response.ok) {
-        alert("商品を登録しました！");
-        form.reset();
-        previewContainer.innerHTML = "";
-        filesArray = [];
-      } else {
-        alert("登録に失敗しました。");
-      }
+    .then(res => {
+        if (res.ok && res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {
+            return res.json();
+        }
+        return res.json().catch(() => ({ success: false, errors: { detail: `サーバーエラー: ${res.status}` } }));
     })
-    .catch(() => alert("通信エラーが発生しました。"));
-
-    
-  });
+    .then(data => {
+        if(data.success){
+            alert("商品を登録しました！");
+            form.reset();
+            previewContainer.innerHTML = "";
+            filesArray = [];
+        } else {
+            let errorMsg = "登録に失敗しました。\n\n";
+            if (data.errors) {
+                for (const [field, messages] of Object.entries(data.errors)) {
+                    errorMsg += `${field}: ${messages.join(' ')}\n`;
+                }
+            } else if (data.detail) {
+                errorMsg += data.detail;
+            }
+            alert(errorMsg);
+        }
+    })
+    .catch(() => alert("通信エラーが発生しました。"))
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '登録';
+    });
+});
 </script>
 {% endblock %}
