@@ -1000,43 +1000,61 @@ def store_edit_hours(request):
 
 @login_required(login_url='store_signin')
 def store_alert(request):
-    # ログインしているユーザーが店舗の場合の通知
-    notifications = Notification.objects.filter(store=request.user).order_by('-created_at')
+    tab = request.GET.get('tab', 'new')
+
+    # 🆕 新着商品（在庫あり）
+    products = Product.objects.filter(
+        store=request.user,
+        quantity__gt=0
+    ).order_by('-created_at')
+
+    # ✅ 購入済み通知（購入された商品）
+    notifications = Notification.objects.filter(
+        store=request.user,
+        recipient_type="store",
+        type="order",
+        product__isnull=False,
+        order__isnull=False,
+    ).select_related(
+        "product", "order"
+    ).order_by("-created_at")
 
     return render(request, "store/alert.html", {
-        "notifications": notifications
+        "products": products,
+        "notifications": notifications,
+        "tab": tab,
     })
 
-@login_required
+@login_required(login_url='store_signin')
 def prepare_product(request, notification_id):
-    notification = get_object_or_404(Notification, notification_id=notification_id)
-
-    # 店舗本人以外アクセス禁止
-    if notification.store != request.user:
-        return HttpResponse("権限がありません", status=403)
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        store=request.user
+    )
 
     if request.method == "POST":
         locker = request.POST.get("locker")
         pin = request.POST.get("pin")
 
-        # --- 購入者に通知を送る ---
+        # 📨 購入者へ「準備完了」通知
         Notification.objects.create(
             type="ready",
-            message = (
-                f"ご注文の「{notification.product}」の準備が完了しました。\n"
+            message=(
+                f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
                 f"受け取りロッカー番号：{locker}\n"
                 f"暗証番号：{pin}\n"
                 f"ご来店の上、お受け取りください。"
             ),
             recipient_type="user",
-            user=notification.order.user,  # ← 購入者
+            user=notification.order.user,
             store=notification.store,
             product=notification.product,
             order=notification.order,
         )
 
-        # --- 店舗側の通知を既読 or 更新 ---
-        # notification.read = True
+        # ✅ 店舗側の購入通知を既読（＝対応済み）
+        notification.read = True
         notification.save()
 
         # ---- 購入者へメール送信 ----
