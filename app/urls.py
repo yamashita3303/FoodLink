@@ -47,4 +47,7 @@ urlpatterns = [
     # path('product_create/', views.product_create, name='product_create'),
     path('product/<int:product_id>/ocr/', views.product_ocr, name='product_ocr'),
 
+    path('read_qr_code/', views.read_qr_code, name='read_qr_code'),
+    path("qr/read/", views.read_qr_code, name="qr_read"),
+    path("qr/result/", views.qr_result, name="qr_result"),
 ]

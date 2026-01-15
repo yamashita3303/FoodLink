@@ -889,7 +889,7 @@ def store_home(request):
     }
    
     return render(request, 'store/home.html', context)
- 
+
 @login_required(login_url='store_signin')
 def store_list(request):
     products = Product.objects.all()
@@ -997,72 +997,45 @@ def store_edit_hours(request):
         'current_value': f"{store.opening_time} - {store.closing_time}"
     })
 
-from .models import Notification, Product
-
-from django.contrib.auth.decorators import login_required
-from .models import Product, OrderItem
-@login_required(login_url='store_signin')
 @login_required(login_url='store_signin')
 def store_alert(request):
-    tab = request.GET.get('tab', 'new')
-
-    # 🆕 新着商品（在庫あり）
-    products = Product.objects.filter(
-        store=request.user,
-        quantity__gt=0
-    ).order_by('-created_at')
-
-    # ✅ 購入済み通知（購入された商品）
-    notifications = Notification.objects.filter(
-        store=request.user,
-        recipient_type="store",
-        type="order",
-        product__isnull=False,
-        order__isnull=False,
-    ).select_related(
-        "product", "order"
-    ).order_by("-created_at")
-
+    # ログインしているユーザーが店舗の場合の通知
+    notifications = Notification.objects.filter(store=request.user).order_by('-created_at')
 
     return render(request, "store/alert.html", {
-        "products": products,
-        "notifications": notifications,
-        "tab": tab,
+        "notifications": notifications
     })
 
-
-
-
-@login_required(login_url='store_signin')
+@login_required
 def prepare_product(request, notification_id):
-    notification = get_object_or_404(
-        Notification,
-        notification_id=notification_id,
-        store=request.user
-    )
+    notification = get_object_or_404(Notification, notification_id=notification_id)
+
+    # 店舗本人以外アクセス禁止
+    if notification.store != request.user:
+        return HttpResponse("権限がありません", status=403)
 
     if request.method == "POST":
         locker = request.POST.get("locker")
         pin = request.POST.get("pin")
 
-        # 📨 購入者へ「準備完了」通知
+        # --- 購入者に通知を送る ---
         Notification.objects.create(
             type="ready",
-            message=(
-                f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
+            message = (
+                f"ご注文の「{notification.product}」の準備が完了しました。\n"
                 f"受け取りロッカー番号：{locker}\n"
                 f"暗証番号：{pin}\n"
                 f"ご来店の上、お受け取りください。"
             ),
             recipient_type="user",
-            user=notification.order.user,
+            user=notification.order.user,  # ← 購入者
             store=notification.store,
             product=notification.product,
             order=notification.order,
         )
 
-        # ✅ 店舗側の購入通知を既読（＝対応済み）
-        notification.read = True
+        # --- 店舗側の通知を既読 or 更新 ---
+        # notification.read = True
         notification.save()
 
         # ---- 購入者へメール送信 ----
@@ -1087,29 +1060,31 @@ def prepare_product(request, notification_id):
         "notification": notification
     })
 
-
-
 @login_required(login_url='store_signin')
 def store_registar(request):
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
         images = request.FILES.getlist("images")  # HTMLのmultiple inputから取得
-
+ 
+        # 画像を image1～5 に順番にセット
+        for i in range(min(5, len(images))):
+            setattr(form.instance, f'image{i+1}', images[i])
+ 
         if form.is_valid():
             product = form.save(commit=False)
             product.store = request.user
-
-            # images を image1～5 に順番にセット
-            for i in range(min(5, len(images))):
-                setattr(product, f'image{i+1}', images[i])
-
             product.save()
+            print("フォーム成功:", product)
             return JsonResponse({"success": True})
         else:
+            # ここでフォームエラーを確認
+            print("フォームエラー:", form.errors)
+            print("POSTデータ:", request.POST)
+            print("FILESデータ:", request.FILES)
             return JsonResponse({"success": False, "errors": form.errors}, status=400)
     else:
         form = ProductForm()
-
+ 
     return render(request, "store/registar.html", {"form": form})
 
 from PIL import Image
@@ -1142,3 +1117,15 @@ def product_ocr(request, product_id):
     print(extracted_text)
 
     return HttpResponse("OCR 完了！コンソールを確認してください")
+
+def read_qr_code(request):
+    return render(request, 'read_qr_code.html')
+
+def qr_result(request):
+    code_type = request.GET.get("type")
+    code_data = request.GET.get("data")
+
+    return render(request, "qr_result.html", {
+        "code_type": code_type,
+        "code_data": code_data,
+    })

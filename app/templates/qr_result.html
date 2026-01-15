@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>スキャン結果</title>
+    <style>
+        body {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            font-family: sans-serif;
+        }
+        .box {
+            background: #e9f7ef;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>スキャン結果</h1>
+
+<div class="box">
+    <p><strong>コード種別：</strong>{{ code_type }}</p>
+    <p><strong>データ：</strong>{{ code_data }}</p>
+</div>
+
+<br>
+<a href="{% url 'qr_read' %}">もう一度スキャン</a>
+
+</body>
+</html>

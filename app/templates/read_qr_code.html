@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>QR・バーコードスキャナー</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f9f9f9;
+            font-family: sans-serif;
+        }
+        #reader {
+            max-width: 600px;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+<h1>QR / バーコード スキャナー</h1>
+
+<div id="reader"></div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    const html5QrCode = new Html5Qrcode("reader");
+    let scanned = false;
+
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 1, qrbox: 250 },
+        (decodedText, decodedResult) => {
+            if (scanned) return;
+            scanned = true;
+
+            const type = decodedResult.result.format.formatName;
+
+            // ★ 次のページへ遷移
+            window.location.href =
+                `/qr/result/?type=${encodeURIComponent(type)}&data=${encodeURIComponent(decodedText)}`;
+        }
+    );
+</script>
+</body>
+</html>
