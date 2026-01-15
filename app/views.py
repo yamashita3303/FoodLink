@@ -21,7 +21,8 @@ from .models import (
     CartItem, 
     Order, 
     OrderItem,
-    Notification
+    Notification,
+    Qr
 )
 from .forms import (
     UserSignupStep1Form, 
@@ -1129,3 +1130,31 @@ def qr_result(request):
         "code_type": code_type,
         "code_data": code_data,
     })
+
+
+def qr_verify(request):
+    if request.method != "POST":
+        return redirect("qr_read")
+
+    code_type = request.POST.get("code_type")
+    code_data = request.POST.get("code_data")
+    pin = request.POST.get("pin")
+
+    # ===== バリデーション =====
+    if not pin or not pin.isdigit():
+        messages.error(request, "暗証番号は数字で入力してください")
+        return redirect(
+            f"/qr/result/?type={code_type}&data={code_data}"
+        )
+
+    pin = int(pin)
+
+    # ===== DB保存 =====
+    Qr.objects.create(
+        code_data=code_data,
+        pin=pin
+    )
+
+    messages.success(request, "スキャン情報を保存しました")
+
+    return redirect("qr_read")
