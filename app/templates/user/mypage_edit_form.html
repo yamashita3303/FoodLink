@@ -1,49 +1,216 @@
 {% extends "user/base.html" %}
+{% load widget_tweaks %}
 {% block title %}{{ title }} | FoodLink{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>{{ title }}</h2>
 
-  <!-- 現在の値 -->
-  <p>現在の値: <strong>{{ current_value }}</strong></p>
+<style>
+  body {
+    background: #f5f5f7;
+  }
 
+  /* カード風の白いコンテナ */
+  .app-edit-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 1.2rem 1.4rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 1.2rem;
+  }
+
+  /* ラベル */
+  .app-label {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  /* 入力欄（丸み＆淡いボーダー） */
+  .app-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid #d9d9e0;
+    background: #fafafa;
+    font-size: 1rem;
+  }
+  .app-input:focus {
+    background: #fff;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, .15);
+    outline: none;
+  }
+
+  /* 現在の値表示 */
+  .current-value-box {
+    background: #fafafa;
+    border: 1px solid #e5e5ea;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 1.05rem;
+  }
+
+  /* 更新ボタン */
+  .app-btn-primary {
+      background: #6c757d;   /* Bootstrap の btn-secondary と同じグレー */
+      border: none;
+      color: #fff;
+      width: 100%;
+      padding: 0.65rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+  }
+
+  .app-btn-primary:active {
+    background: #5a6268;  /* 押した時に少し濃いグレー */
+}
+
+
+  /* 戻るボタン */
+  .app-btn-secondary {
+    width: 100%;
+    padding: 13px;
+    margin-top: 10px;
+    border-radius: 14px;
+    font-size: 1rem;
+    background: #fafafa;
+    border: 1px solid #d9d9e0;
+  }
+
+  /* 電話番号 3つの入力を横並び */
+.phone-flex {
+  display: flex;
+  gap: 8px;
+}
+.phone-flex .app-input {
+  flex: 1;
+  text-align: center;
+}
+
+
+  /* 郵便番号 → 住所検索ボタン（iOS設定画面風） */
+  .postal-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 11px 0;
+    border-radius: 12px;
+    border: 1px solid #0d6efd;
+    background: #eff5ff;
+    color: #0d6efd;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+</style>
+
+
+<div class="container mt-3 mb-5" style="max-width: 550px;">
+
+  <h4 class="fw-bold mb-3">{{ title }}</h4>
+
+  <!-- ▼現在の値 -->
+  <div class="app-edit-card">
+    <div class="app-label">現在の値</div>
+    <div class="current-value-box">
+      <strong>{{ current_value }}</strong>
+    </div>
+  </div>
+
+
+  <!-- ▼フォーム -->
   <form method="post">
     {% csrf_token %}
 
-    {% for field in form %}
-      <div class="mb-3">
-        {{ field.label_tag }} (更新後)
-        {{ field }}
-        {% if field.errors %}
-          <div class="text-danger mt-1">
-            {% for error in field.errors %}{{ error }}<br>{% endfor %}
-          </div>
-        {% endif %}
-      </div>
-    {% endfor %}
+    <div class="app-edit-card">
+      {% for field in form %}
 
-    <button type="submit" class="btn btn-primary">更新</button>
-    <a href="{% url 'user_edit_menu' %}" class="btn btn-secondary ms-2">戻る</a>
+        {# ★ tel1 のときだけ特別処理（横並び） ★ #}
+{# tel1用の特別処理 #}
+{% if field.name == "tel1" %}
+  <div class="mb-4">
+    <div class="app-label">電話番号（更新後）</div>
+    <div class="phone-flex">
+      {{ form.tel1|add_class:"app-input" }}
+      {{ form.tel2|add_class:"app-input" }}
+      {{ form.tel3|add_class:"app-input" }}
+    </div>
+
+    {% if form.tel1.errors or form.tel2.errors or form.tel3.errors %}
+      <div class="text-danger small mt-1">
+        {% for e in form.tel1.errors %}{{ e }}<br>{% endfor %}
+        {% for e in form.tel2.errors %}{{ e }}<br>{% endfor %}
+        {% for e in form.tel3.errors %}{{ e }}<br>{% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+
+{# tel2 と tel3 は無視 #}
+{% if field.name != "tel1" and field.name != "tel2" and field.name != "tel3" %}
+  <div class="mb-4">
+    <div class="app-label">{{ field.label }}（更新後）</div>
+    {{ field|add_class:"app-input" }}
+
+    {% if field.errors %}
+      <div class="text-danger small mt-1">
+        {% for error in field.errors %}
+          {{ error }}<br>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if field.name == "postal_code" %}
+      <button type="button" id="search_address" class="postal-btn">
+        郵便番号から住所検索
+      </button>
+    {% endif %}
+  </div>
+{% endif %}
+
+
+      {% endfor %}
+
+
+    </div>
+
+    <button type="submit" class="app-btn-primary">更新</button>
+    <a href="{% url 'user_edit_menu' %}" class="app-btn-secondary text-center d-block">
+      戻る
+    </a>
+
   </form>
 </div>
 
+
 {% if form.fields.postal_code %}
 <script>
-document.getElementById('id_postal_code').insertAdjacentHTML('afterend', '<button type="button" id="search_address">住所検索</button>');
-document.getElementById('search_address').addEventListener('click', async () => {
-    const postalCode = document.getElementById('id_postal_code').value.replace('-', '');
-    if(!postalCode) return alert("郵便番号を入力してください");
-    const url = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`;
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if(data.status === 200 && data.results) {
-            const r = data.results[0];
-            document.getElementById('id_prefecture').value = r.address1;
-            document.getElementById('id_city').value = r.address2;
-            document.getElementById('id_address_line1').value = r.address3;
-        } else alert("住所が見つかりません");
-    } catch(e) { alert("住所検索に失敗しました"); }
+document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById('search_address');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        const postalCode = document.getElementById('id_postal_code').value.replace('-', '');
+        if (!postalCode) return alert("郵便番号を入力してください");
+
+        const url = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.status === 200 && data.results) {
+                const r = data.results[0];
+                document.getElementById('id_prefecture').value = r.address1;
+                document.getElementById('id_city').value = r.address2;
+                document.getElementById('id_address_line1').value = r.address3;
+            } else {
+                alert("住所が見つかりません");
+            }
+        } catch {
+            alert("住所検索に失敗しました");
+        }
+    });
 });
 </script>
 {% endif %}

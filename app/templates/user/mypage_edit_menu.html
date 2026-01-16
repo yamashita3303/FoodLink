@@ -1,15 +1,197 @@
 {% extends "user/base.html" %}
 {% block title %}プロフィール編集 | FoodLink{% endblock %}
 {% block content %}
-<div class="container">
-  <h2>編集したい項目を選んでください</h2>
-  <ul class="list-group">
-    <li class="list-group-item"><a href="{% url 'user_edit_username' %}">ユーザ名を変更</a></li>
-    <li class="list-group-item"><a href="{% url 'user_edit_email' %}">メールアドレスを変更</a></li>
-    <li class="list-group-item"><a href="{% url 'user_edit_password' %}">パスワードを変更</a></li>
-    <li class="list-group-item"><a href="{% url 'user_edit_phone' %}">電話番号を変更</a></li>
-    <li class="list-group-item"><a href="{% url 'user_edit_address' %}">住所を変更</a></li>
-  </ul>
-  <p><a href="{% url 'user_mypage' %}">マイページに戻る</a></p>
+
+<style>
+  body {
+    background: #f5f5f7;
+  }
+
+  .app-card {
+    border-radius: 18px;
+    border: none;
+    padding: 0.6rem;
+  }
+
+  .app-list-group {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .app-list-item {
+    padding: 0.75rem 1rem;
+    font-size: 1.05rem;
+    border: none;
+    border-bottom: 1px solid #e8e8e8;
+    background-color: #fff;
+    transition: background-color 0.1s ease;
+  }
+
+  .app-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .app-list-item:hover {
+    background-color: #fff !important;
+  }
+
+  .app-list-item:active {
+    background-color: #e5e5ea !important;
+  }
+
+  .app-icon {
+    font-size: 1.15rem;
+    color: #5c5c5c;
+  }
+
+  .app-btn {
+    border-radius: 14px;
+    width: 100%;
+    padding: 0.65rem;
+    font-size: 1rem;
+  }
+
+  /* ▼ ここが今回の重要ポイント ▼ */
+
+  .item-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .item-center {
+    flex: 0;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    color: #666;
+    margin-right: 6px;
+    text-align: right;
+  }
+
+  .item-right {
+    flex: 0;
+    font-size: 1.2rem;
+    color: #999;
+  }
+
+</style>
+
+
+<div class="container mt-3 mb-4">
+
+  <div class="mb-3">
+    <h4 class="app-title fw-bold">プロフィール編集</h4>
+    <p class="text-muted small mb-1">編集したい項目を選択してください</p>
+  </div>
+
+  <div class="card app-card shadow-sm">
+    <ul class="list-group app-list-group">
+
+
+      <!-- ユーザー名 -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'user_edit_username' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-person app-icon me-2"></i>
+            ユーザ名を変更
+          </div>
+
+          <div class="item-center">
+            {{ user.username }}
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+
+      <!-- メールアドレス -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'user_edit_email' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-envelope app-icon me-2"></i>
+            メールアドレスを変更
+          </div>
+
+          <div class="item-center">
+            {{ user.email }}
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+
+      <!-- パスワード（伏せる） -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'user_edit_password' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-key app-icon me-2"></i>
+            パスワードを変更
+          </div>
+
+          <div class="item-center">
+            ●●●●●●
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+
+      <!-- 電話番号 -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'user_edit_phone' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-telephone app-icon me-2"></i>
+            電話番号を変更
+          </div>
+
+          <div class="item-center">
+            {{ user.phone }}
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+
+      <!-- 住所 -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'user_edit_address' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-geo-alt app-icon me-2"></i>
+            住所を変更
+          </div>
+
+          <div class="item-center">
+            {{ user.prefecture }} {{ user.city }}
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+    </ul>
+  </div>
+
+
+  <div class="mt-3">
+    <a href="{% url 'user_mypage' %}" class="btn btn-secondary app-btn">
+      <i class="bi bi-chevron-left me-1"></i> マイページに戻る
+    </a>
+  </div>
+
 </div>
+
 {% endblock %}

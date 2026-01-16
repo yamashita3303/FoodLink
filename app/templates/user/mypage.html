@@ -1,22 +1,136 @@
 {% extends "user/base.html" %}
 {% block title %}マイページ | FoodLink{% endblock %}
 {% block content %}
-  <div class="mypage-header">
-    <h2>マイページ</h2>
-    <p>ようこそ、{{ user.username }} さん！</p>
-    <p>登録メールアドレス: {{ user.email }}</p>
-    <p>登録電話番号: {{ user.phone }}</p>
-    <p>登録住所: {{ user.postal_code }} {{ user.prefecture }} {{ user.city }} {{ user.address_line1 }} {{ user.address_line2 }}</p>
 
-    <p>
-      <a href="{% url 'user_edit_menu' %}" class="btn btn-primary">編集する</a>
-    </p>
+<style>
+  body {
+    background: #f5f5f7;
+  }
 
-    <!-- サインアウトボタン -->
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" name="logout">ログアウト</button>
-    </form>
+  /* ==== ヘッダー ==== */
+  .back-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding-top: 0.3rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .back-header .back-btn-wrapper {
+    position: absolute;
+    left: 0;
+  }
+
+  .back-btn-icon {
+    font-size: 1.4rem;
+    color: #333;
+    padding: 0.4rem 0.6rem;
+    border-radius: 10px;
+  }
+
+  .back-btn-icon:active {
+    background-color: #e5e5ea;
+  }
+
+  /* ==== カードデザイン ==== */
+  .app-card {
+    border-radius: 18px;
+    border: none;
+    padding: 0.6rem;
+  }
+
+  .app-list-group {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .app-list-item {
+    padding: 0.75rem 1rem;
+    font-size: 1.05rem;
+    border-bottom: 1px solid #e8e8e8;
+    background-color: #fff;
+    transition: background-color 0.1s ease;
+  }
+
+  .app-list-item:last-child {
+    border-bottom: none;
+  }
+
+  /* hover 無し、active のみ */
+  .app-list-item:hover {
+    background-color: #fff !important;
+  }
+  .app-list-item:active {
+    background-color: #e5e5ea !important;
+  }
+
+  .app-icon {
+    font-size: 1.15rem;
+    color: #5c5c5c;
+  }
+
+  .logout-btn {
+    margin-top: 1.2rem;
+    width: 100%;
+    border-radius: 14px;
+    padding: 0.7rem;
+  }
+</style>
+
+
+<div class="container mt-3 mb-4">
+
+  <!-- ヘッダー（アプリの設定ページ風） -->
+  <div class="back-header">
+    <h4 class="app-title fw-bold text-center w-100">マイページ</h4>
+  </div>
+
+  <!-- ユーザー情報カード -->
+  <div class="card app-card shadow-sm mb-3">
+    <ul class="list-group app-list-group">
+      <li class="list-group-item app-list-item">
+        <i class="bi bi-person app-icon me-2"></i>
+        {{ user.username }}
+      </li>
+      <li class="list-group-item app-list-item">
+        <i class="bi bi-envelope app-icon me-2"></i>
+        {{ user.email }}
+      </li>
+      <li class="list-group-item app-list-item">
+        <i class="bi bi-telephone app-icon me-2"></i>
+        {{ user.phone }}
+      </li>
+      <li class="list-group-item app-list-item d-flex align-items-start">
+        <i class="bi bi-geo-alt app-icon me-2"></i>
+        <span>
+          {{ user.postal_code }}<br>
+          {{ user.prefecture }} {{ user.city }} {{ user.address_line1 }} {{ user.address_line2 }}
+        </span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 編集メニュー card -->
+  <div class="card app-card shadow-sm mb-3">
+    <ul class="list-group app-list-group">
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'user_edit_menu' %}" class="text-dark text-decoration-none d-flex align-items-center w-100">
+          <i class="bi bi-pencil-square app-icon me-2"></i>
+          プロフィールを編集する
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ログアウト -->
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" name="logout" class="btn btn-outline-danger logout-btn">
+      ログアウト
+    </button>
+  </form>
+
 </div>
 
 {% endblock %}
