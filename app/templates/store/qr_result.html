@@ -36,6 +36,8 @@
 <body>
 
 <h1>スキャン結果</h1>
+<p>商品：{{ notification.product.name }}</p>
+
 
 <div class="box">
     <p><strong>コード種別：</strong>{{ code_type }}</p>
@@ -50,7 +52,7 @@
     {% endfor %}
 {% endif %}
 
-<form method="post" action="{% url 'qr_verify' %}">
+<form method="post" action="{% url 'qr_verify' notification.notification_id %}">
     {% csrf_token %}
     <input type="hidden" name="code_type" value="{{ code_type }}">
     <input type="hidden" name="code_data" value="{{ code_data }}">

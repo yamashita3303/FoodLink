@@ -1025,59 +1025,6 @@ def store_alert(request):
         "tab": tab,
     })
 
-@login_required(login_url='store_signin')
-def prepare_product(request, notification_id):
-    notification = get_object_or_404(
-        Notification,
-        notification_id=notification_id,
-        store=request.user
-    )
-
-    if request.method == "POST":
-        locker = request.POST.get("locker")
-        pin = request.POST.get("pin")
-
-        # 📨 購入者へ「準備完了」通知
-        Notification.objects.create(
-            type="ready",
-            message=(
-                f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
-                f"受け取りロッカー番号：{locker}\n"
-                f"暗証番号：{pin}\n"
-                f"ご来店の上、お受け取りください。"
-            ),
-            recipient_type="user",
-            user=notification.order.user,
-            store=notification.store,
-            product=notification.product,
-            order=notification.order,
-        )
-
-        # ✅ 店舗側の購入通知を既読（＝対応済み）
-        notification.read = True
-        notification.save()
-
-        # ---- 購入者へメール送信 ----
-        # EmailMessage のインスタンスを作成する
-        # emailMessage = EmailMessage(
-        #     subject='【FoodLink】商品の準備が完了しました',
-        #     body=(
-        #         f"ご注文の「{notification.product}」の準備が完了しました。\n"
-        #         f"受け取りロッカー番号：{locker}\n"
-        #         f"暗証番号：{pin}\n"
-        #         f"ご来店の上、お受け取りください。"
-        #     ),
-        #     from_email='FoodLink <noreply@example.com>',  # ← ここで Gmail アドレスを隠す
-        #     to=[notification.order.user.email],
-        # )
-        # # send 関数を呼び出してメールを送信する
-        # emailMessage.send()
-
-        return redirect("store_alert")
-
-    return render(request, "store/prepare_form.html", {
-        "notification": notification
-    })
 
 @login_required(login_url='store_signin')
 def store_registar(request):
@@ -1137,20 +1084,38 @@ def product_ocr(request, product_id):
 
     return HttpResponse("OCR 完了！コンソールを確認してください")
 
-def read_qr_code(request):
-    return render(request, 'read_qr_code.html')
+def read_qr_code(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        store=request.user
+    )
+    return render(request, "store/read_qr_code.html", {
+            "notification": notification
+        })
 
-def qr_result(request):
+def qr_result(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        store=request.user
+    )
     code_type = request.GET.get("type")
     code_data = request.GET.get("data")
 
-    return render(request, "qr_result.html", {
+    return render(request, "store/qr_result.html", {
         "code_type": code_type,
         "code_data": code_data,
+        "notification": notification
     })
 
 
-def qr_verify(request):
+def qr_verify(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        store=request.user
+    )
     if request.method != "POST":
         return redirect("qr_read")
 
@@ -1172,7 +1137,42 @@ def qr_verify(request):
         code_data=code_data,
         pin=pin
     )
+    # 📨 購入者へ「準備完了」通知
+    Notification.objects.create(
+        type="ready",
+        message=(
+            f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
+            f"受け取りロッカー番号：{code_data}\n"
+            f"暗証番号：{pin}\n"
+            f"ご来店の上、お受け取りください。"
+        ),
+        recipient_type="user",
+        user=notification.order.user,
+        store=notification.store,
+        product=notification.product,
+        order=notification.order,
+    )
+
+    # ✅ 店舗側の購入通知を既読（＝対応済み）
+    notification.read = True
+    notification.save()
+
+    # ---- 購入者へメール送信 ----
+    # EmailMessage のインスタンスを作成する
+    # emailMessage = EmailMessage(
+    #     subject='【FoodLink】商品の準備が完了しました',
+    #     body=(
+    #         f"ご注文の「{notification.product}」の準備が完了しました。\n"
+    #         f"受け取りロッカー番号：{code_data}\n"
+    #         f"暗証番号：{pin}\n"
+    #         f"ご来店の上、お受け取りください。"
+    #     ),
+    #     from_email='FoodLink <noreply@example.com>',  # ← ここで Gmail アドレスを隠す
+    #     to=[notification.order.user.email],
+    # )
+    # # send 関数を呼び出してメールを送信する
+    # emailMessage.send()
 
     messages.success(request, "スキャン情報を保存しました")
 
-    return redirect("qr_read")
+    return redirect("store_alert")

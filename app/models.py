@@ -180,4 +180,4 @@ class Qr(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.code_data} ({self.pin})"
+        return f"{self.code_data} ({self.pin}) - {self.created_at:%Y-%m-%d %H:%M}"

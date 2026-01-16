@@ -40,14 +40,13 @@ urlpatterns = [
     path('store_mypage/edit/address/', views.store_edit_address, name='store_edit_address'),
     path('mypage/edit/hours/', views.store_edit_hours, name='store_edit_hours'),
     path('store_alert/', views.store_alert, name='store_alert'),
-    path('prepare/<int:notification_id>/', views.prepare_product, name='prepare_product'),
     path('store_registar/', views.store_registar, name='store_registar'),
 
     # 複数画像登録用
     # path('product_create/', views.product_create, name='product_create'),
     path('product/<int:product_id>/ocr/', views.product_ocr, name='product_ocr'),
 
-    path("qr/read/", views.read_qr_code, name="qr_read"),
-    path("qr/result/", views.qr_result, name="qr_result"),
-    path("qr/verify/", views.qr_verify, name="qr_verify"),
+    path("qr/read/<int:notification_id>/", views.read_qr_code, name="qr_read"),
+    path("qr/result/<int:notification_id>/", views.qr_result, name="qr_result"),
+    path("qr/verify/<int:notification_id>/", views.qr_verify, name="qr_verify"),
 ]

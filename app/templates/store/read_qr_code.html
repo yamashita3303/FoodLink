@@ -23,6 +23,8 @@
 
 <body>
 <h1>QR / バーコード スキャナー</h1>
+<p>商品：{{ notification.product.name }}</p>
+
 
 <div id="reader"></div>
 
@@ -31,6 +33,7 @@
 <script>
     const html5QrCode = new Html5Qrcode("reader");
     let scanned = false;
+    const NOTIFICATION_ID = "{{ notification.notification_id }}";
 
     html5QrCode.start(
         { facingMode: "environment" },
@@ -43,7 +46,7 @@
 
             // ★ 次のページへ遷移
             window.location.href =
-                `/qr/result/?type=${encodeURIComponent(type)}&data=${encodeURIComponent(decodedText)}`;
+                `/qr/result/${NOTIFICATION_ID}/?type=${encodeURIComponent(type)}&data=${encodeURIComponent(decodedText)}`;
         }
     );
 </script>
