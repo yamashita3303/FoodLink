@@ -1,46 +1,181 @@
 {% extends "user/base.html" %}
+{% load static %}
+
 {% block title %}注文履歴{% endblock %}
+
 {% block content %}
 
-<h2>注文履歴</h2>
+<style>
+  body {
+    background: #f5f5f7;
+  }
 
-{% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
+  .order-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
 
-{% if orders %}
-<ul>
-    {% for order in orders %}
-    <li>
-        <strong>{{ order.created_at|date:"Y/m/d H:i" }}</strong>：
-        合計: {{ order.total_price }}円
-        <ul>
-            {% for item in order.items.all %}
-            <li>
-                商品: {{ item.product.name }} × {{ item.quantity }}（小計: {{ item.subtotal }}円）
-                <br>
-                ステータス: {{ order.get_status_display }}
+  .order-date {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 8px;
+  }
 
-                {% if order.status == "pending" %}
-                <form action="{% url 'order_item_cancel' item.order_item_id %}" method="POST" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger btn-sm">キャンセル</button>
-                </form>
-                {% else %}
-                <span style="color:red;">キャンセル済み</span>
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-    </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p>注文履歴はありません。</p>
-{% endif %}
+  .order-total {
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .item-row {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+  }
+
+  .item-row:first-child {
+    border-top: none;
+  }
+
+  .item-row.canceled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .item-image img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  .item-info {
+    flex: 1;
+    font-size: 0.9rem;
+  }
+
+  .item-name {
+    font-weight: 600;
+  }
+
+  .item-sub {
+    color: #666;
+    font-size: 0.85rem;
+  }
+
+  .btn-cancel {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+
+  .canceled-label {
+    color: #999;
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+</style>
+
+<div class="container mt-3 mb-5" style="max-width: 700px;">
+  <h4 class="fw-bold mb-3">注文履歴</h4>
+
+  {% for order in orders %}
+    <div class="order-card">
+      <div class="order-date">
+        {{ order.created_at|date:"Y/m/d H:i" }}
+      </div>
+      <div class="order-total">
+        合計：{{ order.total_price }}円
+      </div>
+
+      {% for item in order.items.all %}
+        <div class="item-row {% if item.is_canceled %}canceled{% endif %}">
+          
+          <div class="item-image">
+            <a href="{% url 'user_food_detail' pk=item.product.product_id %}">
+              {% if item.product.image1 %}
+                <img src="{{ item.product.image1.url }}">
+              {% else %}
+                <img src="{% static 'images/no_image.png' %}">
+              {% endif %}
+            </a>
+          </div>
+
+          <div class="item-info">
+            <div class="item-name">{{ item.product.name }}</div>
+            <div class="item-sub">
+              数量：{{ item.quantity }} ／ 小計：{{ item.subtotal }}円
+            </div>
+            <div class="item-sub">
+
+            </div>
+
+            {% if order.status == "pending" and not item.is_canceled %}
+              <form
+                action="{% url 'order_item_cancel' item.order_item_id %}"
+                method="POST"
+                class="cancel-form"
+              >
+                {% csrf_token %}
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm btn-cancel"
+                  onclick="openCancelModal(this)"
+                >
+                  キャンセル
+                </button>
+              </form>
+            {% elif item.is_canceled %}
+              <div class="canceled-label">キャンセル済み</div>
+            {% endif %}
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+  {% empty %}
+    <p class="text-center text-muted">注文履歴はありません。</p>
+  {% endfor %}
+</div>
+
+<!-- ▼ キャンセル確認モーダル -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">キャンセル確認</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        この商品をキャンセルしますか？<br>
+        <small class="text-muted">※この操作は取り消せません</small>
+      </div>
+      <div class="modal-footer">
+
+        <button type="button" class="btn btn-danger" id="confirmCancelBtn">
+          キャンセルする
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let targetForm = null;
+
+  function openCancelModal(button) {
+    targetForm = button.closest("form");
+    const modal = new bootstrap.Modal(document.getElementById("cancelModal"));
+    modal.show();
+  }
+
+  document.getElementById("confirmCancelBtn").addEventListener("click", function () {
+    if (targetForm) {
+      targetForm.submit();
+    }
+  });
+</script>
 
 {% endblock %}

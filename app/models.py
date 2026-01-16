@@ -132,6 +132,8 @@ class OrderItem(models.Model):
     quantity = models.IntegerField()
     subtotal = models.IntegerField(blank=True, null=True)
 
+    is_canceled = models.BooleanField(default=False)  # ← 追加
+
     def save(self, *args, **kwargs):
         self.subtotal = self.product.price * self.quantity
         super().save(*args, **kwargs)

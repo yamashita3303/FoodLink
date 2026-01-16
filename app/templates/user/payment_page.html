@@ -1,24 +1,105 @@
-<form method="post" action="{% url 'test_exec_tran' order.order_id %}">
-    {% csrf_token %}
-    <input type="hidden" name="AccessID" value="{{ AccessID }}">
-    <input type="hidden" name="AccessPass" value="{{ AccessPass }}">
-    <input type="hidden" name="OrderID" value="{{ OrderID }}">
+{% extends "user/base.html" %}
+{% block title %}決済 | FoodLink{% endblock %}
 
-    <label>カード番号</label><br>
-    <input type="text" name="CardNo" placeholder="4111111111111111" required><br><br>
+{% block content %}
 
-    <label>有効期限（YYMM）</label><br>
-    <input type="text" name="Expire" placeholder="2605" required><br><br>
+<style>
+  body {
+    background: #f5f5f7;
+  }
 
-    <label>セキュリティコード</label><br>
-    <input type="text" name="SecurityCode" placeholder="123" required><br><br>
+  .payment-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
 
-    <label>支払方法</label><br>
-    <select name="Method" required>
-        <option value="1">一括払い</option>
-        <option value="2">分割</option>
-        <option value="3">ボーナス一括</option>
-    </select><br><br>
+  .form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
 
-    <button type="submit">決済する</button>
-</form>
+  .form-control,
+  .form-select {
+    border-radius: 10px;
+  }
+
+  .pay-button {
+    border-radius: 12px;
+    padding: 10px;
+    font-weight: 600;
+  }
+
+  .secure-text {
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+    margin-top: 10px;
+  }
+</style>
+
+<div class="container mt-3 mb-5" style="max-width: 480px;">
+  <h4 class="fw-bold mb-3">お支払い情報</h4>
+
+  <div class="payment-card">
+    <form method="post" action="{% url 'test_exec_tran' order.order_id %}">
+      {% csrf_token %}
+      <input type="hidden" name="AccessID" value="{{ AccessID }}">
+      <input type="hidden" name="AccessPass" value="{{ AccessPass }}">
+      <input type="hidden" name="OrderID" value="{{ OrderID }}">
+
+      <div class="mb-3">
+        <label class="form-label">カード番号</label>
+        <input
+          type="text"
+          name="CardNo"
+          class="form-control"
+          placeholder="4111 1111 1111 1111"
+          required
+        >
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">有効期限（YYMM）</label>
+        <input
+          type="text"
+          name="Expire"
+          class="form-control"
+          placeholder="2605"
+          required
+        >
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">セキュリティコード</label>
+        <input
+          type="text"
+          name="SecurityCode"
+          class="form-control"
+          placeholder="123"
+          required
+        >
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">支払方法</label>
+        <select name="Method" class="form-select" required>
+          <option value="1">一括払い</option>
+          <option value="2">分割払い</option>
+          <option value="3">ボーナス一括</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 pay-button">
+        決済する
+      </button>
+
+      <div class="secure-text">
+        この決済は安全に処理されます
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
