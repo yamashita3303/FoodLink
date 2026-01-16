@@ -2,48 +2,136 @@
 {% block title %}カート | FoodLink{% endblock %}
 
 {% block content %}
-<div class="container mt-3 mb-5">
-  <h2 class="mb-4">カート</h2>
+
+<style>
+  body {
+    background: #f5f5f7;
+  }
+
+  .cart-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .cart-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eee;
+    padding: 12px 0;
+  }
+
+  .cart-item:first-child {
+    border-top: none;
+  }
+
+  .item-info {
+    flex: 1;
+  }
+
+  .item-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .item-price {
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .item-quantity {
+    width: 70px;
+    margin: 0 10px;
+  }
+
+  .item-subtotal {
+    font-weight: 600;
+    min-width: 90px;
+    text-align: right;
+  }
+
+  .cart-total {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-top: 20px;
+  }
+
+  .cart-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+</style>
+
+<div class="cart-container mt-3 mb-5">
+  <h4 class="fw-bold mb-3">カート</h4>
 
   {% if cart %}
     <form method="post">
       {% csrf_token %}
-      <table class="table table-bordered text-center">
-        <thead class="table-light">
-          <tr>
-            <th>商品名</th>
-            <th>価格</th>
-            <th>数量</th>
-            <th>小計</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for pk, item in cart.items %}
-          <tr>
-            <td>{{ item.name }}</td>
-            <td>¥{{ item.price|floatformat:0 }}</td>
-            <td>
-              <input type="number" name="quantity_{{ pk }}" value="{{ item.quantity }}" min="1" class="form-control" style="width:70px; margin:auto;">
-            </td>
-            <td>¥{{ item.subtotal|floatformat:0 }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
 
-      <p class="text-end fw-bold fs-5">
-        合計: ¥{{ total|floatformat:0 }}
-      </p>
+      <div class="cart-card">
+        {% for pk, item in cart.items %}
+          <div class="cart-item">
+            <div class="item-info">
+              <div class="item-name">{{ item.name }}</div>
+              <div class="item-price">¥{{ item.price|floatformat:0 }}</div>
+            </div>
 
-      <div class="text-end mt-3">
-        <button type="submit" class="btn btn-primary me-2">数量を更新</button>
-        <a href="{% url 'user_home' %}" class="btn btn-secondary me-2">買い物を続ける</a>
-        <a href="{% url 'create_order_from_session' %}" class="btn btn-warning">購入手続きへ</a>
+            <input
+              type="number"
+              name="quantity_{{ pk }}"
+              value="{{ item.quantity }}"
+              min="1"
+              class="form-control item-quantity"
+            >
+
+            <div class="item-subtotal">
+              ¥{{ item.subtotal|floatformat:0 }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="cart-total text-end">
+        <div class="fw-bold fs-5">
+          合計：¥{{ total|floatformat:0 }}
+        </div>
+
+        <div class="cart-buttons">
+          <button type="submit" class="btn btn-outline-primary">
+            数量を更新
+          </button>
+          <a href="{% url 'user_home' %}" class="btn btn-secondary">
+            買い物を続ける
+          </a>
+          <a href="{% url 'create_order_from_session' %}" class="btn btn-warning">
+            購入手続きへ
+          </a>
+        </div>
       </div>
     </form>
+
   {% else %}
-    <p>カートは空です。</p>
-    <a href="{% url 'user_home' %}" class="btn btn-primary mt-2">商品を探す</a>
+    <div class="text-center mt-5">
+      <p class="text-muted">カートは空です。</p>
+      <a href="{% url 'user_home' %}" class="btn btn-primary mt-2">
+        商品を探す
+      </a>
+    </div>
   {% endif %}
 </div>
+
 {% endblock %}
