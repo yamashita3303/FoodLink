@@ -729,6 +729,41 @@ def user_alert(request):
         "notifications": notifications
     })
 
+def user_read_qr_code(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        user=request.user
+    )
+    return render(request, "user/read_qr_code.html", {
+            "notification": notification
+        })
+
+def user_qr_result(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        user=request.user
+    )
+    code_type = request.GET.get("type")
+    code_data = request.GET.get("data")
+    qr = get_object_or_404(
+        Qr,
+        code_data=code_data
+    )
+
+     # ✅ 受け取り完了ボタンが押されたとき
+    if request.method == "POST":
+        qr.delete()
+        messages.success(request, "受け取りが完了しました")
+        return redirect("user_home")  # ← 遷移先は調整してOK
+
+    return render(request, "user/qr_result.html", {
+        "notification": notification,
+        "qr": qr
+    })
+
+
 # store側のビュー
 # =============================
 # ヘルパー関数
@@ -1084,7 +1119,7 @@ def product_ocr(request, product_id):
 
     return HttpResponse("OCR 完了！コンソールを確認してください")
 
-def read_qr_code(request, notification_id):
+def store_read_qr_code(request, notification_id):
     notification = get_object_or_404(
         Notification,
         notification_id=notification_id,
@@ -1094,7 +1129,7 @@ def read_qr_code(request, notification_id):
             "notification": notification
         })
 
-def qr_result(request, notification_id):
+def store_qr_result(request, notification_id):
     notification = get_object_or_404(
         Notification,
         notification_id=notification_id,
@@ -1110,14 +1145,14 @@ def qr_result(request, notification_id):
     })
 
 
-def qr_verify(request, notification_id):
+def store_qr_verify(request, notification_id):
     notification = get_object_or_404(
         Notification,
         notification_id=notification_id,
         store=request.user
     )
     if request.method != "POST":
-        return redirect("qr_read")
+        return redirect("store_qr_read")
 
     code_type = request.POST.get("code_type")
     code_data = request.POST.get("code_data")
@@ -1143,7 +1178,6 @@ def qr_verify(request, notification_id):
         message=(
             f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
             f"受け取りロッカー番号：{code_data}\n"
-            f"暗証番号：{pin}\n"
             f"ご来店の上、お受け取りください。"
         ),
         recipient_type="user",
@@ -1154,8 +1188,8 @@ def qr_verify(request, notification_id):
     )
 
     # ✅ 店舗側の購入通知を既読（＝対応済み）
-    notification.read = True
-    notification.save()
+    # notification.read = True
+    # notification.save()
 
     # ---- 購入者へメール送信 ----
     # EmailMessage のインスタンスを作成する

@@ -35,13 +35,14 @@
 </head>
 <body>
 
-<h1>スキャン結果</h1>
+<h1>受け取り情報</h1>
+
 <p>商品：{{ notification.product.name }}</p>
 
-
 <div class="box">
-    <p><strong>コード種別：</strong>{{ code_type }}</p>
-    <p><strong>データ：</strong>{{ code_data }}</p>
+    <p><strong>ロッカー番号：</strong>{{ qr.code_data }}</p>
+    <p><strong>暗証番号：</strong>{{ qr.pin }}</p>
+    <p><strong>準備完了日時：</strong>{{ qr.created_at|date:"Y/m/d H:i" }}</p>
 </div>
 
 {% if messages %}
@@ -52,15 +53,13 @@
     {% endfor %}
 {% endif %}
 
-<form method="post" action="{% url 'store_qr_verify' notification.notification_id %}">
+<form method="post">
     {% csrf_token %}
-    <input type="hidden" name="code_type" value="{{ code_type }}">
-    <input type="hidden" name="code_data" value="{{ code_data }}">
-
-    <label>暗証番号（数字）</label>
-    <input type="number" name="pin" required>
-
-    <button type="submit">受け取り確認</button>
+    <button
+    type="submit"
+    onclick="return confirm('受け取りを完了しますか？');">
+    受け取り完了
+    </button>
 </form>
 
 </body>
