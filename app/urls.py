@@ -53,4 +53,6 @@ urlpatterns = [
     path("store/qr/read/<int:notification_id>/", views.store_read_qr_code, name="store_qr_read"),
     path("store/qr/result/<int:notification_id>/", views.store_qr_result, name="store_qr_result"),
     path("store/qr/verify/<int:notification_id>/", views.store_qr_verify, name="store_qr_verify"),
+
+    path("store/qr/generate/", views.store_qr_generate, name="store_qr_generate"),
 ]

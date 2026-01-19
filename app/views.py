@@ -1210,3 +1210,34 @@ def store_qr_verify(request, notification_id):
     messages.success(request, "スキャン情報を保存しました")
 
     return redirect("store_alert")
+
+import qrcode
+import io
+import base64
+def store_qr_generate(request):
+    qr_list = []
+
+    if request.method == "POST":
+        start = request.POST.get("start_locker")
+        end = request.POST.get("end_locker")
+
+        if start and end and start.isdigit() and end.isdigit():
+            start = int(start)
+            end = int(end)
+
+            if start <= end:
+                for number in range(start, end + 1):
+                    qr = qrcode.make(str(number))
+
+                    buffer = io.BytesIO()
+                    qr.save(buffer, format="PNG")
+                    image_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+                    qr_list.append({
+                        "locker": number,
+                        "image": f"data:image/png;base64,{image_base64}"
+                    })
+
+    return render(request, "store/qr_generate.html", {
+        "qr_list": qr_list
+    })
