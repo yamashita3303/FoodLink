@@ -869,7 +869,7 @@ def store_signup(request):
                 for key in ['signup_data', 'signup_data2', 'signup_step']:
                     request.session.pop(key, None)
 
-                return redirect('store_home')
+                return redirect('store_qr_generate')
 
         return render(request, 'store/signup3.html', {
             'signup_data': signup_data,
