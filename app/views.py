@@ -1224,3 +1224,40 @@ def store_qr_generate(request):
     return render(request, "store/qr_generate.html", {
         "qr_list": qr_list
     })
+@login_required(login_url='store_signin')
+def product_edit(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+
+
+    # 自分の店舗の商品以外は編集不可
+    if product.store != request.user:
+        return HttpResponse("権限がありません", status=403)
+
+    if request.method == "POST":
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        images = request.FILES.getlist("images")
+
+        # 画像上書き（最大5枚）
+        for i in range(min(5, len(images))):
+            setattr(product, f'image{i+1}', images[i])
+
+        if form.is_valid():
+            form.save()
+            return redirect('store_home')
+    else:
+        form = ProductForm(instance=product)
+
+    return render(request, "store/product_edit.html", {
+        "form": form,
+        "product": product,
+        "id": product_id
+    })
+
+def product_delete(request, product_id):
+    product = get_object_or_404(Product, product_id=product_id)
+
+    if request.method == "POST":
+        product.delete()
+        return redirect('store_home')  # 一覧に戻す
+
+    return redirect('store_list')

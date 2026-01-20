@@ -49,7 +49,11 @@ urlpatterns = [
     # 複数画像登録用
     # path('product_create/', views.product_create, name='product_create'),
     path('product/<int:product_id>/ocr/', views.product_ocr, name='product_ocr'),
+    # 商品編集
+    path('product/<int:product_id>/edit/', views.product_edit, name='product_edit'),
 
+    path(
+    'product/<int:product_id>/delete/', views.product_delete, name='product_delete'),
     path("store/qr/read/<int:notification_id>/", views.store_read_qr_code, name="store_qr_read"),
     path("store/qr/result/<int:notification_id>/", views.store_qr_result, name="store_qr_result"),
     path("store/qr/verify/<int:notification_id>/", views.store_qr_verify, name="store_qr_verify"),

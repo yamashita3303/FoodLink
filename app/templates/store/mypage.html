@@ -1,20 +1,47 @@
-<!-- templates/cart.html -->
 {% extends "store/base.html" %}
 {% block title %}ストアマイページ | FoodLink{% endblock %}
+
 {% block content %}
-<div class="mypage-header">
-    <h2>マイページ</h2>
-    <a href="{% url 'store_qr_generate' %}" class="btn btn-primary mt-2">ロッカーQRコード生成</a>
-    <p>ようこそ、{{ store.username }} さん！</p>
-    <p>電話番号: {{ store.phone }}</p>
-    <p>住所: {{ store.postal_code }} {{ store.prefecture }} {{ store.city }} {{ store.address_line1 }} {{ store.address_line2 }}</p>
-    <p>営業時間: {{ store.opening_time }} 〜 {{ store.closing_time }}</p>
+<div class="container mt-4" style="max-width: 600px;">
 
-    <a href="{% url 'store_edit_menu' %}" class="btn btn-primary mt-2">編集する</a>
+  <h3 class="text-center mb-2">マイページ</h3>
+  <p class="text-center text-muted mb-4">
+    ようこそ、<strong>{{ store.username }}</strong> さん
+  </p>
 
-    <form method="post" class="mt-2">
-        {% csrf_token %}
-        <button type="submit" name="logout" class="btn btn-secondary">ログアウト</button>
+  <div class="mb-3">
+    <div class="text-muted small">電話番号</div>
+    <div class="fs-6">{{ store.phone }}</div>
+  </div>
+
+  <div class="mb-3">
+    <div class="text-muted small">住所</div>
+    <div class="fs-6">
+      〒{{ store.postal_code }}<br>
+      {{ store.prefecture }} {{ store.city }}<br>
+      {{ store.address_line1 }} {{ store.address_line2 }}
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <div class="text-muted small">営業時間</div>
+    <div class="fs-6">
+      {{ store.opening_time }} 〜 {{ store.closing_time }}
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="{% url 'store_edit_menu' %}" class="btn btn-primary flex-fill">
+      情報を編集する
+    </a>
+
+    <form method="post" class="flex-fill">
+      {% csrf_token %}
+      <button type="submit" name="logout" class="btn btn-outline-secondary w-100">
+        ログアウト
+      </button>
     </form>
+  </div>
+
 </div>
 {% endblock %}

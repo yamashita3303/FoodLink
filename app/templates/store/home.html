@@ -29,6 +29,7 @@
       align-items: center;
       background: #fff;
       margin-bottom: 20px;
+      position: relative; 
     }
  
     .item-left {
@@ -77,20 +78,30 @@
     }
  
     .item-actions {
+      position: absolute;   /* ← 追加 */
+      bottom: 20px;         /* ← 下に寄せる */
+      right: 20px;          /* ← 右に寄せる */
+
       display: flex;
       align-items: center;
       gap: 15px;
     }
+
  
     .edit-btn {
       background: #e3f8f9;
       border: 1px solid #9ed1d4;
-      padding: 7px 35px;
-      border-radius: 20px;
-      font-size: 14px;
+
+      padding: 10px 48px;   
+      border-radius: 24px;
+      font-size: 15px;      
+      font-weight: 600;
+
       text-decoration: none;
       color: #000;
+      display: inline-block; 
     }
+
  
     .delete-btn {
       background: none;
@@ -176,35 +187,47 @@
   </a>
  
   {% for product in products %}
-  <div class="item-card">
- 
-    <div class="item-left">
-      <div class="item-image">
-        {% if product.image1 %}
-          <img src="{{ product.image1.url }}">
-        {% else %}
-          <img src="{% static 'images/placeholder_store.png' %}">
-        {% endif %}
-        <div class="price-tag">¥{{ product.price|floatformat:0 }}</div>
-      </div>
- 
-      <div class="item-info">
-        <h5>{{ product.name }}</h5>
-        <p>
-          {{ product.quantity }} 個 {{ product.price }} 円<br>
-          {{ product.origin }}<br>
-          消費期限 {{ product.expiration_date|date:"Y/m/d" }}
-        </p>
-      </div>
+<div class="item-card">
+
+  <div class="item-left">
+    <div class="item-image">
+      {% if product.image1 %}
+        <img src="{{ product.image1.url }}">
+      {% else %}
+        <img src="{% static 'images/placeholder_store.png' %}">
+      {% endif %}
+      <div class="price-tag">¥{{ product.price|floatformat:0 }}</div>
     </div>
- 
-      
+
+    <div class="item-info">
+      <h5>{{ product.name }}</h5>
+      <p>
+        {{ product.quantity }} 個 {{ product.price }} 円<br>
+        {{ product.origin }}<br>
+        消費期限 {{ product.expiration_date|date:"Y/m/d" }}
+      </p>
     </div>
- 
   </div>
-  {% empty %}
-  <div class="alert alert-info">登録された商品はありません。</div>
-  {% endfor %}
+
+  <div class="item-actions">
+    <a href="{% url 'product_edit' product_id=product.product_id %}" class="edit-btn">
+    編集
+    </a>
+
+      <form action="{% url 'product_delete' product_id=product.product_id %}"
+        method="post"
+        onsubmit="return confirm('この商品を削除してもよろしいですか？');">
+    {% csrf_token %}
+    <button type="submit" class="delete-btn">
+      <i class="bi bi-trash"></i>
+    </button>
+  </form>
+  </div>
+
+</div>
+{% empty %}
+<div class="alert alert-info">登録された商品はありません。</div>
+{% endfor %}
 </div>
  
 <a href="{% url 'store_registar' %}" class="fab"></a>
