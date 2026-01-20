@@ -41,22 +41,37 @@ class Category(models.Model):
 # Productモデル（商品情報）
 # =========================
 class Product(models.Model):
-    product_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, blank=False)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
-    price = models.IntegerField(blank=False)
-    expiration_date = models.DateField(blank=False)
-    quantity = models.IntegerField(default=1, blank=False)
-    origin = models.CharField(max_length=50, blank=True, null=True)
-    image1 = models.ImageField(upload_to='products/', blank=False)
-    image2 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image3 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image4 = models.ImageField(upload_to='products/', blank=True, null=True)
-    image5 = models.ImageField(upload_to='products/', blank=True, null=True)
-    notes = models.TextField(max_length=100, blank=True, null=True)
-    store = models.ForeignKey(User, on_delete=models.CASCADE, related_name="products")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    product_id = models.AutoField("商品ID", primary_key=True)
+    name = models.CharField("商品名", max_length=100, blank=False)
+    category = models.ForeignKey(
+        Category,
+        verbose_name="カテゴリ",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
+    price = models.IntegerField("価格", blank=False)
+    expiration_date = models.DateField("消費期限", blank=False)
+    quantity = models.IntegerField("在庫数", default=1, blank=False)
+    origin = models.CharField("原産地", max_length=50, blank=True, null=True)
+
+    image1 = models.ImageField("商品画像①", upload_to='products/', blank=False)
+    image2 = models.ImageField("商品画像②", upload_to='products/', blank=True, null=True)
+    image3 = models.ImageField("商品画像③", upload_to='products/', blank=True, null=True)
+    image4 = models.ImageField("商品画像④", upload_to='products/', blank=True, null=True)
+    image5 = models.ImageField("商品画像⑤", upload_to='products/', blank=True, null=True)
+
+    notes = models.TextField("備考", max_length=100, blank=True, null=True)
+
+    store = models.ForeignKey(
+        User,
+        verbose_name="店舗ユーザー",
+        on_delete=models.CASCADE,
+        related_name="products"
+    )
+    created_at = models.DateTimeField("作成日時", auto_now_add=True)
+    updated_at = models.DateTimeField("更新日時", auto_now=True)
+
 
     def __str__(self):
         return self.name

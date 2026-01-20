@@ -1,13 +1,100 @@
 {% extends "store/base.html" %}
 {% block title %}編集メニュー | FoodLink{% endblock %}
+
 {% block content %}
-<h2>編集メニュー</h2>
-<ul>
-    <li><a href="{% url 'store_edit_username' %}">ユーザネーム変更</a></li>
-    <li><a href="{% url 'store_edit_phone' %}">電話番号変更</a></li>
-    <li><a href="{% url 'store_edit_password' %}">パスワード変更</a></li>
-    <li><a href="{% url 'store_edit_address' %}">住所変更</a></li>
-    <li><a href="{% url 'store_edit_hours' %}">営業時間変更</a></li>
-</ul>
-<a href="{% url 'store_mypage' %}" class="btn btn-secondary mt-2">戻る</a>
+
+<!-- Font Awesome（アイコン用） -->
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+.edit-wrapper {
+    max-width: 420px;
+    margin: 20px auto;
+}
+
+.edit-wrapper h2 {
+    margin-bottom: 20px;
+}
+
+.edit-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.edit-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 10px;
+    font-size: 16px;
+    color: #222;
+    text-decoration: none;
+    border-bottom: 1px solid #ddd;
+}
+
+.edit-menu li a:hover {
+    background-color: #f5f5f5;
+}
+
+.edit-menu i {
+    width: 20px;
+    text-align: center;
+    color: #555;
+}
+
+/* ログアウト */
+.edit-menu li.logout a {
+    color: #d32f2f;
+}
+
+.edit-menu li.logout i {
+    color: #d32f2f;
+}
+</style>
+
+<div class="edit-wrapper">
+    <h2>マイページ</h2>
+
+    <ul class="edit-menu">
+        <li>
+            <a href="{% url 'store_edit_username' %}">
+                <i class="fa-solid fa-user"></i>
+                ユーザネーム変更
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'store_edit_phone' %}">
+                <i class="fa-solid fa-phone"></i>
+                電話番号変更
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'store_edit_password' %}">
+                <i class="fa-solid fa-lock"></i>
+                パスワード変更
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'store_edit_address' %}">
+                <i class="fa-solid fa-location-dot"></i>
+                住所変更
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'store_edit_hours' %}">
+                <i class="fa-solid fa-clock"></i>
+                営業時間変更
+            </a>
+        </li>
+        <li class="logout">
+            <a href="{% url 'store_mypage' %}">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                戻る
+            </a>
+        </li>
+    </ul>
+</div>
+
 {% endblock %}
