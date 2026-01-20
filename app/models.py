@@ -175,3 +175,11 @@ class Notification(models.Model):
         from django.core.exceptions import ValidationError
         if self.recipient_type == 'user' and not self.user:
             raise ValidationError("recipient_type が user の場合、user を指定してください")
+        
+class Qr(models.Model):
+    code_data = models.IntegerField()
+    pin = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.code_data} ({self.pin}) - {self.created_at:%Y-%m-%d %H:%M}"

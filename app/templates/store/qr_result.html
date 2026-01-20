@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>スキャン結果</title>
+    <style>
+        body {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            font-family: sans-serif;
+        }
+        .box {
+            background: #e9f7ef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>スキャン結果</h1>
+<p>商品：{{ notification.product.name }}</p>
+
+
+<div class="box">
+    <p><strong>コード種別：</strong>{{ code_type }}</p>
+    <p><strong>データ：</strong>{{ code_data }}</p>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <!-- <p style="color:{% if message.tags == 'error' %}red{% else %}green{% endif %};"> -->
+            {{ message }}
+        <!-- </p> -->
+    {% endfor %}
+{% endif %}
+
+<form method="post" action="{% url 'store_qr_verify' notification.notification_id %}">
+    {% csrf_token %}
+    <input type="hidden" name="code_type" value="{{ code_type }}">
+    <input type="hidden" name="code_data" value="{{ code_data }}">
+
+    <label>暗証番号（数字）</label>
+    <input type="number" name="pin" required>
+
+    <button type="submit">受け取り確認</button>
+</form>
+
+</body>
+</html>

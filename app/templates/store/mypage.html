@@ -4,6 +4,7 @@
 {% block content %}
 <div class="mypage-header">
     <h2>マイページ</h2>
+    <a href="{% url 'store_qr_generate' %}" class="btn btn-primary mt-2">ロッカーQRコード生成</a>
     <p>ようこそ、{{ store.username }} さん！</p>
     <p>電話番号: {{ store.phone }}</p>
     <p>住所: {{ store.postal_code }} {{ store.prefecture }} {{ store.city }} {{ store.address_line1 }} {{ store.address_line2 }}</p>

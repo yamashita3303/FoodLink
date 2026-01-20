@@ -21,7 +21,8 @@ from .models import (
     CartItem, 
     Order, 
     OrderItem,
-    Notification
+    Notification,
+    Qr
 )
 from .forms import (
     UserSignupStep1Form, 
@@ -711,6 +712,41 @@ def user_alert(request):
         "notifications": notifications
     })
 
+def user_read_qr_code(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        user=request.user
+    )
+    return render(request, "user/read_qr_code.html", {
+            "notification": notification
+        })
+
+def user_qr_result(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        user=request.user
+    )
+    code_type = request.GET.get("type")
+    code_data = request.GET.get("data")
+    qr = get_object_or_404(
+        Qr,
+        code_data=code_data
+    )
+
+     # ✅ 受け取り完了ボタンが押されたとき
+    if request.method == "POST":
+        qr.delete()
+        messages.success(request, "受け取りが完了しました")
+        return redirect("user_home")  # ← 遷移先は調整してOK
+
+    return render(request, "user/qr_result.html", {
+        "notification": notification,
+        "qr": qr
+    })
+
+
 # store側のビュー
 # =============================
 # ヘルパー関数
@@ -816,7 +852,7 @@ def store_signup(request):
                 for key in ['signup_data', 'signup_data2', 'signup_step']:
                     request.session.pop(key, None)
 
-                return redirect('store_home')
+                return redirect('store_qr_generate')
 
         return render(request, 'store/signup3.html', {
             'signup_data': signup_data,
@@ -872,7 +908,7 @@ def store_home(request):
     }
    
     return render(request, 'store/home.html', context)
- 
+
 @login_required(login_url='store_signin')
 def store_list(request):
     products = Product.objects.all()
@@ -980,11 +1016,6 @@ def store_edit_hours(request):
         'current_value': f"{store.opening_time} - {store.closing_time}"
     })
 
-from .models import Notification, Product
-
-from django.contrib.auth.decorators import login_required
-from .models import Product, OrderItem
-@login_required(login_url='store_signin')
 @login_required(login_url='store_signin')
 def store_alert(request):
     tab = request.GET.get('tab', 'new')
@@ -1006,7 +1037,6 @@ def store_alert(request):
         "product", "order"
     ).order_by("-created_at")
 
-
     return render(request, "store/alert.html", {
         "products": products,
         "notifications": notifications,
@@ -1014,85 +1044,31 @@ def store_alert(request):
     })
 
 
-
-
-@login_required(login_url='store_signin')
-def prepare_product(request, notification_id):
-    notification = get_object_or_404(
-        Notification,
-        notification_id=notification_id,
-        store=request.user
-    )
-
-    if request.method == "POST":
-        locker = request.POST.get("locker")
-        pin = request.POST.get("pin")
-
-        # 📨 購入者へ「準備完了」通知
-        Notification.objects.create(
-            type="ready",
-            message=(
-                f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
-                f"受け取りロッカー番号：{locker}\n"
-                f"暗証番号：{pin}\n"
-                f"ご来店の上、お受け取りください。"
-            ),
-            recipient_type="user",
-            user=notification.order.user,
-            store=notification.store,
-            product=notification.product,
-            order=notification.order,
-        )
-
-        # ✅ 店舗側の購入通知を既読（＝対応済み）
-        notification.read = True
-        notification.save()
-
-        # ---- 購入者へメール送信 ----
-        # EmailMessage のインスタンスを作成する
-        # emailMessage = EmailMessage(
-        #     subject='【FoodLink】商品の準備が完了しました',
-        #     body=(
-        #         f"ご注文の「{notification.product}」の準備が完了しました。\n"
-        #         f"受け取りロッカー番号：{locker}\n"
-        #         f"暗証番号：{pin}\n"
-        #         f"ご来店の上、お受け取りください。"
-        #     ),
-        #     from_email='FoodLink <noreply@example.com>',  # ← ここで Gmail アドレスを隠す
-        #     to=[notification.order.user.email],
-        # )
-        # # send 関数を呼び出してメールを送信する
-        # emailMessage.send()
-
-        return redirect("store_alert")
-
-    return render(request, "store/prepare_form.html", {
-        "notification": notification
-    })
-
-
-
 @login_required(login_url='store_signin')
 def store_registar(request):
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
         images = request.FILES.getlist("images")  # HTMLのmultiple inputから取得
-
+ 
+        # 画像を image1～5 に順番にセット
+        for i in range(min(5, len(images))):
+            setattr(form.instance, f'image{i+1}', images[i])
+ 
         if form.is_valid():
             product = form.save(commit=False)
             product.store = request.user
-
-            # images を image1～5 に順番にセット
-            for i in range(min(5, len(images))):
-                setattr(product, f'image{i+1}', images[i])
-
             product.save()
+            print("フォーム成功:", product)
             return JsonResponse({"success": True})
         else:
+            # ここでフォームエラーを確認
+            print("フォームエラー:", form.errors)
+            print("POSTデータ:", request.POST)
+            print("FILESデータ:", request.FILES)
             return JsonResponse({"success": False, "errors": form.errors}, status=400)
     else:
         form = ProductForm()
-
+ 
     return render(request, "store/registar.html", {"form": form})
 
 from PIL import Image
@@ -1125,3 +1101,126 @@ def product_ocr(request, product_id):
     print(extracted_text)
 
     return HttpResponse("OCR 完了！コンソールを確認してください")
+
+def store_read_qr_code(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        store=request.user
+    )
+    return render(request, "store/read_qr_code.html", {
+            "notification": notification
+        })
+
+def store_qr_result(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        store=request.user
+    )
+    code_type = request.GET.get("type")
+    code_data = request.GET.get("data")
+
+    return render(request, "store/qr_result.html", {
+        "code_type": code_type,
+        "code_data": code_data,
+        "notification": notification
+    })
+
+
+def store_qr_verify(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        store=request.user
+    )
+    if request.method != "POST":
+        return redirect("store_qr_read")
+
+    code_type = request.POST.get("code_type")
+    code_data = request.POST.get("code_data")
+    pin = request.POST.get("pin")
+
+    # ===== バリデーション =====
+    if not pin or not pin.isdigit():
+        messages.error(request, "暗証番号は数字で入力してください")
+        return redirect(
+            f"/qr/result/?type={code_type}&data={code_data}"
+        )
+
+    pin = int(pin)
+
+    # ===== DB保存 =====
+    Qr.objects.create(
+        code_data=code_data,
+        pin=pin
+    )
+    # 📨 購入者へ「準備完了」通知
+    Notification.objects.create(
+        type="ready",
+        message=(
+            f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
+            f"受け取りロッカー番号：{code_data}\n"
+            f"ご来店の上、お受け取りください。"
+        ),
+        recipient_type="user",
+        user=notification.order.user,
+        store=notification.store,
+        product=notification.product,
+        order=notification.order,
+    )
+
+    # ✅ 店舗側の購入通知を既読（＝対応済み）
+    # notification.read = True
+    # notification.save()
+
+    # ---- 購入者へメール送信 ----
+    # EmailMessage のインスタンスを作成する
+    # emailMessage = EmailMessage(
+    #     subject='【FoodLink】商品の準備が完了しました',
+    #     body=(
+    #         f"ご注文の「{notification.product}」の準備が完了しました。\n"
+    #         f"受け取りロッカー番号：{code_data}\n"
+    #         f"暗証番号：{pin}\n"
+    #         f"ご来店の上、お受け取りください。"
+    #     ),
+    #     from_email='FoodLink <noreply@example.com>',  # ← ここで Gmail アドレスを隠す
+    #     to=[notification.order.user.email],
+    # )
+    # # send 関数を呼び出してメールを送信する
+    # emailMessage.send()
+
+    messages.success(request, "スキャン情報を保存しました")
+
+    return redirect("store_alert")
+
+import qrcode
+import io
+import base64
+def store_qr_generate(request):
+    qr_list = []
+
+    if request.method == "POST":
+        start = request.POST.get("start_locker")
+        end = request.POST.get("end_locker")
+
+        if start and end and start.isdigit() and end.isdigit():
+            start = int(start)
+            end = int(end)
+
+            if start <= end:
+                for number in range(start, end + 1):
+                    qr = qrcode.make(str(number))
+
+                    buffer = io.BytesIO()
+                    qr.save(buffer, format="PNG")
+                    image_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+                    qr_list.append({
+                        "locker": number,
+                        "image": f"data:image/png;base64,{image_base64}"
+                    })
+
+    return render(request, "store/qr_generate.html", {
+        "qr_list": qr_list
+    })

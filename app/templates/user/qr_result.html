@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>スキャン結果</title>
+    <style>
+        body {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            font-family: sans-serif;
+        }
+        .box {
+            background: #e9f7ef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>受け取り情報</h1>
+
+<p>商品：{{ notification.product.name }}</p>
+
+<div class="box">
+    <p><strong>ロッカー番号：</strong>{{ qr.code_data }}</p>
+    <p><strong>暗証番号：</strong>{{ qr.pin }}</p>
+    <p><strong>準備完了日時：</strong>{{ qr.created_at|date:"Y/m/d H:i" }}</p>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <!-- <p style="color:{% if message.tags == 'error' %}red{% else %}green{% endif %};"> -->
+            {{ message }}
+        <!-- </p> -->
+    {% endfor %}
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <button
+    type="submit"
+    onclick="return confirm('受け取りを完了しますか？');">
+    受け取り完了
+    </button>
+</form>
+
+</body>
+</html>

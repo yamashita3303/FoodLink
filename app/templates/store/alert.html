@@ -80,7 +80,7 @@
             購入日：{{ n.order.created_at|date:"Y/m/d H:i" }}
           </p>
 
-          <a href="{% url 'prepare_product' n.notification_id %}"
+          <a href="{% url 'store_qr_read' n.notification_id %}"
              class="btn btn-success btn-sm mt-2">
             準備開始
           </a>

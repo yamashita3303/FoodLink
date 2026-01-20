@@ -27,6 +27,10 @@ urlpatterns = [
     path('user_mypage/edit/phone/', views.user_edit_phone, name='user_edit_phone'),
     path('user_mypage/edit/address/', views.user_edit_address, name='user_edit_address'),
     path('user_alert/', views.user_alert, name='user_alert'),
+    path("user/qr/read/<int:notification_id>/", views.user_read_qr_code, name="user_qr_read"),
+    path("user/qr/result/<int:notification_id>/", views.user_qr_result, name="user_qr_result"),
+
+
 
     path('store_signup/', views.store_signup, name='store_signup'),
     path('store_signin/', views.store_signin, name='store_signin'),
@@ -40,11 +44,15 @@ urlpatterns = [
     path('store_mypage/edit/address/', views.store_edit_address, name='store_edit_address'),
     path('mypage/edit/hours/', views.store_edit_hours, name='store_edit_hours'),
     path('store_alert/', views.store_alert, name='store_alert'),
-    path('prepare/<int:notification_id>/', views.prepare_product, name='prepare_product'),
     path('store_registar/', views.store_registar, name='store_registar'),
 
     # 複数画像登録用
     # path('product_create/', views.product_create, name='product_create'),
     path('product/<int:product_id>/ocr/', views.product_ocr, name='product_ocr'),
 
+    path("store/qr/read/<int:notification_id>/", views.store_read_qr_code, name="store_qr_read"),
+    path("store/qr/result/<int:notification_id>/", views.store_qr_result, name="store_qr_result"),
+    path("store/qr/verify/<int:notification_id>/", views.store_qr_verify, name="store_qr_verify"),
+
+    path("store/qr/generate/", views.store_qr_generate, name="store_qr_generate"),
 ]
