@@ -37,14 +37,33 @@
     text-align: center;
     margin-top: 10px;
   }
+
+  .back-link {
+    color: #333;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
 </style>
 
 <div class="container mt-3 mb-5" style="max-width: 480px;">
-  <h4 class="fw-bold mb-3">お支払い情報</h4>
+
+  <!-- 🔙 カートに戻る（追加） -->
+  <a href="{% url 'user_cart' %}" class="back-link mb-2 d-inline-flex align-items-center">
+    <i class="bi bi-arrow-left me-1"></i>
+    
+  </a>
+
+  <h4 class="fw-bold mb-3 text-center">お支払い情報</h4>
 
   <div class="payment-card">
     <form method="post" action="{% url 'test_exec_tran' order.order_id %}">
       {% csrf_token %}
+
       <input type="hidden" name="AccessID" value="{{ AccessID }}">
       <input type="hidden" name="AccessPass" value="{{ AccessPass }}">
       <input type="hidden" name="OrderID" value="{{ OrderID }}">

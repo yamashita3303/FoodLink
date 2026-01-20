@@ -5,10 +5,20 @@
 {% block content %}
 <div class="container mt-3 mb-5">
 
-  <!-- 🔍 検索 -->
-  <div class="text-center mb-4">
-    <a href="{% url 'user_search' %}" class="search-link">
-      <i class="bi bi-search me-1"></i> 商品を検索
+  <!-- 🔍 検索バー（クリックで検索ページへ） -->
+  <div class="mb-4">
+    <a href="{% url 'user_search' %}" class="search-bar-link">
+      <div class="input-group input-group-lg">
+        <span class="input-group-text bg-white">
+          <i class="bi bi-search"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="商品名・店舗名で検索"
+          readonly
+        >
+      </div>
     </a>
   </div>
 
@@ -80,13 +90,20 @@
   box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
-/* 検索リンク */
-.search-link {
-  font-weight: 500;
-  font-size: 1.25rem;
-  color: #333;
+/* 検索バー風リンク */
+.search-bar-link {
   text-decoration: none;
-  border-bottom: 1px solid #333;
+  color: inherit;
+  display: block;
+}
+
+.search-bar-link .form-control {
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.search-bar-link:hover .form-control {
+  background-color: #f8f9fa;
 }
 </style>
 {% endblock %}

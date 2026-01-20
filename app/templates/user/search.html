@@ -5,25 +5,30 @@
 
 {% block content %}
 <div class="container mt-3 mb-5">
-  
-  <!-- 🔙 戻るボタン -->
-  <button type="button"
-          onclick="history.back()"
-          class="btn btn-outline-secondary btn-sm mb-3">
-    ◀
-  </button>
 
-  <!-- 🔍 検索フォーム -->
-  <form method="get" action="{% url 'user_search' %}" class="mb-3">
-    <div class="input-group">
-      <input type="text"
-             name="q"
-             class="form-control"
-             placeholder="商品名で検索"
-             value="{{ query }}">
+  <!-- 🔍 戻る＋検索バー一体型 -->
+  <form method="get" action="{% url 'user_search' %}" class="mb-4">
+    <div class="input-group input-group-lg search-group">
+
+      <!-- 戻るボタン -->
+      <a href="javascript:history.back()" class="input-group-text back-btn">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+
+      <!-- 検索入力 -->
+      <input
+        type="text"
+        name="q"
+        class="form-control"
+        placeholder="商品名・店舗名で検索"
+        value="{{ query }}"
+      >
+
+      <!-- 検索ボタン -->
       <button class="btn btn-dark" type="submit">
         <i class="bi bi-search"></i>
       </button>
+
     </div>
   </form>
 
@@ -39,12 +44,7 @@
          {% else %}
            btn-outline-dark
          {% endif %}">
-
         {{ category.name }}
-        {% if category.id == selected_category_id %}
-          <span class="ms-1"></span>
-        {% endif %}
-
       </a>
     {% endfor %}
   </div>
@@ -89,4 +89,43 @@
   </div>
 
 </div>
+
+<style>
+/* 🔍 検索バー統一 */
+.search-group .form-control,
+.search-group .btn,
+.search-group .input-group-text {
+  border-radius: 12px;
+}
+
+/* 境界線調整 */
+.search-group .input-group-text {
+  border-right: none;
+  background: #fff;
+  cursor: pointer;
+}
+
+.search-group .form-control {
+  border-left: none;
+  border-right: none;
+}
+
+.search-group .btn {
+  border-left: none;
+}
+
+/* 戻るボタン */
+.back-btn {
+  color: #333;
+}
+
+.back-btn:hover {
+  background-color: #f8f9fa;
+}
+
+/* フォーカス時 */
+.form-control:focus {
+  box-shadow: none;
+}
+</style>
 {% endblock %}
