@@ -51,7 +51,7 @@ class Product(models.Model):
         null=True
     )
     price = models.IntegerField("価格", blank=False)
-    expiration_date = models.DateField("消費期限", blank=False)
+    expiration_date = models.DateTimeField("消費期限", blank=False)
     quantity = models.IntegerField("在庫数", default=1, blank=False)
     origin = models.CharField("原産地", max_length=50, blank=True, null=True)
 

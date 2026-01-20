@@ -163,12 +163,13 @@ textarea { resize: vertical; min-height: 100px;}
             </div>
             <div>
                 <label for="{{ form.expiration_date.id_for_label }}">消費期限</label>
-               
+
                 <div class="date-input-wrapper">
-                    <input type="date" id="{{ form.expiration_date.id_for_label }}" name="{{ form.expiration_date.name }}" class="form-control" value="{{ form.expiration_date.value|default:'' }}">
+                    <input
+                        type="datetime-local" id="{{ form.expiration_date.id_for_label }}" name="{{ form.expiration_date.name }}" class="form-control" value="{{ form.expiration_date.value|default:'' }}">
                     <span class="calendar-icon">📅</span>
                 </div>
-                </div>
+            </div>
         </div>
  
         <div class="form-row">

@@ -30,7 +30,7 @@
   <div class="d-flex justify-content-between align-items-start product-info-box mb-4 flex-wrap">
     <div class="left-info">
       <h4 class="fw-bold mb-2">{{ product.name }}</h4>
-      <p class="mb-1"><strong>消費期限:</strong> {{ product.expiration_date|date:"Y年n月j日" }}</p>
+      <p class="mb-1"><strong>消費期限:</strong> {{ product.expiration_date|date:"Y/m/d H:i" }}</p>
       <p class="mb-1"><strong>産地:</strong> {{ product.origin|default:"-" }}</p>
       <p class="mb-1"><strong>受け取り期限:</strong> {{ product.pickup_deadline|default:"-" }}</p>
       <hr class="my-2">

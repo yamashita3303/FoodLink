@@ -148,7 +148,7 @@
                                         <div class="product-price">{{ product.price }}円</div>
 
                                         {% if product.expiration_date %}
-                                            <p class="product-expire">期限：{{ product.expiration_date|date:"Y/m/d" }}</p>
+                                            <p class="product-expire">消費期限 {{ product.expiration_date|date:"Y/m/d H:i" }}</p>
                                             <p class="product-days">残り：{{ product.days_remaining }}日</p>
                                         {% endif %}
                                     </div>

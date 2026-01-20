@@ -229,10 +229,20 @@ class ProductForm(forms.ModelForm):
             'origin', 'image1', 'image2', 'image3', 'image4', 'image5', 'notes'
         ]
         widgets = {
-            'expiration_date': forms.DateInput(attrs={'type': 'date'})
+            'expiration_date': forms.DateTimeInput(
+                attrs={
+                    'type': 'datetime-local',
+                    'class': 'form-control'
+                },
+                format='%Y-%m-%dT%H:%M'
+            )
         }
- 
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # 🔥 ここ重要：POSTされた datetime-local を正しく解釈させる
+        self.fields['expiration_date'].input_formats = ['%Y-%m-%dT%H:%M']
+
         for i in range(1, 6):
             self.fields[f'image{i}'].required = False
