@@ -39,10 +39,17 @@
             ⚠️ 期限切れ
           </span>
         {% else %}
-          <span class="badge bg-warning text-dark">
+          <span class="badge
+            {% if product.is_urgent %}
+              urgent blink
+            {% else %}
+              bg-warning text-dark
+            {% endif %}
+          ">
             ⏰ 残り {{ product.remaining_time_display }}
           </span>
-        {% endif %}</p>
+        {% endif %}
+        </p>
       <hr class="my-2">
       <p class="mb-0"><strong>店舗名:</strong> {{ product.store.name|default:"-" }}</p>
     </div>
@@ -76,6 +83,21 @@
 
 <!-- 💅 CSS -->
 <style>
+@keyframes blink {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.blink {
+  animation: blink 1s infinite;
+}
+
+.urgent {
+  background-color: #dc3545; /* bootstrap danger */
+  color: #fff;
+}
+
 /* ギャラリー */
 .gallery-container {
   display: flex;
