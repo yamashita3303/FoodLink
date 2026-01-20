@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import RegexValidator
+from django.utils import timezone
 
 # =========================
 # Userモデル（ユーザ情報）
@@ -72,9 +73,49 @@ class Product(models.Model):
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
 
-
     def __str__(self):
         return self.name
+    
+    @property
+    def is_expired(self):
+        return self.expiration_date < timezone.now()
+    
+    @property
+    def remaining_time_display(self):
+        """
+        残り時間を
+        ・○日
+        ・○時間○分
+        ・○分
+        の形で返す
+        """
+        if self.is_expired:
+            return "期限切れ"
+
+        diff = self.expiration_date - timezone.now()
+        total_seconds = int(diff.total_seconds())
+
+        days = total_seconds // 86400
+        hours = (total_seconds % 86400) // 3600
+        minutes = (total_seconds % 3600) // 60
+
+        if days >= 1:
+            return f"{days}日"
+        elif hours >= 1:
+            return f"{hours}時間"
+        else:
+            return f"{minutes}分"
+        
+    @property
+    def is_urgent(self):
+        """
+        残り5分未満なら True
+        """
+        if self.is_expired:
+            return False
+
+        remaining_seconds = (self.expiration_date - timezone.now()).total_seconds()
+        return remaining_seconds < 300  # 5分 = 300秒
     
 # =========================
 # Cartモデル

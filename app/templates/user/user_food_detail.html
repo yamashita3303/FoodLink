@@ -33,6 +33,16 @@
       <p class="mb-1"><strong>消費期限:</strong> {{ product.expiration_date|date:"Y/m/d H:i" }}</p>
       <p class="mb-1"><strong>産地:</strong> {{ product.origin|default:"-" }}</p>
       <p class="mb-1"><strong>受け取り期限:</strong> {{ product.pickup_deadline|default:"-" }}</p>
+      <p class="mb-1">
+        {% if product.is_expired %}
+          <span class="badge bg-danger">
+            ⚠️ 期限切れ
+          </span>
+        {% else %}
+          <span class="badge bg-warning text-dark">
+            ⏰ 残り {{ product.remaining_time_display }}
+          </span>
+        {% endif %}</p>
       <hr class="my-2">
       <p class="mb-0"><strong>店舗名:</strong> {{ product.store.name|default:"-" }}</p>
     </div>

@@ -173,6 +173,22 @@
       color: #46569b;
       transform: scale(1.1);
     }
+
+    @keyframes blink {
+      0%   { opacity: 1; }
+      50%  { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .blink {
+      animation: blink 1s infinite;
+    }
+
+    .urgent {
+      background-color: #dc3545; /* bootstrap danger */
+      color: #fff;
+    }
+
   </style>
 </head>
  
@@ -205,6 +221,21 @@
         {{ product.quantity }} 個 {{ product.price }} 円<br>
         {{ product.origin }}<br>
         消費期限 {{ product.expiration_date|date:"Y/m/d H:i" }}
+        {% if product.is_expired %}
+          <span class="badge bg-danger">
+            ⚠️ 期限切れ
+          </span>
+        {% else %}
+          <span class="badge
+            {% if product.is_urgent %}
+              urgent blink
+            {% else %}
+              bg-warning text-dark
+            {% endif %}
+          ">
+            ⏰ 残り {{ product.remaining_time_display }}
+          </span>
+        {% endif %}
       </p>
     </div>
   </div>
