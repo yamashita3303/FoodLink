@@ -11,6 +11,7 @@ from django.contrib.auth.hashers import make_password
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
+from django.shortcuts import render, redirect, get_object_or_404
 import pytesseract
 import requests
 from .models import (
@@ -739,29 +740,66 @@ def user_read_qr_code(request, notification_id):
             "notification": notification
         })
 
-def user_qr_result(request, notification_id):
-    notification = get_object_or_404(
-        Notification,
-        notification_id=notification_id,
-        user=request.user
-    )
-    code_type = request.GET.get("type")
-    code_data = request.GET.get("data")
-    qr = get_object_or_404(
-        Qr,
-        code_data=code_data
-    )
 
-     # ✅ 受け取り完了ボタンが押されたとき
+def user_qr_result(request, notification_id):
+    # 🔽 POST（受け取り完了）
     if request.method == "POST":
-        qr.delete()
-        messages.success(request, "受け取りが完了しました")
-        return redirect("user_home")  # ← 遷移先は調整してOK
+        code_data = request.GET.get("data")
+
+        if not code_data:
+            return render(request, "user/qr_error.html", {
+                "message": "QR情報が不正です"
+            })
+
+        try:
+            code_data = int(code_data)
+        except ValueError:
+            return render(request, "user/qr_error.html", {
+                "message": "QRデータ形式が不正です"
+            })
+
+        qr = Qr.objects.filter(code_data=code_data).first()
+
+        if not qr:
+            return render(request, "user/qr_error.html", {
+                "message": "このQRコードは無効です"
+            })
+
+        # ✅ 受け取り完了処理（例）
+        qr.is_received = True
+        qr.save()
+
+        # ✅ ホーム画面へ戻る
+        return redirect("user_home")  # ← 自分のホームURL名に合わせて
+
+    # 🔽 GET（表示用）
+    code_data = request.GET.get("data")
+
+    if not code_data:
+        return render(request, "user/qr_error.html", {
+            "message": "QR情報が不正です"
+        })
+
+    try:
+        code_data = int(code_data)
+    except ValueError:
+        return render(request, "user/qr_error.html", {
+            "message": "QRデータ形式が不正です"
+        })
+
+    qr = Qr.objects.filter(code_data=code_data).first()
+
+    if not qr:
+        return render(request, "user/qr_error.html", {
+            "message": "このQRコードは無効です"
+        })
 
     return render(request, "user/qr_result.html", {
-        "notification": notification,
-        "qr": qr
+        "qr": qr,
     })
+
+
+
 
 
 # store側のビュー
@@ -1240,4 +1278,21 @@ def store_qr_generate(request):
 
     return render(request, "store/qr_generate.html", {
         "qr_list": qr_list
+    })
+
+def store_qr_confirm(request, notification_id):
+    if request.method != "POST":
+        return redirect("store_home")
+
+    notification = get_object_or_404(Notification, pk=notification_id)
+
+    pin = request.POST.get("pin")
+    code_type = request.POST.get("code_type")
+    code_data = request.POST.get("code_data")
+
+    return render(request, "store/qr_confirm.html", {
+        "notification": notification,
+        "pin": pin,
+        "code_type": code_type,
+        "code_data": code_data,
     })
