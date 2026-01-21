@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>受け取り情報</title>
+  <title>受け取り確認</title>
 
   <style>
     body {
@@ -10,7 +10,6 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
       padding: 0;
-      color: #222;
     }
 
     .container {
@@ -51,8 +50,8 @@
       border-radius: 18px;
       padding: 24px 20px;
       text-align: center;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .pin-label {
@@ -62,33 +61,49 @@
     }
 
     .pin-value {
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 700;
       letter-spacing: 6px;
       color: #0d6efd;
     }
 
-    .time {
+    .notice {
+      background: #fff3cd;
+      color: #856404;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
       text-align: center;
-      font-size: 0.8rem;
-      color: #777;
-      margin-bottom: 24px;
     }
 
-    button {
+    .btn {
       width: 100%;
-      padding: 14px;
+      padding: 12px;
       font-size: 1rem;
       font-weight: 600;
-      background: #0d6efd;
-      color: #fff;
-      border: none;
       border-radius: 12px;
+      border: none;
       cursor: pointer;
+      margin-bottom: 10px;
     }
 
-    button:hover {
+    .btn-confirm {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    .btn-confirm:hover {
       opacity: 0.9;
+    }
+
+    .btn-back {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .btn-back:hover {
+      background: #d5d5d5;
     }
   </style>
 </head>
@@ -97,7 +112,7 @@
 
 <div class="container">
 
-  <h2>受け取り情報</h2>
+  <h2>受け取り内容の確認</h2>
 
   <!-- 商品・ロッカー情報 -->
   <div class="card">
@@ -105,26 +120,42 @@
       <strong>商品</strong>{{ notification.product.name }}
     </div>
     <div class="item">
-      <strong>ロッカー番号</strong>{{ qr.code_data }}
+      <strong>ロッカー番号</strong>{{ code_data }}
     </div>
   </div>
 
-  <!-- 🔐 暗証番号 -->
+  <!-- 🔐 暗証番号（強調） -->
   <div class="pin-card">
     <div class="pin-label">暗証番号</div>
-    <div class="pin-value">{{ qr.pin }}</div>
+    <div class="pin-value">{{ pin }}</div>
   </div>
 
-  <div class="time">
-    準備完了日時：{{ qr.created_at|date:"Y/m/d H:i" }}
+  <div class="notice">
+    内容に問題がなければ「確定」を押してください。
   </div>
 
-  <form method="post">
+  <!-- 確定 -->
+  <form method="post" action="{% url 'store_qr_verify' notification.notification_id %}">
     {% csrf_token %}
-    <button
-      type="submit"
-      onclick="return confirm('受け取りを完了しますか？');">
-      受け取り完了
+    <input type="hidden" name="pin" value="{{ pin }}">
+    <input type="hidden" name="code_type" value="{{ code_type }}">
+    <input type="hidden" name="code_data" value="{{ code_data }}">
+
+    <button type="submit" class="btn btn-confirm">
+      この内容で確定
+    </button>
+  </form>
+
+  <!-- 戻る（スキャン結果へ） -->
+  <form
+    method="get"
+    action="{% url 'store_qr_result' notification.notification_id %}"
+  >
+    <input type="hidden" name="type" value="{{ code_type }}">
+    <input type="hidden" name="data" value="{{ code_data }}">
+
+    <button type="submit" class="btn btn-back">
+      戻る
     </button>
   </form>
 

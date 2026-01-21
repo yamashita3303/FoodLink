@@ -2,60 +2,188 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>ロッカーQRコード生成</title>
-    <style>
-        .qr-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-        .qr-box {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: center;
-        }
-        .qr-box img {
-            width: 100%;
-            height: auto;
-            max-width: 180px;   /* ← QRの最大サイズ */
-            display: block;
-            margin: 0 auto;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>ロッカーQRコード生成</title>
+
+  <style>
+    body {
+      background: #f5f5f7;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      position: relative;
+    }
+
+    /* ← ホームへ */
+    .back-home {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .back-home:hover {
+      text-decoration: underline;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* フォーム */
+    .form-area {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .locker-range {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .locker-input {
+      width: 80px;
+      height: 48px;
+      font-size: 1.1rem;
+      text-align: center;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    .locker-range span {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .submit-btn {
+      margin-top: 20px;
+      padding: 10px 24px;
+      border-radius: 12px;
+      border: none;
+      background: #0d6efd;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* アラート */
+    .alert {
+      margin: 15px auto 25px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: #fdecea;
+      border: 1px solid #f5c2c0;
+      color: #fc3041;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* QR表示 */
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .qr-box {
+      border: 1px solid #e0e0e0;
+      padding: 15px;
+      border-radius: 14px;
+      text-align: center;
+      background: #fafafa;
+    }
+
+    .qr-box p {
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .qr-box img {
+      width: 100%;
+      height: auto;
+      max-width: 180px;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>ロッカーQRコード生成</h1>
+<div class="container">
 
-<form method="post">
+  <a href="{% url 'store_home' %}" class="back-home">
+    ← ホームへ
+  </a>
+
+  <h1>ロッカーQRコード生成</h1>
+
+  <form method="post" class="form-area">
     {% csrf_token %}
-    <label>ロッカー番号（開始）</label><br>
-    <input type="number" name="start_locker" required><br><br>
 
-    <label>ロッカー番号（終了）</label><br>
-    <input type="number" name="end_locker" required><br><br>
+    <label class="form-label">ロッカー番号</label>
+    <label class="form-label">例）101～108</label>
 
-    <button type="submit">QRコード生成</button>
-</form>
+    <div class="locker-range">
+      <input type="number" name="start_locker" class="locker-input" required>
+      <span>～</span>
+      <input type="number" name="end_locker" class="locker-input" required>
+    </div>
 
-{% if qr_list %}
+    <button type="submit" class="submit-btn">
+      QRコード生成
+    </button>
+  </form>
+
+  {% if qr_list %}
     <hr>
-    <h2>生成されたQRコード</h2>
+
+    <h2 style="text-align:center; font-size:1.2rem; margin-top:20px;">
+      生成されたQRコード
+    </h2>
+
+    <div class="alert">
+      生成されたQRコードを印刷して、各ロッカーに貼り付けてください。
+    </div>
 
     <div class="qr-grid">
-        {% for qr in qr_list %}
-            <div class="qr-box">
-                <p>ロッカー {{ qr.locker }}</p>
-                <img src="{{ qr.image }}">
-            </div>
-        {% endfor %}
+      {% for qr in qr_list %}
+        <div class="qr-box">
+          <p>ロッカー {{ qr.locker }}</p>
+          <img src="{{ qr.image }}">
+        </div>
+      {% endfor %}
     </div>
-    <a href="{% url 'store_home' %}">
-        <i class="bi bi-house-fill"></i><span>ホーム</span>
-    </a>
-{% endif %}
+  {% endif %}
+
+</div>
 
 </body>
 </html>
