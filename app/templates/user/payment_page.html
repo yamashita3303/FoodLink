@@ -43,7 +43,9 @@
   <h4 class="fw-bold mb-3">お支払い情報</h4>
 
   <div class="payment-card">
-    <form method="post" action="{% url 'test_exec_tran' order.order_id %}">
+    <!-- <form method="post" action="{% url 'test_exec_tran' order.order_id %}"> -->
+    <form method="post" action="{% url 'test_exec_tran' order_id=order.order_id %}">
+
       {% csrf_token %}
       <input type="hidden" name="AccessID" value="{{ AccessID }}">
       <input type="hidden" name="AccessPass" value="{{ AccessPass }}">

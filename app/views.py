@@ -379,77 +379,144 @@ def user_store_detail(request, user_id):
 # -------------------------
 # カート画面（Session）
 # -------------------------
+# @login_required
+# def user_cart(request):
+#     cart = request.session.get('cart', {})
+
+#     if request.method == 'POST':
+#         for pk, item in cart.items():
+#             key = f'quantity_{pk}'
+#             if key in request.POST:
+#                 cart[pk]["quantity"] = max(1, int(request.POST[key]))
+#         request.session["cart"] = cart
+#         return redirect("user_cart")
+
+#     total = sum(item["price"] * item["quantity"] for item in cart.values())
+#     for pk, item in cart.items():
+#         item["subtotal"] = item["price"] * item["quantity"]
+
+#     return render(request, "user/cart.html", {
+#         "cart": cart,
+#         "total": total,
+#     })
+from collections import defaultdict
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+
+from collections import defaultdict
+
 @login_required
 def user_cart(request):
-    cart = request.session.get('cart', {})
+    cart, _ = Cart.objects.get_or_create(user=request.user)
 
-    if request.method == 'POST':
-        for pk, item in cart.items():
-            key = f'quantity_{pk}'
-            if key in request.POST:
-                cart[pk]["quantity"] = max(1, int(request.POST[key]))
-        request.session["cart"] = cart
+    # POST処理
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "add":
+            product_id = request.POST.get("product_id")
+            quantity = int(request.POST.get("quantity", 1))
+            if product_id:
+                product = get_object_or_404(Product, product_id=product_id)
+                item, created = CartItem.objects.get_or_create(
+                    cart=cart,
+                    product=product,
+                    defaults={"quantity": quantity}
+                )
+                if not created:
+                    item.quantity += 1
+                    item.save()
+        elif action == "update":
+            for item in cart.items.all():
+                key = f"quantity_{item.cart_item_id}"
+                if key in request.POST:
+                    item.quantity = max(1, int(request.POST[key]))
+                    item.save()
         return redirect("user_cart")
 
-    total = sum(item["price"] * item["quantity"] for item in cart.values())
-    for pk, item in cart.items():
-        item["subtotal"] = item["price"] * item["quantity"]
+    # GET処理：店舗ごとにグルーピング
+    stores = defaultdict(list)
+    # select_relatedでProductとUser（store）をまとめて取得
+    for item in cart.items.select_related("product__store"):
+        stores[item.product.store].append(item)
+
+    store_blocks = []
+    grand_total = 0
+    for store, items in stores.items():
+        total = sum(item.subtotal for item in items)
+        grand_total += total
+        store_blocks.append({
+            "store": store,   # store は User オブジェクト
+            "items": items,
+            "total": total,
+        })
 
     return render(request, "user/cart.html", {
-        "cart": cart,
-        "total": total,
+        "stores": store_blocks,
+        "grand_total": grand_total,
     })
 
 
-# -------------------------
-# カート → Order作成
-# -------------------------
+    # =========================
+    # 店舗ごとにグルーピング
+    # =========================
+    stores = defaultdict(list)
+
+    for item in cart.items.select_related("product__store"):
+        stores[item.product.store].append(item)
+
+    store_blocks = []
+    grand_total = 0
+
+    for store, items in stores.items():
+        total = sum(item.subtotal for item in items)
+        grand_total += total
+        store_blocks.append({
+            "store": store,
+            "items": items,
+            "total": total,
+        })
+
+    return render(request, "user/cart.html", {
+        "stores": store_blocks,
+        "grand_total": grand_total,
+    })  
+
+
+
 @login_required
-def create_order_from_session(request):
-    cart = request.session.get('cart', {})
-    if not cart:
+def create_order_from_store(request):
+    # GET で store_id を受け取る
+    store_id = request.GET.get("store_id")
+    if not store_id:
         return redirect("user_cart")
 
-    # 店舗を最初の商品から取得
-    first_pk = next(iter(cart))
-    product = Product.objects.get(pk=first_pk)
-    store = product.store
+    cart = get_object_or_404(Cart, user=request.user)
+    items = cart.items.filter(product__store_id=store_id)
+    if not items.exists():
+        return redirect("user_cart")
 
-    # GMO用ユニークOrderID
+    # Order 作成
+    import datetime
     order_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + f"_{request.user.id}"
-
-    # Order作成
     order = Order.objects.create(
         order_id=order_id,
         user=request.user,
-        store=store,
+        store_id=store_id,
     )
 
-    # OrderItem作成
-    for pk, item in cart.items():
-        prod = Product.objects.get(pk=pk)
+    for item in items:
         OrderItem.objects.create(
             order=order,
-            product=prod,
-            quantity=item["quantity"]
+            product=item.product,
+            quantity=item.quantity
         )
+        item.delete()
 
-    # 合計計算
     order.update_total_price()
 
-    # セッションカートクリア
-    request.session["cart"] = {}
-
-    return redirect("entry_tran", order_id=order.order_id)
-
-
-# -------------------------
-# EntryTran
-# -------------------------
-@login_required
-def entry_tran(request, order_id):
-    order = get_object_or_404(Order, order_id=order_id)
-
+    # GMO EntryTran
+    import requests
+    from django.conf import settings
     payload = {
         "ShopID": settings.GMO_SHOP_ID,
         "ShopPass": settings.GMO_SHOP_PASS,
@@ -459,18 +526,93 @@ def entry_tran(request, order_id):
         "JobCd": "CAPTURE",
         "Amount": str(int(order.total_price)),
     }
-
     response = requests.post("https://pt01.mul-pay.jp/payment/EntryTran.idPass", data=payload)
     result = dict(x.split("=") for x in response.text.split("&"))
 
-    return redirect(
-        reverse("test_exec_tran", args=[order_id])
-        + f"?AccessID={result['AccessID']}&AccessPass={result['AccessPass']}"
-    )
+    return render(request, "user/payment_page.html", {
+        "order": order,
+        "ShopID": settings.GMO_SHOP_ID,
+        "AccessID": result['AccessID'],
+        "AccessPass": result['AccessPass'],
+        "OrderID": order.order_id,
+        "JobCd": "CAPTURE",
+        "Amount": int(order.total_price),
+    })
+
+
+
+# -------------------------
+# カート → Order作成
+# -------------------------
+# @login_required
+# def create_order_from_session(request):
+#     cart = request.session.get('cart', {})
+#     if not cart:
+#         return redirect("user_cart")
+
+#     # 店舗を最初の商品から取得
+#     first_pk = next(iter(cart))
+#     product = Product.objects.get(pk=first_pk)
+#     store = product.store
+
+#     # GMO用ユニークOrderID
+#     order_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + f"_{request.user.id}"
+
+#     # Order作成
+#     order = Order.objects.create(
+#         order_id=order_id,
+#         user=request.user,
+#         store=store,
+#     )
+
+#     # OrderItem作成
+#     for pk, item in cart.items():
+#         prod = Product.objects.get(pk=pk)
+#         OrderItem.objects.create(
+#             order=order,
+#             product=prod,
+#             quantity=item["quantity"]
+#         )
+
+#     # 合計計算
+#     order.update_total_price()
+
+#     # セッションカートクリア
+#     request.session["cart"] = {}
+
+#     return redirect("entry_tran", order_id=order.order_id)
+
+
+# -------------------------
+# EntryTran
+# -------------------------
+# @login_required
+# def entry_tran(request, cart_item_id):
+#     cart = get_object_or_404(CartItem, cart_item_id=cart_item_id)
+
+#     payload = {
+#         "ShopID": settings.GMO_SHOP_ID,
+#         "ShopPass": settings.GMO_SHOP_PASS,
+#         "SiteID": settings.GMO_SITE_ID,
+#         "SitePass": settings.GMO_SITE_PASS,
+#         "OrderID": str(cart.cart_item_id),
+#         "JobCd": "CAPTURE",
+#         "Amount": str(int(cart.total_price)),
+#     }
+
+#     response = requests.post("https://pt01.mul-pay.jp/payment/EntryTran.idPass", data=payload)
+#     result = dict(x.split("=") for x in response.text.split("&"))
+
+#     return redirect(
+#         reverse("test_exec_tran", args=[cart.cart_item_id])
+#         + f"?AccessID={result['AccessID']}&AccessPass={result['AccessPass']}"
+#     )
 
 # -------------------------
 # テスト用 ExecTran
 # -------------------------
+from django.shortcuts import redirect
+
 @login_required
 def test_exec_tran(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
@@ -497,36 +639,40 @@ def test_exec_tran(request, order_id):
             "SecurityCode": security,
         }
 
-        response = requests.post("https://pt01.mul-pay.jp/payment/ExecTran.idPass", data=payload)
+        response = requests.post(
+            "https://pt01.mul-pay.jp/payment/ExecTran.idPass",
+            data=payload
+        )
         result = dict(x.split("=") for x in response.text.split("&"))
 
         approve = result.get("Approve")
         if approve:
             order.status = "pending"
-            order.ready = True
-            message = "決済完了"
-            # --- 店舗に通知を作成 ---
-            # 注文の各商品ごとに通知作成
+            order.save()
+
             for item in order.items.all():
+                product = item.product
+                product.quantity -= item.quantity
+                if product.quantity < 0:
+                    product.quantity = 0
+                product.save()
+
                 Notification.objects.create(
                     type="order",
-                    message=f"{item.product.name} が購入されました（数量: {item.quantity}）",
+                    message=f"{product.name} が購入されました（数量: {item.quantity}）",
                     recipient_type="store",
                     store=order.store,
                     order=order,
-                    product=item.product
+                    product=product
                 )
+
+            # ✅ 決済完了後に home.html へ
+            return redirect("user_home")
+
         else:
             order.status = "canceled"
-            message = "決済失敗"
-
-        order.save()
-
-        return render(request, "user/payment_result.html", {
-            "order": order,
-            "message": message,
-            "result": result,
-        })
+            order.save()
+            return redirect("user_cart")
 
     # GET → フォーム表示
     return render(request, "user/payment_page.html", {
@@ -538,6 +684,22 @@ def test_exec_tran(request, order_id):
         "JobCd": "CAPTURE",
         "Amount": int(order.total_price),
     })
+
+
+
+    # GET → フォーム表示
+    return render(request, "user/payment_page.html", {
+        "order": order,
+        "ShopID": settings.GMO_SHOP_ID,
+        "AccessID": request.GET.get("AccessID"),
+        "AccessPass": request.GET.get("AccessPass"),
+        "OrderID": order.order_id,
+        "JobCd": "CAPTURE",
+        "Amount": int(order.total_price),
+    })
+
+
+
 
 # -------------------------
 # 決済結果表示（本番用 RetURL 向け）
@@ -553,8 +715,18 @@ def payment_result(request):
         order.status = "pending"
         order.ready = True
         message = "決済完了"
+        print("決済成功")
         # --- 店舗に通知を作成 ---
         # send_store_notification(order)
+        for item in order.items.all():
+                Notification.objects.create(
+                    type="order",
+                    message=f"{item.product.name} が購入されました（数量: {item.quantity}）",
+                    recipient_type="store",
+                    store=order.store,
+                    order=order,
+                    product=item.product
+                )
     else:
         order.status = "canceled"
         message = "決済失敗"

@@ -1,137 +1,101 @@
 {% extends "user/base.html" %}
+{% load static %}
+
 {% block title %}カート | FoodLink{% endblock %}
 
 {% block content %}
+<div class="container mt-4 mb-5">
+  <h2 class="mb-4"> カート</h2>
 
-<style>
-  body {
-    background: #f5f5f7;
-  }
+  {% if stores %}
+  <form method="post" action="{% url 'user_cart' %}">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="update">
 
-  .cart-container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .cart-card {
-    background: #fff;
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 14px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  }
-
-  .cart-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid #eee;
-    padding: 12px 0;
-  }
-
-  .cart-item:first-child {
-    border-top: none;
-  }
-
-  .item-info {
-    flex: 1;
-  }
-
-  .item-name {
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .item-price {
-    font-size: 0.85rem;
-    color: #666;
-  }
-
-  .item-quantity {
-    width: 70px;
-    margin: 0 10px;
-  }
-
-  .item-subtotal {
-    font-weight: 600;
-    min-width: 90px;
-    text-align: right;
-  }
-
-  .cart-total {
-    background: #fff;
-    border-radius: 16px;
-    padding: 16px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    margin-top: 20px;
-  }
-
-  .cart-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 16px;
-  }
-</style>
-
-<div class="cart-container mt-3 mb-5">
-  <h4 class="fw-bold mb-3">カート</h4>
-
-  {% if cart %}
-    <form method="post">
-      {% csrf_token %}
-
-      <div class="cart-card">
-        {% for pk, item in cart.items %}
-          <div class="cart-item">
-            <div class="item-info">
-              <div class="item-name">{{ item.name }}</div>
-              <div class="item-price">¥{{ item.price|floatformat:0 }}</div>
-            </div>
-
-            <input
-              type="number"
-              name="quantity_{{ pk }}"
-              value="{{ item.quantity }}"
-              min="1"
-              class="form-control item-quantity"
-            >
-
-            <div class="item-subtotal">
-              ¥{{ item.subtotal|floatformat:0 }}
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-
-      <div class="cart-total text-end">
-        <div class="fw-bold fs-5">
-          合計：¥{{ total|floatformat:0 }}
+    {% for block in stores %}
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+          <strong>{{ block.store.username }}</strong>
+          {% if block.store.opening_time and block.store.closing_time %}
+            (営業時間: {{ block.store.opening_time }}〜{{ block.store.closing_time }})
+          {% endif %}
         </div>
 
-        <div class="cart-buttons">
-          <button type="submit" class="btn btn-outline-primary">
-            数量を更新
-          </button>
-          <a href="{% url 'user_home' %}" class="btn btn-secondary">
-            買い物を続ける
-          </a>
-          <a href="{% url 'create_order_from_session' %}" class="btn btn-warning">
-            購入手続きへ
+        <div class="card-body p-0">
+          <table class="table mb-0 align-middle text-center">
+            <thead class="table-light">
+              <tr>
+                <th>商品</th>
+                <th>単価</th>
+                <th>数量</th>
+                <th>小計</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for item in block.items %}
+              <tr>
+                <td class="text-start ps-3">{{ item.product.name }}</td>
+                <td>¥{{ item.product.price }}</td>
+                <td style="width:120px;">
+                  <input type="number"
+                         name="quantity_{{ item.cart_item_id }}"
+                         value="{{ item.quantity }}"
+                         min="1"
+                         class="form-control text-center">
+                </td>
+                <td>¥{{ item.subtotal }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-footer text-end">
+          <strong>店舗合計：</strong> ¥{{ block.total }}
+        </div>
+
+        <!-- {# 店舗ごとの購入ボタン #}
+        <div class="text-end mb-3 me-3">
+          <form method="post" action="{% url 'create_order_from_store' %}">
+              {% csrf_token %}
+              <input type="hidden" name="store_id" value="{{ block.store.id }}">
+              <button type="submit" class="btn btn-success btn-sm">
+                  この店舗で購入
+              </button>
+          </form> -->
+        <div class="text-end mb-3 me-3">
+          <a href="{% url 'create_order_from_store' %}?store_id={{ block.store.id }}" class="btn btn-success btn-sm">
+              この店舗で購入
           </a>
         </div>
+
+
+
+
+        </div>
+
       </div>
-    </form>
+    {% endfor %}
+
+    {# カート全体の合計 & 更新ボタン #}
+    <div class="d-flex justify-content-between align-items-center mt-4">
+      <h4 class="mb-0">
+        合計金額：
+        <span class="text-danger">¥{{ grand_total }}</span>
+      </h4>
+      <button type="submit" class="btn btn-primary px-4">
+        数量を更新
+      </button>
+    </div>
+  </form>
 
   {% else %}
-    <div class="text-center mt-5">
-      <p class="text-muted">カートは空です。</p>
-      <a href="{% url 'user_home' %}" class="btn btn-primary mt-2">
+    <div class="text-center py-5">
+      <p class="fs-5 mb-3">カートに商品が入っていません</p>
+      <a href="{% url 'user_home' %}" class="btn btn-outline-secondary">
         商品を探す
       </a>
     </div>
   {% endif %}
 </div>
-
 {% endblock %}
