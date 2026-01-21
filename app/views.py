@@ -590,6 +590,8 @@ def order_item_cancel(request, order_item_id):
         item.save()
 
         order.update_total_price()
+        order.status = "canceled"
+        order.save()
         messages.success(request, "商品をキャンセルしました")
     else:
         messages.error(request, "この注文はキャンセルできません")
@@ -734,6 +736,22 @@ def user_qr_result(request, notification_id):
         Qr,
         code_data=code_data
     )
+
+    # 通知に紐づく注文を取得
+    order = notification.order
+    if not order:
+        messages.error(request, "注文情報が見つかりません")
+        return redirect("user_home")
+
+    # すでに完了している場合
+    if order.status == "completed":
+        messages.info(request, "この注文はすでに完了しています")
+        return redirect("user_home")
+
+    # 注文を完了にする
+    order.status = "completed"
+    order.save(update_fields=["status"])
+    
 
      # ✅ 受け取り完了ボタンが押されたとき
     if request.method == "POST":
