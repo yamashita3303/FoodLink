@@ -8,7 +8,9 @@
 
   <!-- 🔙 戻るボタン -->
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <a href="javascript:history.back()" class="text-dark fs-4"><i class="bi bi-arrow-left"></i></a>
+    <a href="javascript:history.back()" class="text-dark fs-4">
+      <i class="bi bi-arrow-left"></i>
+    </a>
   </div>
 
   <!-- 🖼 横スクロールギャラリー -->
@@ -53,22 +55,46 @@
       <hr class="my-2">
       <p class="mb-0"><strong>店舗名:</strong> {{ product.store.name|default:"-" }}</p>
     </div>
+
     <div class="right-info text-end">
-      <p class="price-display mb-1">¥{{ product.price }} <small class="text-muted">(1個あたり)</small></p>
+      <p class="price-display mb-1">
+        ¥{{ product.price }}
+        <small class="text-muted">(1個あたり)</small>
+      </p>
       <p class="text-danger fw-bold mb-0">残り {{ product.quantity }}個</p>
     </div>
   </div>
 
-  <!-- 🛒 カート追加フォーム -->
-  <form method="post">
+  <!-- 🛒 カート追加フォーム（★完全修正版★） -->
+  <form method="post" action="{% url 'user_cart' %}">
     {% csrf_token %}
+
+    <!-- ★重要：user_cart に命令する -->
+    <input type="hidden" name="action" value="add">
+    <input type="hidden" name="product_id" value="{{ product.product_id }}">
+
+
     <div class="d-flex align-items-center justify-content-center mb-3 mt-3">
       <button type="button" class="btn btn-outline-secondary me-2" id="minusBtn">−</button>
-      <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control text-center" style="width:60px;">
+
+      <input
+        type="number"
+        name="quantity"
+        id="quantity"
+        value="1"
+        min="1"
+        max="{{ product.quantity }}"
+        class="form-control text-center"
+        style="width:60px;"
+      >
+
       <button type="button" class="btn btn-outline-secondary ms-2" id="plusBtn">＋</button>
     </div>
+
     <div class="text-center mb-5">
-      <button type="submit" class="btn btn-warning px-5 py-2 fw-bold rounded-pill">カートに追加</button>
+      <button type="submit" class="btn btn-warning px-5 py-2 fw-bold rounded-pill">
+        カートに追加
+      </button>
     </div>
   </form>
 
@@ -202,10 +228,12 @@ document.getElementById("plusBtn").addEventListener("click", function() {
 const scrollGallery = document.querySelector(".scroll-gallery");
 const leftBtn = document.querySelector(".left-btn");
 const rightBtn = document.querySelector(".right-btn");
+
 function getImageWidth() {
   const img = scrollGallery.querySelector("img");
   return img ? img.clientWidth + 10 : 310;
 }
+
 leftBtn.addEventListener("click", () => {
   scrollGallery.scrollBy({ left: -getImageWidth(), behavior: "smooth" });
 });
