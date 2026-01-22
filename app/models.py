@@ -73,6 +73,11 @@ class Product(models.Model):
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
 
+    expiration_notified = models.BooleanField(
+        "期限切れ通知済み",
+        default=False
+    )
+
     def __str__(self):
         return self.name
     
