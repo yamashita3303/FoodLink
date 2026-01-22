@@ -756,11 +756,27 @@ def order_item_cancel(request, order_item_id):
         messages.error(request, "権限がありません")
         return redirect("user_history")
 
-    if order.status == "pending":
+    # 決済完了後のみキャンセル可
+    if order.status == "pending" and not item.is_canceled:
+        product = item.product
+
+        # 🔁 在庫を元に戻す（決済時の逆）
+        product.quantity += item.quantity
+        product.save()
+
+        # 商品をキャンセル
         item.is_canceled = True
         item.save()
 
+        # 注文金額を再計算
         order.update_total_price()
+
+        # 全商品キャンセルなら注文もキャンセル
+        if not order.items.filter(is_canceled=False).exists():
+            order.status = "canceled"
+
+        order.save()
+
         messages.success(request, "商品をキャンセルしました")
     else:
         messages.error(request, "この注文はキャンセルできません")
