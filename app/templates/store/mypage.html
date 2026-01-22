@@ -2,46 +2,127 @@
 {% block title %}ストアマイページ | FoodLink{% endblock %}
 
 {% block content %}
-<div class="container mt-4" style="max-width: 600px;">
 
-  <h3 class="text-center mb-2">マイページ</h3>
-  <p class="text-center text-muted mb-4">
-    ようこそ、<strong>{{ store.username }}</strong> さん
-  </p>
+<style>
+/* =====================
+   スクロール禁止マイページ
+===================== */
 
-  <div class="mb-3">
-    <div class="text-muted small">電話番号</div>
-    <div class="fs-6">{{ store.phone }}</div>
-  </div>
+html, body {
+  height: 100%;
+  overflow: hidden; /* ページ全体スクロール禁止 */
+}
 
-  <div class="mb-3">
-    <div class="text-muted small">住所</div>
-    <div class="fs-6">
-      〒{{ store.postal_code }}<br>
-      {{ store.prefecture }} {{ store.city }}<br>
-      {{ store.address_line1 }} {{ store.address_line2 }}
+/* コンテンツ全体 */
+.mypage-wrapper {
+  height: calc(100vh - 56px); /* ヘッダーがある場合 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 24px;
+}
+
+/* 中身 */
+.mypage-container {
+  max-width: 520px;
+  width: 100%;
+  padding: 0 14px;
+}
+
+/* タイトル */
+.mypage-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.mypage-sub {
+  text-align: center;
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 20px;
+}
+
+/* 情報 */
+.info-block {
+  padding: 10px 0;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.info-block:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 2px;
+}
+
+.info-value {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ボタン */
+.mypage-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.mypage-btn {
+  flex: 1;
+  padding: 10px 0;
+  font-size: 15px;
+  border-radius: 28px;
+}
+</style>
+
+<div class="mypage-wrapper">
+  <div class="mypage-container">
+
+    <h3 class="mypage-title">マイページ</h3>
+    <p class="mypage-sub">
+      ようこそ、<strong>{{ store.username }}</strong> さん
+    </p>
+
+    <div class="info-block">
+      <div class="info-label">電話番号</div>
+      <div class="info-value">{{ store.phone }}</div>
     </div>
-  </div>
 
-  <div class="mb-4">
-    <div class="text-muted small">営業時間</div>
-    <div class="fs-6">
-      {{ store.opening_time }} 〜 {{ store.closing_time }}
+    <div class="info-block">
+      <div class="info-label">住所</div>
+      <div class="info-value">
+        〒{{ store.postal_code }}
+        {{ store.prefecture }} {{ store.city }}<br>
+        {{ store.address_line1 }} {{ store.address_line2 }}
+      </div>
     </div>
+
+    <div class="info-block">
+      <div class="info-label">営業時間</div>
+      <div class="info-value">
+        {{ store.opening_time }} 〜 {{ store.closing_time }}
+      </div>
+    </div>
+
+    <div class="mypage-actions">
+      <a href="{% url 'store_edit_menu' %}" class="btn btn-primary mypage-btn">
+        情報を編集する
+      </a>
+
+      <form method="post" style="flex:1;">
+        {% csrf_token %}
+        <button type="submit" name="logout" class="btn btn-outline-secondary mypage-btn w-100">
+          ログアウト
+        </button>
+      </form>
+    </div>
+
   </div>
-
-  <div class="d-flex gap-2">
-    <a href="{% url 'store_edit_menu' %}" class="btn btn-primary flex-fill">
-      情報を編集する
-    </a>
-
-    <form method="post" class="flex-fill">
-      {% csrf_token %}
-      <button type="submit" name="logout" class="btn btn-outline-secondary w-100">
-        ログアウト
-      </button>
-    </form>
-  </div>
-
 </div>
+
 {% endblock %}

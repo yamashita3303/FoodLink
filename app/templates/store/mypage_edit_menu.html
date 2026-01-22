@@ -8,15 +8,26 @@
  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
+/* ===== スクロール禁止（レイアウト非破壊） ===== */
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+/* ===== レイアウト ===== */
 .edit-wrapper {
     max-width: 420px;
     margin: 20px auto;
+    padding: 0 12px;
 }
 
 .edit-wrapper h2 {
     margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
 }
 
+/* ===== メニュー ===== */
 .edit-menu {
     list-style: none;
     padding: 0;
@@ -26,16 +37,18 @@
 .edit-menu li a {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 10px;
-    font-size: 16px;
+    gap: 14px;          /* 少し広く */
+    padding: 18px 12px; /* 高さアップ */
+    font-size: 18px;    /* ← 16 → 18 */
     color: #222;
     text-decoration: none;
     border-bottom: 1px solid #ddd;
+    min-height: 56px;   /* タップしやすさUP */
 }
 
+
 .edit-menu li a:hover {
-    background-color: #f5f5f5;
+    background-color: #fafafa;
 }
 
 .edit-menu i {
@@ -44,7 +57,7 @@
     color: #555;
 }
 
-/* ログアウト */
+/* ===== 戻る ===== */
 .edit-menu li.logout a {
     color: #d32f2f;
 }

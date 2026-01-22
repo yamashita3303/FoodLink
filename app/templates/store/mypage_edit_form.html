@@ -1,47 +1,169 @@
 {% extends "store/base.html" %}
 {% block title %}{{ title }} | FoodLink{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
+
+<style>
+/* =====================
+   シンプル編集レイアウト
+===================== */
+.edit-container {
+  max-width: 480px;
+  margin: 32px auto;
+  padding: 0 12px;
+}
+
+/* タイトル */
+.edit-container h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* 現在の値 */
+.current-value {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 22px;
+}
+
+/* フォーム */
+.form-group {
+  margin-bottom: 18px;
+}
+
+/* ラベル */
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* 入力欄（共通） */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* フォーカス */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #46569b;
+}
+
+/* 電話番号：1行で入力しやすく */
+input[type="tel"] {
+  letter-spacing: 0.08em;
+}
+
+/* エラー */
+.form-error {
+  font-size: 12px;
+  color: #dc3545;
+  margin-top: 4px;
+}
+
+/* ボタン */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.form-actions .btn {
+  flex: 1;
+  padding: 10px 0;
+  font-size: 14px;
+}
+
+/* 住所検索 */
+#search_address {
+  margin-top: 6px;
+  padding: 5px 14px;
+  font-size: 12px;
+  border-radius: 16px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+}
+</style>
+
+<div class="edit-container">
+
   <h2>{{ title }}</h2>
 
-  <p>現在の値: <strong>{{ current_value }}</strong></p>
+  <p class="current-value">
+    現在の値：<strong>{{ current_value }}</strong>
+  </p>
 
   <form method="post">
     {% csrf_token %}
+
     {% for field in form %}
-      <div class="mb-3">
-        {{ field.label_tag }} (更新後)
+      <div class="form-group">
+        <label>{{ field.field.verbose_name }}</label>
         {{ field }}
+
         {% if field.errors %}
-          <div class="text-danger mt-1">
-            {% for error in field.errors %}{{ error }}<br>{% endfor %}
+          <div class="form-error">
+            {% for error in field.errors %}
+              {{ error }}
+            {% endfor %}
           </div>
         {% endif %}
       </div>
     {% endfor %}
 
-    <button type="submit" class="btn btn-primary">更新</button>
-    <a href="{% url 'store_edit_menu' %}" class="btn btn-secondary ms-2">戻る</a>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">更新</button>
+      <a href="{% url 'store_edit_menu' %}" class="btn btn-secondary">戻る</a>
+    </div>
   </form>
+
 </div>
 
 {% if form.fields.postal_code %}
 <script>
-document.getElementById('id_postal_code').insertAdjacentHTML('afterend', '<button type="button" id="search_address">住所検索</button>');
+document.getElementById('id_postal_code')
+  .insertAdjacentHTML(
+    'afterend',
+    '<button type="button" id="search_address">住所検索</button>'
+  );
+
 document.getElementById('search_address').addEventListener('click', async () => {
-    const postalCode = document.getElementById('id_postal_code').value.replace('-', '');
-    if(!postalCode) return alert("郵便番号を入力してください");
-    const url = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`;
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if(data.status === 200 && data.results) {
-            const r = data.results[0];
-            document.getElementById('id_prefecture').value = r.address1;
-            document.getElementById('id_city').value = r.address2;
-            document.getElementById('id_address_line1').value = r.address3;
-        } else alert("住所が見つかりません");
-    } catch(e) { alert("住所検索に失敗しました"); }
+  const postalCode = document
+    .getElementById('id_postal_code')
+    .value.replace('-', '');
+
+  if (!postalCode) {
+    alert("郵便番号を入力してください");
+    return;
+  }
+
+  const url = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 200 && data.results) {
+      const r = data.results[0];
+      document.getElementById('id_prefecture').value = r.address1;
+      document.getElementById('id_city').value = r.address2;
+      document.getElementById('id_address_line1').value = r.address3;
+    } else {
+      alert("住所が見つかりません");
+    }
+  } catch {
+    alert("住所検索に失敗しました");
+  }
 });
 </script>
 {% endif %}
