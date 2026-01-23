@@ -98,13 +98,18 @@
                 {% if user.address_line2 %} {{ user.address_line2 }}{% endif %}
             </p>
 
-            {% if user.opening_time or user.closing_time %}
-                <p class="mb-0">
-                    <strong>営業時間：</strong>
-                    {% if user.opening_time %}{{ user.opening_time }}{% endif %}
-                    {% if user.closing_time %} - {{ user.closing_time }}{% endif %}
-                </p>
+        {% if user.opening_time or user.closing_time %}
+        <p class="mb-0">
+            <strong>営業時間：</strong>
+            {% if user.opening_time %}
+            {{ user.opening_time|time:"H:i" }}
             {% endif %}
+            {% if user.closing_time %}
+            〜 {{ user.closing_time|time:"H:i" }}
+            {% endif %}
+        </p>
+        {% endif %}
+
         </div>
     </div>
 

@@ -1150,10 +1150,10 @@ def store_edit_address(request):
         'title': '住所を変更',
         'current_value': f"{store.postal_code} {store.prefecture} {store.city} {store.address_line1}"
     })
-
 @login_required(login_url='store_signin')
 def store_edit_hours(request):
     store = request.user
+
     if request.method == 'POST':
         form = StoreEditHoursForm(request.POST, instance=store)
         if form.is_valid():
@@ -1161,12 +1161,22 @@ def store_edit_hours(request):
             messages.success(request, '営業時間を更新しました。')
             return redirect('store_mypage')
     else:
-        form = StoreEditHoursForm()
+        form = StoreEditHoursForm(instance=store)
+
+    current_value = None
+    if store.opening_time and store.closing_time:
+        current_value = (
+            f"{store.opening_time.strftime('%H:%M')} "
+            f"〜 "
+            f"{store.closing_time.strftime('%H:%M')}"
+        )
+
     return render(request, 'store/mypage_edit_form.html', {
         'form': form,
         'title': '営業時間を変更',
-        'current_value': f"{store.opening_time} - {store.closing_time}"
+        'current_value': current_value
     })
+
 
 from .models import Notification, Product
 

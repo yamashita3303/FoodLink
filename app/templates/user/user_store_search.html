@@ -38,16 +38,38 @@
 {% if mode == "result" %}
 <div class="result-box mt-4">
   <h5>検索結果 ({{ user_search.count }} 件)</h5>
+
   {% if user_search.exists %}
     <div class="row row-cols-1 row-cols-md-2 g-3 mt-2">
       {% for user in user_search %}
         <div class="col">
-          <!-- ここをリンク化 -->
           <a href="{% url 'user_store_detail' user.id %}" class="text-decoration-none text-dark">
             <div class="card h-100">
               <div class="card-body">
-                <h6 class="card-title">{{ user.username }}</h6>
-                <p class="card-text">{{ user.prefecture }} {{ user.city }}<br>{{ user.address_line1 }} {{ user.address_line2 }}</p>
+
+                <!-- 店舗名 -->
+                <h6 class="card-title fw-bold mb-1">
+                  {{ user.username }}
+                </h6>
+
+                <p class="card-text mb-2">
+                  {{ user.prefecture }} {{ user.city }}<br>
+                  {% if user.address_line1 or user.address_line2 %}
+                    {{ user.address_line1|default_if_none:"" }} {{ user.address_line2|default_if_none:"" }}
+                  {% endif %}
+                </p>
+
+
+                <!-- 営業時間 -->
+                <p class="card-text text-muted mb-0">
+                  <i class="bi bi-clock me-1"></i>
+                  {% if user.opening_time and user.closing_time %}
+                    {{ user.opening_time|time:"H:i" }} 〜 {{ user.closing_time|time:"H:i" }}
+                  {% else %}
+                    営業時間未設定
+                  {% endif %}
+                </p>
+
               </div>
             </div>
           </a>
@@ -59,6 +81,7 @@
   {% endif %}
 </div>
 {% endif %}
+
 
 </div>
 
