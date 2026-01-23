@@ -17,6 +17,7 @@ urlpatterns = [
     # path('create_order_from_session/', views.create_order_from_session, name='create_order_from_session'),
     # path("payment/entry/<str:cart_id>/", views.entry_tran, name="entry_tran"),
     path("payment/exec/<str:order_id>/", views.test_exec_tran, name="test_exec_tran"),
+    path("payment/confirm/<str:order_id>/",views.payment_confirm,name="payment_confirm"),
     path("payment/result/", views.payment_result, name="payment_result"),
     path('user_history/', views.user_history, name='user_history'),
     path('order/cancel/<int:order_item_id>/', views.order_item_cancel, name='order_item_cancel'),

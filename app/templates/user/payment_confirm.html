@@ -1,0 +1,175 @@
+{% extends "user/base.html" %}
+
+{% block title %}お支払い内容の確認{% endblock %}
+
+{% block content %}
+
+<style>
+  body {
+    background: #f5f5f7;
+  }
+
+  .confirm-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.8rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  .confirm-row {
+    font-size: 0.95rem;
+    padding: 10px 0;
+  }
+
+  .confirm-label {
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+  }
+
+  .confirm-value {
+    font-weight: 600;
+  }
+
+  .confirm-divider {
+    border-top: 1px solid #eee;
+    margin: 16px 0;
+  }
+
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+  }
+
+  .item-name {
+    font-weight: 600;
+  }
+
+  .item-sub {
+    font-size: 0.8rem;
+    color: #666;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    margin-top: 12px;
+  }
+
+  .notice-text {
+    font-size: 0.8rem;
+    color: #c00;
+    text-align: center;
+    margin: 14px 0;
+  }
+
+  .btn-confirm {
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .back-link {
+    display: block;
+    margin-top: 14px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #555;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="container mt-4 mb-5" style="max-width: 520px;">
+  <h4 class="fw-bold mb-3 text-center">お支払い内容の確認</h4>
+
+  <div class="confirm-card">
+
+    <!-- ▼ 決済情報 -->
+    <div class="confirm-row">
+      <div class="confirm-label">カード番号</div>
+      <div class="confirm-value">
+        **** **** **** {{ CardNo|slice:"-4:" }}
+      </div>
+    </div>
+
+    <div class="confirm-row">
+      <div class="confirm-label">有効期限</div>
+      <div class="confirm-value">{{ Expire }}</div>
+    </div>
+
+    <div class="confirm-row">
+      <div class="confirm-label">支払方法</div>
+      <div class="confirm-value">
+        {% if Method == "1" %}
+          一括払い
+        {% elif Method == "2" %}
+          分割払い
+        {% else %}
+          ボーナス一括
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="confirm-divider"></div>
+
+    <!-- ▼ 購入商品 -->
+    <h6 class="fw-bold mb-2">購入商品</h6>
+
+    {% for item in order_items %}
+      <div class="item-row">
+        <div>
+          <div class="item-name">{{ item.product.name }}</div>
+          <div class="item-sub">
+            ¥{{ item.product.price }} × {{ item.quantity }}
+          </div>
+        </div>
+        <div>
+          ¥{{ item.subtotal }}
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="total-row">
+      <div>合計</div>
+      <div>¥{{ order.total_price }}</div>
+    </div>
+
+    <!-- ▼ 注意 -->
+    <div class="notice-text">
+      ※ ご購入後のキャンセルは可能ですが、返金はできません。あらかじめご了承ください。
+    </div>
+
+    <!-- ▼ 支払い確定 -->
+    <form method="post" action="{% url 'test_exec_tran' order_id=order.order_id %}">
+      {% csrf_token %}
+      <input type="hidden" name="CardNo" value="{{ CardNo }}">
+      <input type="hidden" name="Expire" value="{{ Expire }}">
+      <input type="hidden" name="SecurityCode" value="{{ SecurityCode }}">
+      <input type="hidden" name="Method" value="{{ Method }}">
+      <input type="hidden" name="AccessID" value="{{ AccessID }}">
+      <input type="hidden" name="AccessPass" value="{{ AccessPass }}">
+      <input type="hidden" name="OrderID" value="{{ OrderID }}">
+
+      <button type="submit" class="btn btn-primary w-100 btn-confirm">
+        この内容で支払う
+      </button>
+    </form>
+
+    <!-- ▼ 戻る -->
+    <a href="javascript:history.back()" class="back-link">
+      戻って内容を修正する
+    </a>
+
+  </div>
+</div>
+
+{% endblock %}
