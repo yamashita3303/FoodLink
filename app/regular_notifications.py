@@ -76,5 +76,5 @@ def update():
 # =========================
 def start():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(update, 'interval', minutes=10)  # 10分ごとに実行
+    scheduler.add_job(update, 'interval', minutes=5)  # 5分ごとに実行
     scheduler.start()
