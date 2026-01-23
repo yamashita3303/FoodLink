@@ -5,13 +5,7 @@
 
 {% block content %}
 <div class="container mt-4 mb-5">
-
-  <h2 class="mb-3"> カート</h2>
-
-  <!-- ⚠️ 返金不可メッセージ（赤文字） -->
-  <div class="alert alert-danger small fw-bold" role="alert">
-    ※ ご購入後のキャンセルは可能ですが、返金はできません。あらかじめご了承ください。
-  </div>
+  <h2 class="mb-4"> カート</h2>
 
   {% if stores %}
   <form method="post" action="{% url 'user_cart' %}">
@@ -35,6 +29,7 @@
                 <th>単価</th>
                 <th>数量</th>
                 <th>小計</th>
+                <th>削除</th>
               </tr>
             </thead>
             <tbody>
@@ -43,17 +38,26 @@
                 <td class="text-start ps-3">{{ item.product.name }}</td>
                 <td>¥{{ item.product.price }}</td>
                 <td style="width:120px;">
-                  <input
-                    type="number"
-                    name="quantity_{{ item.cart_item_id }}"
+                  <input type="number"
+                    class="form-control text-center quantity-input"
                     value="{{ item.quantity }}"
                     min="1"
-                    class="form-control text-center"
-                  >
+                    max="{{ item.product.quantity }}"
+                    data-item-id="{{ item.cart_item_id }}">
                 </td>
-                <td>¥{{ item.subtotal }}</td>
+                <td id="subtotal-{{ item.cart_item_id }}">
+                  ¥{{ item.subtotal }}
+                </td>
+                <td>
+                  <button type="submit"
+                          name="delete_item_id"
+                          value="{{ item.cart_item_id }}"
+                          class="btn btn-outline-danger btn-sm">
+                    削除
+                  </button>
+                </td>
               </tr>
-            {% endfor %}
+              {% endfor %}
             </tbody>
           </table>
         </div>
@@ -62,20 +66,30 @@
           <strong>店舗合計：</strong> ¥{{ block.total }}
         </div>
 
-        <!-- 店舗ごとの購入 -->
+        <!-- {# 店舗ごとの購入ボタン #}
         <div class="text-end mb-3 me-3">
-          <a
-            href="{% url 'create_order_from_store' %}?store_id={{ block.store.id }}"
-            class="btn btn-success btn-sm"
-          >
-            この店舗で購入
+          <form method="post" action="{% url 'create_order_from_store' %}">
+              {% csrf_token %}
+              <input type="hidden" name="store_id" value="{{ block.store.id }}">
+              <button type="submit" class="btn btn-success btn-sm">
+                  この店舗で購入
+              </button>
+          </form> -->
+        <div class="text-end mb-3 me-3">
+          <a href="{% url 'create_order_from_store' %}?store_id={{ block.store.id }}" class="btn btn-success btn-sm">
+              この店舗で購入
           </a>
+        </div>
+
+
+
+
         </div>
 
       </div>
     {% endfor %}
 
-    <!-- カート全体 -->
+    {# カート全体の合計 & 更新ボタン #}
     <div class="d-flex justify-content-between align-items-center mt-4">
       <h4 class="mb-0">
         合計金額：
@@ -96,4 +110,33 @@
     </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll(".quantity-input").forEach(input => {
+  input.addEventListener("change", async function () {
+    const itemId = this.dataset.itemId;
+    const quantity = this.value;
+
+    const response = await fetch("{% url 'update_cart_quantity' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: `item_id=${itemId}&quantity=${quantity}`
+    });
+
+    const data = await response.json();
+
+    // 小計更新
+    document.getElementById(`subtotal-${itemId}`).innerText =
+      "¥" + data.subtotal;
+
+    // 👉 合計金額は一旦リロード（後で改善できる）
+    location.reload();
+  });
+});
+</script>
 {% endblock %}

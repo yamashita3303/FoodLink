@@ -1,5 +1,4 @@
 import hashlib
-import datetime
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -13,8 +12,6 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.utils import timezone
 import pytesseract
 import requests
 from .models import (
@@ -48,7 +45,6 @@ from .forms import (
 )
 import datetime
 from django.http import JsonResponse
-now = timezone.now()
 
 # =========================
 # トップページ
@@ -182,10 +178,6 @@ def user_home(request):
     products = (
         Product.objects
         .select_related('store')
-        .filter(
-            expiration_date__gte=now,
-            quantity__gt=0
-        )
         .order_by('-created_at')
     )
 
@@ -217,10 +209,7 @@ def user_home(request):
 
 def user_search(request):
     query = request.GET.get('q', '').strip()
-    products = Product.objects.filter(
-    expiration_date__gte=now,
-    quantity__gt=0
-)
+    products = Product.objects.all()
 
     if query:
         keywords = query.split()  # スペースで区切る
@@ -244,12 +233,8 @@ def user_search(request):
 def user_category_results(request, category_id):
     categories = Category.objects.all()
     category = get_object_or_404(Category, id=category_id)
- 
-    products = Product.objects.filter(
-    category=category,
-    expiration_date__gte=now,
-    quantity__gt=0
-    )  # ← 修正ポイント
+
+    products = Product.objects.filter(category=category)  # ← 修正ポイント
 
     context = {
         'categories': categories,
@@ -327,29 +312,26 @@ from datetime import date
 
 def user_store_detail(request, user_id):
     user = get_object_or_404(User, id=user_id)
-    now = timezone.now()
-
+    today = date.today()
 
     # 新着順（作成日が新しい順）で、期限が切れていないもの
     new_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=now,
-        quantity__gt=0
+        expiration_date__gte=today
     ).order_by('-created_at')
 
     # 期限が近い順（expiration_dateが近い順）で、期限が切れていないもの
     soon_expire_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=now,
-        quantity__gt=0
+        expiration_date__gte=today
     ).order_by('expiration_date')
 
     # 残り日数を計算してテンプレートに渡す
-    # for product in new_products:
-    #     product.days_remaining = (product.expiration_date - today).days
+    for product in new_products:
+        product.days_remaining = (product.expiration_date - today).days
 
-    # for product in soon_expire_products:
-    #     product.days_remaining = (product.expiration_date - today).days
+    for product in soon_expire_products:
+        product.days_remaining = (product.expiration_date - today).days
 
     context = {
         'user': user,
@@ -366,27 +348,26 @@ from datetime import date
 
 def user_store_detail(request, user_id):
     user = get_object_or_404(User, id=user_id)
-    now = timezone.now()
-
+    today = date.today()
 
     # 新着順（作成日が新しい順）で、期限が切れていないもの
     new_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=now
+        expiration_date__gte=today
     ).order_by('-created_at')
 
     # 期限が近い順（expiration_dateが近い順）で、期限が切れていないもの
     soon_expire_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=now
+        expiration_date__gte=today
     ).order_by('expiration_date')
 
     # 残り日数を計算してテンプレートに渡す
-    # for product in new_products:
-    #     product.days_remaining = (product.expiration_date - today).days
+    for product in new_products:
+        product.days_remaining = (product.expiration_date - today).days
 
-    # for product in soon_expire_products:
-    #     product.days_remaining = (product.expiration_date - today).days
+    for product in soon_expire_products:
+        product.days_remaining = (product.expiration_date - today).days
 
     context = {
         'user': user,
@@ -404,6 +385,12 @@ from collections import defaultdict
 @login_required
 def user_cart(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
+
+    # 🔥 ① 期限切れ商品をカートから削除
+    expired_items = cart.items.select_related("product").filter(
+        product__expiration_date__lt=timezone.now()
+    )
+    expired_items.delete()
  
     # POST処理
     if request.method == "POST":
@@ -413,19 +400,38 @@ def user_cart(request):
             quantity = int(request.POST.get("quantity", 1))
             if product_id:
                 product = get_object_or_404(Product, product_id=product_id)
+                # ❌ 期限切れは追加させない（保険）
+                if product.is_expired:
+                    return redirect("user_cart")
                 item, created = CartItem.objects.get_or_create(
                     cart=cart,
                     product=product,
                     defaults={"quantity": quantity}
                 )
                 if not created:
-                    item.quantity += 1
+                    item.quantity = min(item.quantity, product.quantity)
                     item.save()
         elif action == "update":
-            for item in cart.items.all():
+            # 🔴 削除ボタンが押された場合
+            delete_id = request.POST.get("delete_item_id")
+            if delete_id:
+                CartItem.objects.filter(
+                    cart=cart,
+                    cart_item_id=delete_id
+                ).delete()
+                return redirect("user_cart")
+
+            # 🔵 数量更新
+            for item in cart.items.select_related("product"):
                 key = f"quantity_{item.cart_item_id}"
                 if key in request.POST:
-                    item.quantity = max(1, int(request.POST[key]))
+                    requested_qty = int(request.POST[key])
+
+                    # 在庫数を超えないように制限
+                    item.quantity = max(
+                        1,
+                        min(requested_qty, item.product.quantity)
+                    )
                     item.save()
         return redirect("user_cart")
  
@@ -476,7 +482,29 @@ def user_cart(request):
         "stores": store_blocks,
         "grand_total": grand_total,
     })  
- 
+
+from django.views.decorators.http import require_POST
+@login_required
+@require_POST
+def update_cart_quantity(request):
+    item_id = request.POST.get("item_id")
+    quantity = int(request.POST.get("quantity", 1))
+
+    item = get_object_or_404(
+        CartItem,
+        cart__user=request.user,
+        cart_item_id=item_id
+    )
+
+    # 在庫チェック
+    quantity = max(1, min(quantity, item.product.quantity))
+    item.quantity = quantity
+    item.save()
+
+    return JsonResponse({
+        "subtotal": item.subtotal,
+        "price": item.product.price,
+    })
  
  
 @login_required
@@ -494,36 +522,6 @@ def create_order_from_store(request):
     # Order 作成
     import datetime
     order_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + f"_{request.user.id}"
-
-    with transaction.atomic():  # ★ 超重要（在庫ズレ防止）
-        order = Order.objects.create(
-            order_id=order_id,
-            user=request.user,
-            store=store,
-        )
- 
-        for pk, item in cart.items():
-            prod = Product.objects.select_for_update().get(pk=pk)
- 
-            # 🔴 在庫チェック
-            if prod.quantity < item["quantity"]:
-                messages.error(request, f"{prod.name} の在庫が不足しています")
-                return redirect("user_cart")
- 
-            # 🔽 在庫を減らす
-            prod.quantity -= item["quantity"]
-            prod.save()
- 
-            OrderItem.objects.create(
-                order=order,
-                product=prod,
-                quantity=item["quantity"]
-            )
- 
-        order.update_total_price()
- 
-    request.session["cart"] = {}
-    return redirect("entry_tran", order_id=order.order_id)
     order = Order.objects.create(
         order_id=order_id,
         user=request.user,
@@ -732,29 +730,6 @@ def test_exec_tran(request, order_id):
 # -------------------------
 from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
-def payment_confirm(request, order_id):
-    if request.method != "POST":
-        return redirect("user_cart")
-
-    order = get_object_or_404(Order, order_id=order_id, user=request.user)
-
-    context = {
-        # 決済情報
-        "CardNo": request.POST.get("CardNo"),
-        "Expire": request.POST.get("Expire"),
-        "SecurityCode": request.POST.get("SecurityCode"),
-        "Method": request.POST.get("Method"),
-        "AccessID": request.POST.get("AccessID"),
-        "AccessPass": request.POST.get("AccessPass"),
-        "OrderID": request.POST.get("OrderID"),
-
-        # ★ここが追加
-        "order": order,
-        "order_items": order.items.all(),
-    }
-
-    return render(request, "user/payment_confirm.html", context)
-
 def payment_result(request):
     order_id = request.POST.get("OrderID")
     approve = request.POST.get("Approve")

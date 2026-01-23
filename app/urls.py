@@ -13,6 +13,7 @@ urlpatterns = [
     path('store/<int:user_id>/', views.user_store_detail, name='user_store_detail'),# 店舗詳細ページ
     path('category/<int:category_id>/', views.user_category_results, name='user_category_results'),
     path('cart/', views.user_cart, name='user_cart'),
+    path("cart/update/", views.update_cart_quantity, name="update_cart_quantity"),
     path('create_order_from_store/', views.create_order_from_store, name='create_order_from_store'),
     # path('create_order_from_session/', views.create_order_from_session, name='create_order_from_session'),
     # path("payment/entry/<str:cart_id>/", views.entry_tran, name="entry_tran"),
