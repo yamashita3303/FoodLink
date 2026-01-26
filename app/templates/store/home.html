@@ -1,9 +1,10 @@
 {% extends "store/base.html" %}
 {% load static %}
- 
+
 {% block title %}ホーム | FoodLink{% endblock %}
- 
+
 {% block content %}
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -259,25 +260,153 @@
 {% empty %}
 <div class="alert alert-info">登録された商品はありません。</div>
 {% endfor %}
+=======
+<style>
+  /* ===== 商品カード ===== */
+  .item-card {
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  }
+
+  .item-left {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .item-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    background: #f5f5f5;
+    flex-shrink: 0;
+  }
+
+  .item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .price-tag {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+
+  .item-info h5 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .item-info p {
+    font-size: 13px;
+    color: #555;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .item-info .meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #777;
+  }
+
+  /* ===== フローティング追加ボタン ===== */
+  .fab {
+    position: fixed;
+    bottom: 85px;
+    right: 22px;
+    width: 62px;
+    height: 62px;
+    background: linear-gradient(135deg, #FFD54F, #FFC107);
+    border-radius: 50%;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    text-decoration: none;
+  }
+
+  .fab::before,
+  .fab::after {
+    content: '';
+    position: absolute;
+    background-color: white;
+    border-radius: 2px;
+  }
+
+  .fab::before {
+    width: 26px;
+    height: 4px;
+  }
+
+  .fab::after {
+    width: 4px;
+    height: 26px;
+  }
+
+  /* ===== 見出し ===== */
+  .page-title {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 14px;
+  }
+</style>
+
+<div class="container my-3">
+
+  <p class="page-title">登録されている商品一覧</p>
+
+  {% for product in products %}
+    <div class="item-card">
+
+      <div class="item-left">
+        <div class="item-image">
+          {% if product.image1 %}
+            <img src="{{ product.image1.url }}">
+          {% else %}
+            <img src="{% static 'images/placeholder_store.png' %}">
+          {% endif %}
+          <div class="price-tag">¥{{ product.price|floatformat:0 }}</div>
+        </div>
+
+        <div class="item-info">
+          <h5>{{ product.name }}</h5>
+          <p>
+            {{ product.quantity }} 個 / {{ product.price }} 円<br>
+            {{ product.origin }}
+          </p>
+          <div class="meta">
+            消費期限：{{ product.expiration_date|date:"Y/m/d" }}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  {% empty %}
+    <div class="alert alert-info">
+      登録された商品はありません。
+    </div>
+  {% endfor %}
+>>>>>>> user_visual
 </div>
- 
+
+<!-- 追加ボタン -->
 <a href="{% url 'store_registar' %}" class="fab"></a>
- 
-<nav class="bottom-nav">
-  <a href="{% url 'store_home' %}" class="{% if 'store_home' in request.path %}active{% endif %}">
-    <i class="bi bi-house-fill"></i><span>ホーム</span>
-  </a>
-  <a href="{% url 'store_list' %}" class="{% if 'list' in request.path %}active{% endif %}">
-    <i class="bi bi-list"></i><span>出品一覧</span>
-  </a>
-  <a href="{% url 'store_alert' %}">
-    <i class="bi bi-bell"></i><span>通知</span>
-  </a>
-  <a href="{% url 'store_mypage' %}">
-    <i class="bi bi-person-fill"></i><span>マイページ</span>
-  </a>
-</nav>
- 
-</body>
-</html>
 {% endblock %}

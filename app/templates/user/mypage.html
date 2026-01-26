@@ -102,12 +102,24 @@
         {{ user.phone }}
       </li>
       <li class="list-group-item app-list-item d-flex align-items-start">
-        <i class="bi bi-geo-alt app-icon me-2"></i>
-        <span>
+      <i class="bi bi-geo-alt app-icon me-2"></i>
+      <span>
+        {% if user.postal_code %}
           {{ user.postal_code }}<br>
-          {{ user.prefecture }} {{ user.city }} {{ user.address_line1 }} {{ user.address_line2 }}
-        </span>
-      </li>
+        {% endif %}
+
+        {{ user.prefecture }} {{ user.city }}
+
+        {% if user.address_line1 %}
+          {{ user.address_line1 }}
+        {% endif %}
+
+        {% if user.address_line2 %}
+          {{ user.address_line2 }}
+        {% endif %}
+      </span>
+    </li>
+
     </ul>
   </div>
 
