@@ -763,6 +763,30 @@ def payment_result(request):
         "result": request.POST,
     })
 
+def payment_confirm(request, order_id):
+    if request.method != "POST":
+        return redirect("user_cart")
+
+    order = get_object_or_404(Order, order_id=order_id, user=request.user)
+
+    context = {
+        # 決済情報
+        "CardNo": request.POST.get("CardNo"),
+        "Expire": request.POST.get("Expire"),
+        "SecurityCode": request.POST.get("SecurityCode"),
+        "Method": request.POST.get("Method"),
+        "AccessID": request.POST.get("AccessID"),
+        "AccessPass": request.POST.get("AccessPass"),
+        "OrderID": request.POST.get("OrderID"),
+
+        # ★ここが追加
+        "order": order,
+        "order_items": order.items.all(),
+    }
+
+    return render(request, "user/payment_confirm.html", context)
+
+
 @login_required
 def user_history(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
