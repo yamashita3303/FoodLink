@@ -414,7 +414,7 @@ def user_cart(request):
                 if not created:
                     item.quantity += quantity
                     item.save()
-                    
+
         elif action == "update":
             # 🔴 削除ボタンが押された場合
             delete_id = request.POST.get("delete_item_id")
@@ -815,6 +815,17 @@ def order_item_cancel(request, order_item_id):
         order.update_total_price()
         order.status = "canceled"
         order.save()
+        
+        product = item.product
+        Notification.objects.create(
+            recipient_type="store",
+            store=order.store,
+            order=order,
+            product=product,
+            type="info",
+            message=f"購入者キャンセルしました。商品「{product.name}」を自己回収してください。"
+        )
+
         messages.success(request, "商品をキャンセルしました")
     else:
         messages.error(request, "この注文はキャンセルできません")
