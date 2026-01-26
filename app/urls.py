@@ -43,6 +43,7 @@ urlpatterns = [
     path('store_alert/', views.store_alert, name='store_alert'),
     path('prepare/<int:notification_id>/', views.prepare_product, name='prepare_product'),
     path('store_registar/', views.store_registar, name='store_registar'),
+    path('store/sales/', views.store_sales, name='store_sales'),
 
     # 複数画像登録用
     # path('product_create/', views.product_create, name='product_create'),

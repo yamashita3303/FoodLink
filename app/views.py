@@ -1323,3 +1323,57 @@ def product_ocr(request, product_id):
     print(extracted_text)
 
     return HttpResponse("OCR 完了！コンソールを確認してください")
+
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
+from django.utils import timezone
+from datetime import timedelta
+from .models import OrderItem
+
+@login_required(login_url='store_signin')
+def store_sales(request):
+    store = request.user
+
+    # 表示する日を判定
+    day_type = request.GET.get('day', 'today')
+
+    if day_type == 'yesterday':
+        target_date = timezone.localdate() - timedelta(days=1)
+        label = '前日の売上'
+    else:
+        target_date = timezone.localdate()
+        label = '今日の売上'
+
+    start = timezone.make_aware(
+        timezone.datetime.combine(target_date, timezone.datetime.min.time())
+    )
+    end = start + timedelta(days=1)
+
+    sales_items = OrderItem.objects.filter(
+        order__store=store,
+        order__status='completed',
+        is_canceled=False,
+        order__created_at__range=(start, end)
+    ).annotate(
+        net_sales=ExpressionWrapper(
+            F('subtotal') * 0.9,
+            output_field=DecimalField()
+        )
+    )
+
+    total_gross = sales_items.aggregate(
+        total=Sum('subtotal')
+    )['total'] or 0
+
+    total_net = sales_items.aggregate(
+        total=Sum('net_sales')
+    )['total'] or 0
+
+    return render(request, 'store/sales.html', {
+        'sales_items': sales_items,
+        'total_gross': total_gross,
+        'total_net': total_net,
+        'target_date': target_date,
+        'label': label,
+        'day_type': day_type,
+    })
