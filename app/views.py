@@ -398,19 +398,23 @@ def user_cart(request):
         if action == "add":
             product_id = request.POST.get("product_id")
             quantity = int(request.POST.get("quantity", 1))
+
             if product_id:
                 product = get_object_or_404(Product, product_id=product_id)
                 # ❌ 期限切れは追加させない（保険）
                 if product.is_expired:
                     return redirect("user_cart")
+
                 item, created = CartItem.objects.get_or_create(
                     cart=cart,
                     product=product,
                     defaults={"quantity": quantity}
                 )
+
                 if not created:
-                    item.quantity = min(item.quantity, product.quantity)
+                    item.quantity += quantity
                     item.save()
+                    
         elif action == "update":
             # 🔴 削除ボタンが押された場合
             delete_id = request.POST.get("delete_item_id")
