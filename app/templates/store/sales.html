@@ -1,0 +1,75 @@
+{% extends "store/base.html" %}
+{% block title %}売上確認 | FoodLink{% endblock %}
+
+{% block content %}
+<div class="container mt-3 mb-5">
+
+  <!-- ===== タイトル + 日付切り替え ===== -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="fw-bold mb-0"> {{ label }}</h4>
+      <small class="text-muted">{{ target_date|date:"Y年m月d日" }}</small>
+    </div>
+
+    <div class="btn-group btn-group-sm shadow-sm">
+      <a href="?day=yesterday"
+         class="btn {% if day_type == 'yesterday' %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        前日
+      </a>
+      <a href="?day=today"
+         class="btn {% if day_type == 'today' %}btn-dark{% else %}btn-outline-dark{% endif %}">
+        今日
+      </a>
+    </div>
+  </div>
+
+  <!-- ===== 売上 & 利益 ===== -->
+  <div class="row mb-4">
+    <div class="col-6">
+      <div class="card shadow-sm text-center border-0">
+        <div class="card-body">
+          <p class="mb-1 text-muted small">売上（総額）</p>
+          <h4 class="fw-bold mb-0">
+            ¥{{ total_gross|floatformat:0 }}
+          </h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6">
+      <div class="card shadow-sm text-center border-0 bg-light">
+        <div class="card-body">
+          <p class="mb-1 text-muted small">利益（手数料10%差引後）</p>
+          <h4 class="fw-bold text-success mb-0">
+            ¥{{ total_net|floatformat:0 }}
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 明細 ===== -->
+  {% for item in sales_items %}
+    <div class="card mb-2 shadow-sm border-0">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ item.product.name }}</strong><br>
+          <small class="text-muted">
+            {{ item.quantity }}個 ・
+            売上 ¥{{ item.subtotal|floatformat:0 }} ・
+            利益 ¥{{ item.net_sales|floatformat:0 }}
+          </small>
+        </div>
+        <span class="badge bg-secondary">
+          {{ item.order.created_at|time:"H:i" }}
+        </span>
+      </div>
+    </div>
+  {% empty %}
+    <div class="alert alert-info text-center">
+      この日の売上はありません。
+    </div>
+  {% endfor %}
+
+</div>
+{% endblock %}

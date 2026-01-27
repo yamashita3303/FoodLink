@@ -262,6 +262,40 @@
 {% endfor %}
 =======
 <style>
+  /* ===== 見出し & 売上ボタン ===== */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .page-title {
+    font-size: 15px;
+    color: #666;
+    margin: 0;
+  }
+
+  .sales-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #46569b;
+    background: #eef2ff;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .sales-btn:hover {
+    background: #dfe6ff;
+    color: #2f3a8f;
+    transform: translateY(-1px);
+  }
+
   /* ===== 商品カード ===== */
   .item-card {
     background: #ffffff;
@@ -360,18 +394,19 @@
     width: 4px;
     height: 26px;
   }
-
-  /* ===== 見出し ===== */
-  .page-title {
-    font-size: 15px;
-    color: #666;
-    margin-bottom: 14px;
-  }
 </style>
 
 <div class="container my-3">
 
-  <p class="page-title">登録されている商品一覧</p>
+  <!-- 見出し + 売上ボタン -->
+  <div class="page-header">
+    <p class="page-title">登録されている商品一覧</p>
+
+    <a href="{% url 'store_sales' %}" class="sales-btn">
+      <i class="bi bi-bar-chart-fill"></i>
+      売上を見る
+    </a>
+  </div>
 
   {% for product in products %}
     <div class="item-card">
@@ -407,6 +442,7 @@
 >>>>>>> user_visual
 </div>
 
-<!-- 追加ボタン -->
+<!-- 商品追加ボタン -->
 <a href="{% url 'store_registar' %}" class="fab"></a>
+
 {% endblock %}

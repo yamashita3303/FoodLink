@@ -61,12 +61,57 @@
 </div>
 
 <style>
-/* 横スクロール */
+/* ===== 検索 ===== */
+.search-area {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.search-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.1rem;
+  padding: 10px 22px;
+  border-radius: 30px;
+  background: #f5f7fa;
+  color: #333;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
+}
+.search-link:hover {
+  background: #e9ecf1;
+  transform: translateY(-2px);
+}
+
+/* ===== 店舗ブロック ===== */
+.store-block {
+  margin-bottom: 40px;
+}
+
+.store-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.store-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.store-location {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* ===== 横スクロール ===== */
 .horizontal-scroll {
   display: flex;
+  gap: 14px;
   overflow-x: auto;
-  gap: 12px;
-  padding-bottom: 5px;
+  padding-bottom: 6px;
 }
 .horizontal-scroll::-webkit-scrollbar {
   height: 6px;
@@ -81,13 +126,14 @@
   flex-shrink: 0;
 }
 
-/* 商品カード */
+/* ===== 商品カード ===== */
 .product-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.product-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  background: #fff;
+  border-radius: 16px;
+  padding: 8px;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
 }
 
 /* 検索バー風リンク */
@@ -104,6 +150,73 @@
 
 .search-bar-link:hover .form-control {
   background-color: #f8f9fa;
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.15);
+}
+
+.product-card img {
+  border-radius: 12px;
+  height: 140px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.product-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+
+.product-price {
+  font-size: 0.85rem;
+  color: #666;
 }
 </style>
+
+<div class="container mt-3 mb-5">
+
+  <!-- 🔍 検索 -->
+  <div class="search-area">
+    <a href="{% url 'user_search' %}" class="search-link">
+      <i class="bi bi-search"></i>
+      商品を検索
+    </a>
+  </div>
+
+  <!-- 🏪 店舗ごと -->
+  {% for store, products in store_products.items %}
+    <div class="store-block">
+
+      <!-- 店舗ヘッダー -->
+      <div class="store-header">
+        <div class="store-name">{{ store.username }}</div>
+        <div class="store-location">
+          {{ store.prefecture }} {{ store.city }}
+        </div>
+      </div>
+
+      <!-- 横スクロール商品 -->
+      <div class="horizontal-scroll">
+        {% for product in products %}
+          <div class="scroll-item">
+            <a href="{% url 'user_food_detail' pk=product.product_id %}"
+               class="text-decoration-none text-dark">
+
+              <div class="product-card">
+                <img src="{{ product.image1.url }}">
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-price">¥{{ product.price }}</div>
+              </div>
+
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  {% endfor %}
+
+</div>
 {% endblock %}
