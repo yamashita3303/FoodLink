@@ -4,7 +4,6 @@
 {% block title %}ホーム | FoodLink{% endblock %}
 
 {% block content %}
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -190,79 +189,7 @@
       color: #fff;
     }
 
-  </style>
-</head>
- 
-<body>
- 
-<div class="container my-4">
-  <h2 class="mb-3">ようこそ、{{ store.username }} 様！</h2>
-  <p>現在登録されている商品一覧です。</p>
- 
-  <a href="{% url 'store_registar' %}" class="btn btn-primary mb-4">
-    ＋ 新しい商品を登録する
-  </a>
- 
-  {% for product in products %}
-<div class="item-card">
-
-  <div class="item-left">
-    <div class="item-image">
-      {% if product.image1 %}
-        <img src="{{ product.image1.url }}">
-      {% else %}
-        <img src="{% static 'images/placeholder_store.png' %}">
-      {% endif %}
-      <div class="price-tag">¥{{ product.price|floatformat:0 }}</div>
-    </div>
-
-    <div class="item-info">
-      <h5>{{ product.name }}</h5>
-      <p>
-        {{ product.quantity }} 個 {{ product.price }} 円<br>
-        {{ product.origin }}<br>
-        消費期限 {{ product.expiration_date|date:"Y/m/d H:i" }}
-        {% if product.is_expired %}
-          <span class="badge bg-danger">
-            ⚠️ 期限切れ
-          </span>
-        {% else %}
-          <span class="badge
-            {% if product.is_urgent %}
-              urgent blink
-            {% else %}
-              bg-warning text-dark
-            {% endif %}
-          ">
-            ⏰ 残り {{ product.remaining_time_display }}
-          </span>
-        {% endif %}
-      </p>
-    </div>
-  </div>
-
-  <div class="item-actions">
-    <a href="{% url 'product_edit' product_id=product.product_id %}" class="edit-btn">
-    編集
-    </a>
-
-      <form action="{% url 'product_delete' product_id=product.product_id %}"
-        method="post"
-        onsubmit="return confirm('この商品を削除してもよろしいですか？');">
-    {% csrf_token %}
-    <button type="submit" class="delete-btn">
-      <i class="bi bi-trash"></i>
-    </button>
-  </form>
-  </div>
-
-</div>
-{% empty %}
-<div class="alert alert-info">登録された商品はありません。</div>
-{% endfor %}
-=======
-<style>
-  /* ===== 見出し & 売上ボタン ===== */
+    /* ===== 見出し & 売上ボタン ===== */
   .page-header {
     display: flex;
     justify-content: space-between;
@@ -394,7 +321,11 @@
     width: 4px;
     height: 26px;
   }
-</style>
+
+  </style>
+</head>
+ 
+<body>
 
 <div class="container my-3">
 
@@ -424,23 +355,47 @@
         <div class="item-info">
           <h5>{{ product.name }}</h5>
           <p>
-            {{ product.quantity }} 個 / {{ product.price }} 円<br>
-            {{ product.origin }}
+            {{ product.quantity }} 個 {{ product.price }} 円<br>
+            {{ product.origin }}<br>
+            消費期限 {{ product.expiration_date|date:"Y/m/d H:i" }}
+            {% if product.is_expired %}
+              <span class="badge bg-danger">
+                ⚠️ 期限切れ
+              </span>
+            {% else %}
+              <span class="badge
+                {% if product.is_urgent %}
+                  urgent blink
+                {% else %}
+                  bg-warning text-dark
+                {% endif %}
+              ">
+                ⏰ 残り {{ product.remaining_time_display }}
+              </span>
+            {% endif %}
           </p>
-          <div class="meta">
-            消費期限：{{ product.expiration_date|date:"Y/m/d" }}
-          </div>
         </div>
       </div>
 
+      <div class="item-actions">
+        <a href="{% url 'product_edit' product_id=product.product_id %}" class="edit-btn">
+        編集
+        </a>
+
+          <form action="{% url 'product_delete' product_id=product.product_id %}"
+            method="post"
+            onsubmit="return confirm('この商品を削除してもよろしいですか？');">
+        {% csrf_token %}
+        <button type="submit" class="delete-btn">
+          <i class="bi bi-trash"></i>
+        </button>
+      </form>
+      </div>
+
     </div>
-  {% empty %}
-    <div class="alert alert-info">
-      登録された商品はありません。
-    </div>
-  {% endfor %}
->>>>>>> user_visual
-</div>
+    {% empty %}
+    <div class="alert alert-info">登録された商品はありません。</div>
+    {% endfor %}
 
 <!-- 商品追加ボタン -->
 <a href="{% url 'store_registar' %}" class="fab"></a>
