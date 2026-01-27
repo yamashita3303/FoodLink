@@ -38,7 +38,7 @@ urlpatterns = [
     path('store_signup/', views.store_signup, name='store_signup'),
     path('store_signin/', views.store_signin, name='store_signin'),
     path('store_home/', views.store_home, name='store_home'),
-    path('list/', views.store_list, name='store_list'),
+    path('list/', views.store_purchased_list, name='store_list'),
     path('store_mypage/', views.store_mypage, name='store_mypage'),
     path('store_mypage/edit/', views.store_edit_menu, name='store_edit_menu'),
     path('store_mypage/edit/username/', views.store_edit_username, name='store_edit_username'),
@@ -47,6 +47,8 @@ urlpatterns = [
     path('store_mypage/edit/address/', views.store_edit_address, name='store_edit_address'),
     path('mypage/edit/hours/', views.store_edit_hours, name='store_edit_hours'),
     path('store_alert/', views.store_alert, name='store_alert'),
+    path("cancel/", views.user_cancel_list, name="user_cancel_list"),
+
     path('store_registar/', views.store_registar, name='store_registar'),
 
     # 複数画像登録用

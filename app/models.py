@@ -131,31 +131,29 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-# =========================
-# CartItemモデル
-# =========================
 class CartItem(models.Model):
     cart_item_id = models.AutoField(primary_key=True)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="cart_items")
-    quantity = models.IntegerField()
-    subtotal = models.IntegerField(blank=True, null=True)
-    checked = models.BooleanField(default=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
 
-    def save(self, *args, **kwargs):
-        self.subtotal = self.product.price * self.quantity
-        super().save(*args, **kwargs)
+    @property
+    def subtotal(self):
+        return self.product.price * self.quantity
+
 
 # =========================
 # Orderモデル
 # =========================
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('canceled', 'Canceled'),
+        ('pending', '準備待ち'),
+        ('completed', '完了'),
+        ('canceled', 'キャンセル'),
     ]
+
     order_id = models.AutoField(primary_key=True)
+
     # 注文した人
     user = models.ForeignKey(
         User,
@@ -169,9 +167,18 @@ class Order(models.Model):
         on_delete=models.CASCADE,
         related_name="store_orders"
     )
+
     total_price = models.IntegerField(default=0)
+
+    # ← ここが「準備完了かどうか」
     ready = models.BooleanField(default=False)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -180,8 +187,12 @@ class Order(models.Model):
         self.total_price = total
         self.save(update_fields=['total_price'])
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+    def mark_ready(self):
+        """準備完了にする"""
+        self.ready = True
+        self.status = 'completed'
+        self.save(update_fields=['ready', 'status'])
+
 
 # =========================
 # OrderItemモデル

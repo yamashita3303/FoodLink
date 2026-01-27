@@ -1,6 +1,7 @@
 {% extends "store/base.html" %}
 {% load static %}
-{% block title %}ストア商品一覧 | FoodLink{% endblock %}
+
+{% block title %}キャンセル商品一覧 | FoodLink{% endblock %}
 
 {% block content %}
 <div class="container mt-3 mb-5">
@@ -8,27 +9,27 @@
   <!-- 🔀 タブ -->
   <div class="d-flex mb-3">
     <a href="?tab=new"
-       class="btn me-2 {% if tab == 'new' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-      新着商品
+       class="btn me-2 {% if tab == 'new' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+      お客様キャンセル
     </a>
 
     <a href="?tab=purchased"
-       class="btn {% if tab == 'purchased' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-      購入済み
+       class="btn {% if tab == 'purchased' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+      期限切れ自動キャンセル
     </a>
   </div>
 
   <!-- ===================== -->
-  <!-- 🆕 新着商品 -->
+  <!-- ❌ お客様キャンセル -->
   <!-- ===================== -->
   {% if tab == 'new' %}
-    {% for product in products %}
-      <div class="card mb-3 shadow-sm rounded-4">
+    {% for cancel in user_cancelled_products %}
+      <div class="card mb-3 shadow-sm rounded-4 border-danger">
         <div class="row g-0 align-items-center">
 
           <div class="col-4 text-center p-2">
-            {% if product.image1 %}
-              <img src="{{ product.image1.url }}"
+            {% if cancel.product.image1 %}
+              <img src="{{ cancel.product.image1.url }}"
                    class="img-fluid rounded-3"
                    style="max-height:120px; object-fit:contain;">
             {% else %}
@@ -39,60 +40,66 @@
           </div>
 
           <div class="col-8 p-2">
-            <strong>{{ product.name }}</strong>
+            <strong>{{ cancel.product.name }}</strong>
+
             <p class="small text-muted mb-1">
-              登録日：{{ product.created_at|date:"Y/m/d H:i" }}
+              キャンセル日：{{ cancel.cancelled_at|date:"Y/m/d H:i" }}
             </p>
-            <span class="badge bg-success">在庫あり</span>
+
+            <span class="badge bg-danger">
+              お客様都合によるキャンセル
+            </span>
           </div>
 
         </div>
       </div>
     {% empty %}
-      <p class="text-center text-muted">商品はありません。</p>
+      <p class="text-center text-muted">
+        お客様にキャンセルされた商品はありません。
+      </p>
     {% endfor %}
   {% endif %}
 
   <!-- ===================== -->
-  <!-- ✅ 購入済み -->
+  <!-- ⏰ 期限切れ自動キャンセル -->
   <!-- ===================== -->
-{% if tab == 'purchased' %}
-  {% for n in notifications %}
-    <div class="card mb-3 shadow-sm rounded-4 border-success">
-      <div class="row g-0 align-items-center">
+  {% if tab == 'purchased' %}
+    {% for expired in expired_products %}
+      <div class="card mb-3 shadow-sm rounded-4 border-warning">
+        <div class="row g-0 align-items-center">
 
-        <div class="col-4 text-center p-2">
-          {% if n.product.image1 %}
-            <img src="{{ n.product.image1.url }}"
-                 class="img-fluid rounded-3"
-                 style="max-height:120px; object-fit:contain;">
-          {% else %}
-            <img src="{% static 'img/no-image.png' %}"
-                 class="img-fluid rounded-3"
-                 style="max-height:120px;">
-          {% endif %}
+          <div class="col-4 text-center p-2">
+            {% if expired.product.image1 %}
+              <img src="{{ expired.product.image1.url }}"
+                   class="img-fluid rounded-3"
+                   style="max-height:120px; object-fit:contain;">
+            {% else %}
+              <img src="{% static 'img/no-image.png' %}"
+                   class="img-fluid rounded-3"
+                   style="max-height:120px;">
+            {% endif %}
+          </div>
+
+          <div class="col-8 p-2">
+            <strong>{{ expired.product.name }}</strong>
+
+            <p class="small text-muted mb-1">
+              期限切れ日時：{{ expired.expired_at|date:"Y/m/d H:i" }}
+            </p>
+
+            <span class="badge bg-warning text-dark">
+              消費期限切れ（自動キャンセル）
+            </span>
+          </div>
+
         </div>
-
-        <div class="col-8 p-2">
-          <strong>{{ n.product.name }}</strong>
-
-          <p class="small text-muted mb-1">
-            購入日：{{ n.order.created_at|date:"Y/m/d H:i" }}
-          </p>
-
-          <a href="{% url 'store_qr_read' n.notification_id %}"
-             class="btn btn-success btn-sm mt-2">
-            準備開始
-          </a>
-        </div>
-
       </div>
-    </div>
-  {% empty %}
-    <p class="text-center text-muted">購入済み商品はありません。</p>
-  {% endfor %}
-{% endif %}
-
+    {% empty %}
+      <p class="text-center text-muted">
+        消費期限切れでキャンセルされた商品はありません。
+      </p>
+    {% endfor %}
+  {% endif %}
 
 </div>
 {% endblock %}

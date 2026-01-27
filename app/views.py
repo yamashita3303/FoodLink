@@ -12,6 +12,9 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render
+from .models import Notification
+from django.contrib.auth.decorators import login_required
 import pytesseract
 import requests
 from .models import (
@@ -19,7 +22,7 @@ from .models import (
     Product, 
     Category, 
     Cart, 
-    CartItem, 
+    CartItem,
     Order, 
     OrderItem,
     Notification,
@@ -799,6 +802,31 @@ def user_history(request):
         'orders': orders
     })
 
+
+@login_required
+def user_cancel_list(request):
+    tab = request.GET.get("tab", "new")
+
+    # 🟥 お客様キャンセル（自分でキャンセルした商品）
+    user_cancelled_products = OrderItem.objects.filter(
+        order__user=request.user,
+        is_canceled=True,
+    ).select_related("product", "order").order_by("-order__created_at")
+
+    # 🟨 消費期限切れ自動キャンセル
+    expired_products = OrderItem.objects.filter(
+        order__user=request.user,
+        product__expiration_date__lt=timezone.now(),
+        is_canceled=False,
+    ).select_related("product", "order").order_by("-product__expiration_date")
+
+    return render(request, "user/cancel_list.html", {
+        "tab": tab,
+        "user_cancelled_products": user_cancelled_products,
+        "expired_products": expired_products,
+    })
+
+
 @login_required
 def order_item_cancel(request, order_item_id):
     item = get_object_or_404(OrderItem, order_item_id=order_item_id)
@@ -1325,6 +1353,36 @@ def store_edit_hours(request):
         'current_value': current_value
     })
 
+
+@login_required
+def store_purchased_list(request):
+
+    qs = Notification.objects.all()
+
+    print("=== ALL ===", qs.count())
+
+    qs2 = Notification.objects.filter(
+        product__store=request.user
+    )
+    print("=== product__store ===", qs2.count())
+
+    qs3 = Notification.objects.filter(
+        recipient_type="store"
+    )
+    print("=== recipient_type=store ===", qs3.count())
+
+    qs4 = Notification.objects.filter(
+        recipient_type="store",
+        product__store=request.user,
+    )
+    print("=== BOTH ===", qs4.count())
+
+    return render(request, "store/store_purchased_list.html", {
+        "notifications": qs4,
+    })
+
+
+
 @login_required(login_url='store_signin')
 def store_alert(request):
     tab = request.GET.get('tab', 'new')
@@ -1443,6 +1501,7 @@ def store_qr_verify(request, notification_id):
         notification_id=notification_id,
         store=request.user
     )
+
     if request.method != "POST":
         return redirect("store_qr_read")
 
@@ -1450,58 +1509,42 @@ def store_qr_verify(request, notification_id):
     code_data = request.POST.get("code_data")
     pin = request.POST.get("pin")
 
-    # ===== バリデーション =====
     if not pin or not pin.isdigit():
         messages.error(request, "暗証番号は数字で入力してください")
         return redirect(
             f"/qr/result/?type={code_type}&data={code_data}"
         )
 
-    pin = int(pin)
-
-    # ===== DB保存 =====
+    # QR保存
     Qr.objects.create(
         code_data=code_data,
-        pin=pin
+        pin=int(pin)
     )
-    # 📨 購入者へ「準備完了」通知
+
+    # ✅ ここが超重要！！！！！！
+    order = notification.order
+    order.ready = True
+    order.save(update_fields=["ready"])
+    order.status = 'completed'
+    order.save()
+
+    # ユーザーに準備完了通知
     Notification.objects.create(
         type="ready",
         message=(
             f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
-            f"受け取りロッカー番号：{code_data}\n"
-            f"ご来店の上、お受け取りください。"
+            f"受け取りロッカー番号：{code_data}"
         ),
         recipient_type="user",
-        user=notification.order.user,
+        user=order.user,
         store=notification.store,
         product=notification.product,
-        order=notification.order,
+        order=order,
     )
 
-    # ✅ 店舗側の購入通知を既読（＝対応済み）
-    # notification.read = True
-    # notification.save()
-
-    # ---- 購入者へメール送信 ----
-    # EmailMessage のインスタンスを作成する
-    # emailMessage = EmailMessage(
-    #     subject='【FoodLink】商品の準備が完了しました',
-    #     body=(
-    #         f"ご注文の「{notification.product}」の準備が完了しました。\n"
-    #         f"受け取りロッカー番号：{code_data}\n"
-    #         f"暗証番号：{pin}\n"
-    #         f"ご来店の上、お受け取りください。"
-    #     ),
-    #     from_email='FoodLink <noreply@example.com>',  # ← ここで Gmail アドレスを隠す
-    #     to=[notification.order.user.email],
-    # )
-    # # send 関数を呼び出してメールを送信する
-    # emailMessage.send()
-
-    messages.success(request, "スキャン情報を保存しました")
-
+    messages.success(request, "準備完了にしました")
     return redirect("store_alert")
+
 
 import qrcode
 import io
