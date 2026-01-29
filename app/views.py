@@ -45,6 +45,10 @@ from .forms import (
 )
 import datetime
 from django.http import JsonResponse
+from django.utils import timezone
+
+now = timezone.now()
+
 
 # =========================
 # トップページ
@@ -173,11 +177,15 @@ def store_alert(request):
 from django.db.models import Case, When, Value, IntegerField
 
 def user_home(request):
-    user = request.user
+    now = timezone.now()
 
     products = (
         Product.objects
         .select_related('store')
+        .filter(
+            expiration_date__gt=now,
+            quantity__gt=0
+        )
         .order_by('-created_at')
     )
 
@@ -209,7 +217,11 @@ def user_home(request):
 
 def user_search(request):
     query = request.GET.get('q', '').strip()
-    products = Product.objects.all()
+    products = Product.objects.filter(
+    expiration_date__gte=now,
+    quantity__gt=0
+)
+
 
     if query:
         keywords = query.split()  # スペースで区切る
@@ -234,7 +246,12 @@ def user_category_results(request, category_id):
     categories = Category.objects.all()
     category = get_object_or_404(Category, id=category_id)
 
-    products = Product.objects.filter(category=category)  # ← 修正ポイント
+    products = Product.objects.filter(
+    category=category,
+    expiration_date__gte=now,
+    quantity__gt=0
+)
+
 
     context = {
         'categories': categories,
@@ -248,7 +265,13 @@ def user_category_results(request, category_id):
 
 
 def user_food_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(
+    Product,
+    pk=pk,
+    expiration_date__gte=date.today(),
+    quantity__gt=0
+)
+
 
     # 画像リストを作る
     images = [img for img in [product.image1, product.image2, product.image3, product.image4, product.image5] if img]
@@ -317,7 +340,7 @@ def user_store_detail(request, user_id):
     # 新着順（作成日が新しい順）で、期限が切れていないもの
     new_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=today
+        expiration_date__gte=now
     ).order_by('-created_at')
 
     # 期限が近い順（expiration_dateが近い順）で、期限が切れていないもの
@@ -353,13 +376,13 @@ def user_store_detail(request, user_id):
     # 新着順（作成日が新しい順）で、期限が切れていないもの
     new_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=today
+        expiration_date__gte=now
     ).order_by('-created_at')
 
     # 期限が近い順（expiration_dateが近い順）で、期限が切れていないもの
     soon_expire_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=today
+        expiration_date__gte=now
     ).order_by('expiration_date')
 
     # 残り日数を計算してテンプレートに渡す
@@ -1192,22 +1215,33 @@ def store_signin(request):
     form = StoreSigninForm()
     return render(request, 'store/signin.html', {'form': form, 'next': next_url})
 
-@login_required(login_url='store_signin')
-def store_home(request):
-    # 1. ログイン中のユーザー（店舗アカウント）を取得
-    store = request.user
-   
-    # 2. その店舗が登録した商品のみをデータベースから取得
-    #    新しいもの順に並べ替えることが多いです
-    products = Product.objects.filter(store=store.id).order_by('-created_at')
-   
-    # 3. テンプレートにデータを渡す
-    context = {
-        'store': store,    # 店舗情報（ヘッダーなどに使う可能性）
-        'products': products # 登録商品の一覧
-    }
-   
-    return render(request, 'store/home.html', context)
+@login_required
+def user_home(request):
+    now = timezone.now()
+
+    products = Product.objects.filter(
+        expiration_date__gte=now,  # ← 画像の end_date__gte=now と同じ考え
+        quantity__gt=0
+    )
+
+    stores = User.objects.filter(is_store=True)
+
+    print("==== USER HOME DEBUG ====")
+    print("全商品数:", products.count())
+    for p in products:
+        print(
+            p.name,
+            "期限:", p.expiration_date,
+            "今:", now,
+            "期限OK:", p.expiration_date >= now,
+            "在庫:", p.quantity
+        )
+
+    return render(request, "user/home.html", {
+        "products": products,
+        "stores": stores
+    })
+
 
 @login_required(login_url='store_signin')
 def store_list(request):
@@ -1587,4 +1621,16 @@ def store_qr_confirm(request, notification_id):
         "pin": pin,
         "code_type": code_type,
         "code_data": code_data,
+    })
+
+@login_required
+def store_home(request):
+    store = request.user
+
+    products = Product.objects.filter(
+        store=store
+    ).order_by('-created_at')
+
+    return render(request, "store/home.html", {
+        "products": products
     })

@@ -23,9 +23,8 @@
   </div>
 
   <!-- 🏪 店舗ごと横スクロール -->
-  {% for store, products in store_products.items %}
+  {% for store in stores %}
     <div class="mb-5">
-
       <!-- 店舗タイトル -->
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="fw-bold mb-0">{{ store.username }}</h4>
@@ -52,10 +51,13 @@
 
             </a>
           </div>
+        {% empty %}
+          <div>データなし</div>
         {% endfor %}
       </div>
-
     </div>
+  {% empty %}
+    <div>データなし</div>
   {% endfor %}
 
 </div>
