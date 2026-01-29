@@ -1,271 +1,270 @@
 {% extends "user/base.html" %}
 {% load static %}
-
 {% block title %}{{ product.name }} | FoodLink{% endblock %}
 
 {% block content %}
-<style>
-/* ===== ギャラリー ===== */
-.gallery-container {
-  position: relative;
-  width: 100%;
-  max-width: 340px;
-  margin: 0 auto;
-}
+<div class="container mt-3 mb-5 product-detail">
 
-.scroll-gallery {
-  display: flex;
-  overflow-x: hidden;
-  scroll-snap-type: x mandatory;
-}
-
-.scroll-gallery img {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
-  scroll-snap-align: start;
-  border-radius: 12px;
-}
-
-/* ボタン */
-.scroll-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
-  z-index: 10;
-}
-
-.left-btn { left: -18px; }
-.right-btn { right: -18px; }
-
-/* ===== 商品情報 ===== */
-.price-display {
-  font-size: 1.4rem;
-  font-weight: bold;
-}
-</style>
-
-<div class="container mt-3 mb-5">
-
-  <!-- 戻る -->
-  <a href="javascript:history.back()" class="text-dark fs-4">
+  <!-- 🔙 戻る -->
+  <a href="javascript:history.back()" class="back-btn">
     <i class="bi bi-arrow-left"></i>
   </a>
 
   <!-- 🖼 ギャラリー -->
-  <div class="gallery-container my-4">
-    <button class="scroll-btn left-btn">◀</button>
-
+  <div class="gallery-wrapper">
     <div class="scroll-gallery" id="gallery">
       {% for img in images %}
         <img src="{{ img.url }}" alt="{{ product.name }}">
       {% empty %}
-        <img src="{% static 'images/no_image.png' %}" alt="画像なし">
+        <img src="{% static 'images/no_image.png' %}">
       {% endfor %}
     </div>
-
-    <button class="scroll-btn right-btn">▶</button>
+    <div class="dots" id="dots"></div>
   </div>
 
-  <!-- 商品情報 -->
-  <div class="d-flex justify-content-between flex-wrap mb-4">
-    <div>
-      <h4 class="fw-bold">{{ product.name }}</h4>
-      <p>消費期限：{{ product.expiration_date|date:"Y年n月j日" }}</p>
-      <p>産地：{{ product.origin|default:"-" }}</p>
-      <p>
+  <!-- 📦 商品カード -->
+  <div class="product-card">
+
+    <!-- ★ ヘッダー -->
+    <div class="product-header">
+
+      <!-- 🔹 左側（商品名＋消費期限） -->
+      <div class="left-info">
+        <h3 class="product-name">{{ product.name }}</h3>
+
         {% if product.is_expired %}
-          <span class="badge bg-danger">
-            ⚠️ 期限切れ
-          </span>
+          <span class="expire-badge expired">期限切れ</span>
         {% else %}
-          <span class="badge
-            {% if product.is_urgent %}
-              urgent blink
-            {% else %}
-              bg-warning text-dark
-            {% endif %}
-          ">
+          <span class="expire-badge {% if product.is_urgent %}urgent blink{% endif %}">
             ⏰ 残り {{ product.remaining_time_display }}
           </span>
         {% endif %}
-      </p>
-      <p>店舗名：{{ product.store }}</p>
-      <p>備考：{{ product.notes|default:"記載なし" }}</p>
+      </div>
+
+      <!-- 🔹 右側（価格＋在庫） -->
+      <div class="right-info">
+        <span class="price">¥{{ product.price }}</span>
+
+        <span class="stock-badge {% if product.quantity <= 3 %}low{% endif %}">
+          残り {{ product.quantity }} 個
+        </span>
+      </div>
+
     </div>
-    <div class="text-end">
-      <p class="price-display">¥{{ product.price }}</p>
-      <p class="text-danger fw-bold">残り {{ product.quantity }}個</p>
+
+    <!-- 📄 詳細 -->
+    <div class="product-meta">
+      <p><strong>消費期限</strong><span>{{ product.expiration_date|date:"Y年n月j日" }}</span></p>
+      <p><strong>産地</strong><span>{{ product.origin|default:"-" }}</span></p>
+      <p><strong>店舗</strong><span>{{ product.store }}</span></p>
+      <p><strong>備考</strong><span>{{ product.notes|default:"記載なし" }}</span></p>
     </div>
   </div>
 
-  <!-- カート -->
-  <form method="post" action="{% url 'user_cart' %}">
+  <!-- 🛒 カート -->
+  <form method="post" action="{% url 'user_cart' %}" class="cart-box">
     {% csrf_token %}
     <input type="hidden" name="action" value="add">
     <input type="hidden" name="product_id" value="{{ product.product_id }}">
 
-    <div class="d-flex justify-content-center mb-3">
-      <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control text-center" style="width:80px;">
+    <div class="quantity-wrapper">
+      <button type="button" class="qty-btn" id="minusBtn">−</button>
+      <input type="number" id="quantityInput" name="quantity"
+             value="1" min="1" max="{{ product.quantity }}">
+      <button type="button" class="qty-btn" id="plusBtn">＋</button>
     </div>
 
-    <div class="text-center">
-      <button class="btn btn-warning px-5 py-2 rounded-pill fw-bold">
-        カートに追加
-      </button>
-    </div>
+    <button class="add-cart-btn">
+      <i class="bi bi-cart-plus"></i> カートに追加
+    </button>
   </form>
-
 </div>
 
-<<<<<<< HEAD
-<!-- ポップアップアラート（スタイリッシュ版） -->
 {% if added %}
-<div id="popup-alert" class="popup-alert">
-  <i class="bi bi-check-circle-fill me-2"></i> カートに追加されました！
+<div class="popup-alert">
+  <i class="bi bi-check-circle-fill"></i> カートに追加しました
 </div>
 {% endif %}
 
-<!-- 💅 CSS -->
+<!-- ================= CSS ================= -->
 <style>
-@keyframes blink {
-  0%   { opacity: 1; }
-  50%  { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-.blink {
-  animation: blink 1s infinite;
-}
-
-.urgent {
-  background-color: #dc3545; /* bootstrap danger */
-  color: #fff;
-}
+.product-detail { max-width: 430px; }
+.back-btn { font-size: 1.4rem; color: #333; }
 
 /* ギャラリー */
-.gallery-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
 .scroll-gallery {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  width: 100%;
-  max-width: 300px;
-  height: 300px;
-  border-radius: 10px;
-  gap: 10px;
-  scrollbar-width: none;
+  height: 260px;
+  border-radius: 18px;
 }
-.scroll-gallery::-webkit-scrollbar { display: none; }
 .scroll-gallery img {
-  width: 100%;
-  height: 100%;
+  flex: 0 0 100%;
   object-fit: cover;
-  scroll-snap-align: center;
-  border-radius: 10px;
-  flex-shrink: 0;
+}
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.dots span {
+  width: 6px;
+  height: 6px;
+  background: #ccc;
+  border-radius: 50%;
+}
+.dots .active { background: #ffc107; }
+
+/* 商品カード */
+.product-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.1);
 }
 
-/* スクロールボタン */
-.scroll-btn {
-  width: 35px;
-  height: 60px;
-  background: rgba(255,255,255,0.85);
-  border: none;
-  cursor: pointer;
-  clip-path: polygon(20% 0%, 80% 50%, 20% 100%);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-.left-btn { clip-path: polygon(80% 0%, 20% 50%, 80% 100%); }
-.scroll-btn:hover {
-  background: rgba(255,255,255,1);
-  transform: scale(1.1);
-  box-shadow: 0 5px 14px rgba(0,0,0,0.25);
-}
-
-/* 商品情報 */
-.product-info-box {
+/* ヘッダー */
+.product-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 10px;
 }
-.left-info { flex: 1; min-width: 55%; }
-.right-info { min-width: 40%; text-align: right; }
-.left-info hr { border: none; border-top: 1px solid #ccc; margin: 8px 0; }
-.price-display { font-size: 2rem; font-weight: bold; color: #000; }
 
-/* ポップアップアラート */
+/* 左側 */
+.left-info {
+  max-width: 65%;
+}
+.product-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+/* 消費期限 */
+.expire-badge {
+  font-size: .75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ffeeba;
+  color: #856404;
+  font-weight: bold;
+}
+.expired {
+  background: #dc3545;
+  color: #fff;
+}
+.urgent {
+  background: #dc3545;
+  color: #fff;
+}
+.blink { animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+
+/* 右側 */
+.right-info {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 金額 */
+.price {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff9800;
+}
+
+/* 在庫 */
+.stock-badge {
+  font-size: .75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255,152,0,.15);
+  color: #ff9800;
+  font-weight: bold;
+}
+.stock-badge.low {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* 詳細 */
+.product-meta p {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed #eee;
+  padding: 6px 0;
+  font-size: .9rem;
+}
+
+/* カート */
+.cart-box {
+  margin-top: 20px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+.quantity-wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+.qty-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f1f3f5;
+  border: none;
+}
+.add-cart-btn {
+  width: 100%;
+  margin-top: 14px;
+  background: linear-gradient(135deg,#ffc107,#ff9800);
+  border: none;
+  color: #fff;
+  padding: 12px;
+  border-radius: 999px;
+  font-weight: bold;
+}
+
+/* ポップアップ */
 .popup-alert {
   position: fixed;
-  top: 80px;
+  top: 90px;
   right: 20px;
-  background-color: #28a745;
+  background: #28a745;
   color: #fff;
-  padding: 12px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  z-index: 10000;
-  opacity: 1;
-  transform: translateX(100%);
-  animation: slideIn 0.5s forwards, fadeOut 0.5s 2s forwards;
-}
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-
-/* スマホ対応 */
-@media (max-width: 767px) {
-  .scroll-gallery, .scroll-gallery img { width: 250px; height: 250px; }
-  .price-display { font-size: 1.6rem; }
-  .left-info { font-size: 0.95rem; }
+  padding: 12px 18px;
+  border-radius: 14px;
 }
 </style>
 
-<!-- 💻 JS -->
-=======
-<!-- ===== JS ===== -->
->>>>>>> user_visual
+<!-- ================= JS ================= -->
 <script>
 const gallery = document.getElementById("gallery");
-const images = gallery.querySelectorAll("img");
-const leftBtn = document.querySelector(".left-btn");
-const rightBtn = document.querySelector(".right-btn");
+const dotsBox = document.getElementById("dots");
+const imgs = gallery.querySelectorAll("img");
 
-let index = 0;
+imgs.forEach((_, i) => {
+  const dot = document.createElement("span");
+  if (i === 0) dot.classList.add("active");
+  dotsBox.appendChild(dot);
+});
 
-function moveGallery(newIndex) {
-  if (newIndex < 0) newIndex = 0;
-  if (newIndex >= images.length) newIndex = images.length - 1;
-
-  index = newIndex;
-  gallery.scrollTo({
-    left: gallery.clientWidth * index,
-    behavior: "smooth"
+gallery.addEventListener("scroll", () => {
+  const index = Math.round(gallery.scrollLeft / gallery.clientWidth);
+  dotsBox.querySelectorAll("span").forEach((d,i)=>{
+    d.classList.toggle("active", i === index);
   });
-}
+});
 
-leftBtn.addEventListener("click", () => moveGallery(index - 1));
-rightBtn.addEventListener("click", () => moveGallery(index + 1));
+const qty = document.getElementById("quantityInput");
+document.getElementById("plusBtn").onclick = () => qty.value < qty.max && qty.value++;
+document.getElementById("minusBtn").onclick = () => qty.value > 1 && qty.value--;
 </script>
+
 {% endblock %}
