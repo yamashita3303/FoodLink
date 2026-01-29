@@ -1,201 +1,111 @@
 {% extends "user/base.html" %}
 {% load static %}
 {% block title %}ホーム | FoodLink{% endblock %}
-
+ 
 {% block content %}
-
-<style>
-/* ===== 検索 ===== */
-.search-area {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.search-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.05rem;
-  padding: 12px 26px;
-  border-radius: 30px;
-  background: #f5f7fa;
-  color: #333;
-  text-decoration: none;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  transition: all 0.25s ease;
-}
-
-.search-link:hover {
-  background: #e9ecf1;
-  transform: translateY(-2px);
-}
-
-/* ===== 店舗ブロック ===== */
-.store-block {
-  margin-bottom: 48px;
-}
-
-.store-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.store-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-.store-location {
-  font-size: 0.85rem;
-  color: #777;
-}
-
-/* ===== 横スクロール ===== */
-.horizontal-scroll {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
-}
-
-.horizontal-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.horizontal-scroll::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
-}
-
-.scroll-item {
-  min-width: 170px;
-  flex-shrink: 0;
-  scroll-snap-align: start;
-}
-
-/* ===== 商品カード ===== */
-.product-card {
-  position: relative;
-  background: #fff;
-  border-radius: 18px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  transition: all 0.25s ease;
-}
-
-.product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 26px rgba(0,0,0,0.18);
-}
-
-.product-card img {
-  border-radius: 14px;
-  height: 140px;
-  object-fit: cover;
-  width: 100%;
-}
-
-.product-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-top: 8px;
-}
-
-.product-price {
-  font-size: 0.85rem;
-  color: #666;
-}
-
-/* ===== 消費期限バッジ（左上固定） ===== */
-.expire-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 999px;
-
-  /* 通常（淡いベージュ） */
-  background: linear-gradient(135deg, #fff3d6, #ffe8b0);
-  color: #8a5a00;
-  box-shadow: 0 3px 8px rgba(255, 200, 120, 0.35);
-}
-
-/* 🔴 残り10分未満 */
-.expire-badge.urgent {
-  background: linear-gradient(135deg, #ff4d4d, #ff1f1f);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(255, 50, 50, 0.55);
-  animation: expire-blink 1s infinite;
-}
-
-@keyframes expire-blink {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-</style>
-
 <div class="container mt-3 mb-5">
-
-  <!-- 🔍 検索 -->
-  <div class="search-area">
-    <a href="{% url 'user_search' %}" class="search-link">
-      <i class="bi bi-search"></i>
-      商品を検索
+ 
+  <!-- 🔍 検索バー（クリックで検索ページへ） -->
+  <div class="mb-4">
+    <a href="{% url 'user_search' %}" class="search-bar-link">
+      <div class="input-group input-group-lg">
+        <span class="input-group-text bg-white">
+          <i class="bi bi-search"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="商品名・店舗名で検索"
+          readonly
+        >
+      </div>
     </a>
   </div>
-
-  <!-- 🏪 店舗ごと表示 -->
+ 
+  <!-- 🏪 店舗ごと横スクロール -->
   {% for store, products in store_products.items %}
-    <div class="store-block">
-
-      <!-- 店舗ヘッダー -->
-      <div class="store-header">
-        <div class="store-name">{{ store.username }}</div>
-        <div class="store-location">
+    <div class="mb-5">
+      <!-- 店舗タイトル -->
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 class="fw-bold mb-0">{{ store.username }}</h4>
+        <span class="text-muted small">
           {{ store.prefecture }} {{ store.city }}
-        </div>
+        </span>
       </div>
-
-      <!-- 商品横スクロール -->
+ 
+      <!-- 横スクロール商品 -->
       <div class="horizontal-scroll">
         {% for product in products %}
           <div class="scroll-item">
             <a href="{% url 'user_food_detail' pk=product.product_id %}"
                class="text-decoration-none text-dark">
-
-              <div class="product-card">
-
-                <!-- 消費期限（期限切れは表示されない前提） -->
-                <span class="expire-badge {% if product.is_urgent %}urgent{% endif %}">
-                  残り {{ product.remaining_time_display }}
-                </span>
-
-                <img src="{{ product.image1.url }}" alt="{{ product.name }}">
-                <div class="product-name">{{ product.name }}</div>
-                <div class="product-price">¥{{ product.price }}</div>
-
+ 
+              <div class="product-card border rounded text-center p-2">
+                <img src="{{ product.image1.url }}"
+                     class="img-fluid rounded"
+                     style="height:140px; object-fit:cover; width:100%;">
+                <p class="mt-2 mb-0 fw-bold">{{ product.name }}</p>
+                <p class="text-muted small mb-0">¥{{ product.price }}</p>
               </div>
-
+ 
             </a>
           </div>
+        {% empty %}
+          <div>データなし</div>
         {% endfor %}
       </div>
-
     </div>
+  {% empty %}
+    <div>データなし</div>
   {% endfor %}
-
+ 
 </div>
-
+ 
+<style>
+/* 横スクロール */
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  padding-bottom: 5px;
+}
+.horizontal-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+ 
+.scroll-item {
+  min-width: 160px;
+  flex-shrink: 0;
+}
+ 
+/* 商品カード */
+.product-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.product-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+ 
+/* 検索バー風リンク */
+.search-bar-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+ 
+.search-bar-link .form-control {
+  cursor: pointer;
+  background-color: #fff;
+}
+ 
+.search-bar-link:hover .form-control {
+  background-color: #f8f9fa;
+}
+</style>
 {% endblock %}
+ 
