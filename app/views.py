@@ -808,15 +808,15 @@ def payment_result(request):
         print("決済成功")
         # --- 店舗に通知を作成 ---
         # send_store_notification(order)
-        for item in order.items.all():
-                Notification.objects.create(
-                    type="order",
-                    message=f"{item.product.name} が購入されました（数量: {item.quantity}）",
-                    recipient_type="store",
-                    store=order.store,
-                    order=order,
-                    product=item.product
-                )
+        # for item in order.items.all():
+        #         Notification.objects.create(
+        #             type="order",
+        #             message=f"{item.product.name} が購入されました（数量: {item.quantity}）",
+        #             recipient_type="store",
+        #             store=order.store,
+        #             order=order,
+        #             product=item.product
+        #         )
     else:
         order.status = "canceled"
         message = "決済失敗"
@@ -1417,28 +1417,19 @@ def store_edit_hours(request):
 @login_required
 def store_purchased_list(request):
 
-    qs = Notification.objects.all()
-
-    print("=== ALL ===", qs.count())
-
-    qs2 = Notification.objects.filter(
-        product__store=request.user
-    )
-    print("=== product__store ===", qs2.count())
-
-    qs3 = Notification.objects.filter(
-        recipient_type="store"
-    )
-    print("=== recipient_type=store ===", qs3.count())
-
-    qs4 = Notification.objects.filter(
+    # ✅ 購入済み通知（購入された商品）
+    notifications = Notification.objects.filter(
+        store=request.user,
         recipient_type="store",
-        product__store=request.user,
-    )
-    print("=== BOTH ===", qs4.count())
+        type="order",
+        product__isnull=False,
+        order__isnull=False,
+    ).select_related(
+        "product", "order"
+    ).order_by("-created_at")
 
     return render(request, "store/store_purchased_list.html", {
-        "notifications": qs4,
+        "notifications": notifications,
     })
 
 
