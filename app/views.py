@@ -175,13 +175,25 @@ def store_alert(request):
 # @login_required
 from django.db.models import Case, When, Value, IntegerField
 
+from django.shortcuts import render
+from django.utils import timezone
+from .models import Product
+
+from django.utils import timezone
+
 def user_home(request):
     user = request.user
+    now = timezone.now()
 
+    # ▼ 期限切れでない商品だけ取得
+    # ▼ 消費期限が近い順（昇順）に並べる
     products = (
         Product.objects
         .select_related('store')
-        .order_by('-created_at')
+        .filter(
+            expiration_date__gte=now
+        )
+        .order_by('expiration_date')  # ← ★ここが変更点
     )
 
     store_products = {}
@@ -198,6 +210,7 @@ def user_home(request):
         if store not in store_products:
             store_products[store] = []
 
+        # ▼ 左から「期限が近い順」で最大10件
         if len(store_products[store]) < MAX_PER_STORE:
             store_products[store].append(product)
 
@@ -206,7 +219,30 @@ def user_home(request):
     })
 
 
+def store_product_list(request, store_id):
+    store = get_object_or_404(User, id=store_id, is_store=True)
+    now = timezone.now()
 
+    sort = request.GET.get('sort', 'expire')
+
+    products = Product.objects.filter(
+        store=store,
+        expiration_date__gte=now,
+        quantity__gt=0
+    )
+
+    if sort == 'price':
+        # 値段が安い順 → 同価格なら期限が近い順
+        products = products.order_by('price', 'expiration_date')
+    else:
+        # 消費期限が近い順 → 同期限なら安い順
+        products = products.order_by('expiration_date', 'price')
+
+    return render(request, 'user/store_product_list.html', {
+        'store': store,
+        'products': products,
+        'sort': sort,
+    })
 
 
 

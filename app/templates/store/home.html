@@ -1,5 +1,7 @@
 {% extends "store/base.html" %}
 {% load static %}
+{% load tz %}
+{% load i18n %}
 
 {% block title %}ホーム | FoodLink{% endblock %}
 
@@ -7,397 +9,262 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
- 
-  <style>
-    body {
-      background-color: #fff;
-      padding-bottom: 70px;
-      font-family: 'Noto Sans JP', sans-serif;
-    }
- 
-    .item-card {
-      width: 100%;
-      border: 2px solid #d0d0d0;
-      border-radius: 30px;
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #fff;
-      margin-bottom: 20px;
-      position: relative; 
-    }
- 
-    .item-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
- 
-    .item-image {
-      position: relative;
-      width: 130px;
-      height: 130px;
-      border: 2px solid #ccc;
-      border-radius: 15px;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
- 
-    .item-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
- 
-    .price-tag {
-      position: absolute;
-      bottom: 6px;
-      right: 6px;
-      background: rgba(0,0,0,0.65);
-      color: #fff;
-      padding: 2px 10px;
-      border-radius: 10px;
-      font-size: 13px;
-    }
- 
-    .item-info h5 {
-      margin: 0 0 8px;
-      font-size: 20px;
-      font-weight: 600;
-    }
- 
-    .item-info p {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.5;
-    }
- 
-    .item-actions {
-      position: absolute;   /* ← 追加 */
-      bottom: 20px;         /* ← 下に寄せる */
-      right: 20px;          /* ← 右に寄せる */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
- 
-    .edit-btn {
-      background: #e3f8f9;
-      border: 1px solid #9ed1d4;
+<style>
+/* =========================
+   全体
+========================= */
+body {
+  background-color: #fff;
+  padding-bottom: 90px;
+  font-family: 'Noto Sans JP', sans-serif;
+}
 
-      padding: 10px 48px;   
-      border-radius: 24px;
-      font-size: 15px;      
-      font-weight: 600;
+/* =========================
+   ヘッダー
+========================= */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
 
-      text-decoration: none;
-      color: #000;
-      display: inline-block; 
-    }
+.page-title {
+  font-size: 15px;
+  color: #666;
+  margin: 0;
+}
 
- 
-    .delete-btn {
-      background: none;
-      border: none;
-      color: #dc3545;
-      font-size: 22px;
-      cursor: pointer;
-    }
- 
-    /* ＋ボタン */
-    .fab {
-      position: fixed;
-      bottom: 80px;
-      right: 25px;
-      width: 60px;
-      height: 60px;
-      background-color: #FFD54F;
-      border-radius: 50%;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1100;
-    }
- 
-    .fab::before,
-    .fab::after {
-      content: '';
-      position: absolute;
-      background-color: white;
-      border-radius: 2px;
-    }
- 
-    .fab::before {
-      width: 24px;
-      height: 4px;
-    }
- 
-    .fab::after {
-      width: 4px;
-      height: 24px;
-    }
- 
-    /* 下部ナビ */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 65px;
-      background-color: #e9f4f7;
-      border-top: 1px solid #ccc;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 1000;
-    }
- 
-    .bottom-nav a {
-      color: #000;
-      text-decoration: none;
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
- 
-    .bottom-nav a.active {
-      color: #46569b;
-      transform: scale(1.1);
-    }
+.sales-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #46569b;
+  background: #eef2ff;
+  border-radius: 20px;
+  text-decoration: none;
+}
 
-    @keyframes blink {
-      0%   { opacity: 1; }
-      50%  { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
+/* =========================
+   商品一覧
+========================= */
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
 
-    .blink {
-      animation: blink 1s infinite;
-    }
+/* =========================
+   商品カード
+========================= */
+.item-card {
+  background: #fff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
 
-    .urgent {
-      background-color: #dc3545; /* bootstrap danger */
-      color: #fff;
-    }
+/* =========================
+   商品画像
+========================= */
+.item-image {
+  width: 100%;
+  height: 180px;
+  position: relative;
+  background: #f5f5f5;
+}
 
-    /* ===== 見出し & 売上ボタン ===== */
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* =========================
+   消費期限バッジ（薄オレンジ）
+========================= */
+.expire-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  background: #ffedd5; /* 薄オレンジ */
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.expire-badge.urgent {
+  background: #dc3545;
+  color: #fff;
+  animation: blink 1s infinite;
+}
+
+/* =========================
+   商品情報
+========================= */
+.item-body {
+  padding: 14px;
+}
+
+.item-body h5 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.item-body p {
+  font-size: 13px;
+  color: #555;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* 価格（個数の下） */
+.item-price {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ff7a00;
+}
+
+/* =========================
+   操作ボタン
+========================= */
+.item-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.edit-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #e3f8f9, #c8f0f3);
+  border: none;
+  padding: 10px 0;
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  color: #000;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 22px;
+}
+
+/* =========================
+   フローティングボタン
+========================= */
+.fab {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #FFD54F, #FFC107);
+  border-radius: 50%;
+}
+
+.fab::before,
+.fab::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.fab::before { width: 26px; height: 4px; }
+.fab::after  { width: 4px; height: 26px; }
+
+/* =========================
+   点滅
+========================= */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: .4; }
+  100% { opacity: 1; }
+}
+
+/* =========================
+   レスポンシブ
+========================= */
+@media (min-width: 1024px) {
+  .item-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
-
-  .page-title {
-    font-size: 15px;
-    color: #666;
-    margin: 0;
-  }
-
-  .sales-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #46569b;
-    background: #eef2ff;
-    border-radius: 20px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-  }
-
-  .sales-btn:hover {
-    background: #dfe6ff;
-    color: #2f3a8f;
-    transform: translateY(-1px);
-  }
-
-  /* ===== 商品カード ===== */
-  .item-card {
-    background: #ffffff;
-    border-radius: 22px;
-    padding: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-  }
-
-  .item-left {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-  }
-
-  .item-image {
-    width: 120px;
-    height: 120px;
-    border-radius: 14px;
-    overflow: hidden;
-    position: relative;
-    background: #f5f5f5;
-    flex-shrink: 0;
-  }
-
-  .item-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .price-tag {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    background: rgba(0,0,0,0.75);
-    color: #fff;
-    font-size: 13px;
-    padding: 4px 10px;
-    border-radius: 12px;
-  }
-
-  .item-info h5 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-
-  .item-info p {
-    font-size: 13px;
-    color: #555;
-    margin: 0;
-    line-height: 1.6;
-  }
-
-  .item-info .meta {
-    margin-top: 6px;
-    font-size: 12px;
-    color: #777;
-  }
-
-  /* ===== フローティング追加ボタン ===== */
-  .fab {
-    position: fixed;
-    bottom: 85px;
-    right: 22px;
-    width: 62px;
-    height: 62px;
-    background: linear-gradient(135deg, #FFD54F, #FFC107);
-    border-radius: 50%;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1100;
-    text-decoration: none;
-  }
-
-  .fab::before,
-  .fab::after {
-    content: '';
-    position: absolute;
-    background-color: white;
-    border-radius: 2px;
-  }
-
-  .fab::before {
-    width: 26px;
-    height: 4px;
-  }
-
-  .fab::after {
-    width: 4px;
-    height: 26px;
-  }
-
-  </style>
+}
+</style>
 </head>
- 
-<body>
 
+<body>
 <div class="container my-3">
 
-  <!-- 見出し + 売上ボタン -->
   <div class="page-header">
     <p class="page-title">登録されている商品一覧</p>
-
     <a href="{% url 'store_sales' %}" class="sales-btn">
-      <i class="bi bi-bar-chart-fill"></i>
-      売上を見る
+      <i class="bi bi-bar-chart-fill"></i> 売上を見る
     </a>
   </div>
 
-  {% for product in products %}
+  <div class="item-grid">
+    {% for product in products %}
     <div class="item-card">
 
-      <div class="item-left">
-        <div class="item-image">
-          {% if product.image1 %}
-            <img src="{{ product.image1.url }}">
-          {% else %}
-            <img src="{% static 'images/placeholder_store.png' %}">
-          {% endif %}
-          <div class="price-tag">¥{{ product.price|floatformat:0 }}</div>
-        </div>
+      <div class="item-image">
+        {% if product.image1 %}
+          <img src="{{ product.image1.url }}">
+        {% else %}
+          <img src="{% static 'images/placeholder_store.png' %}">
+        {% endif %}
 
-        <div class="item-info">
+        {% language 'ja' %}
+        {% with remain=product.expiration_date|timeuntil %}
+        <div class="expire-badge {% if remain|slice:":1" == "0" %}urgent{% endif %}">
+           残り {{ remain }}<br>
+          </div>
+          {% endwith %}
+          {% endlanguage %}
+        </div>
+        
+        <div class="item-body">
           <h5>{{ product.name }}</h5>
-          <p>
-            {{ product.quantity }} 個 {{ product.price }} 円<br>
-            {{ product.origin }}<br>
-            消費期限 {{ product.expiration_date|date:"Y/m/d H:i" }}
-            {% if product.is_expired %}
-              <span class="badge bg-danger">
-                ⚠️ 期限切れ
-              </span>
-            {% else %}
-              <span class="badge
-                {% if product.is_urgent %}
-                  urgent blink
-                {% else %}
-                  bg-warning text-dark
-                {% endif %}
-              ">
-                ⏰ 残り {{ product.remaining_time_display }}
-              </span>
-            {% endif %}
-          </p>
+          <p>{{ product.quantity }} 個</p>
+          {{ product.expiration_date|date:"m/d H:i" }}
+        <div class="item-price">¥{{ product.price|floatformat:0 }}</div>
+
+        <div class="item-actions">
+          <a href="{% url 'product_edit' product_id=product.product_id %}" class="edit-btn">編集</a>
+          <form action="{% url 'product_delete' product_id=product.product_id %}" method="post">
+            {% csrf_token %}
+            <button class="delete-btn"><i class="bi bi-trash"></i></button>
+          </form>
         </div>
-      </div>
-
-      <div class="item-actions">
-        <a href="{% url 'product_edit' product_id=product.product_id %}" class="edit-btn">
-        編集
-        </a>
-
-          <form action="{% url 'product_delete' product_id=product.product_id %}"
-            method="post"
-            onsubmit="return confirm('この商品を削除してもよろしいですか？');">
-        {% csrf_token %}
-        <button type="submit" class="delete-btn">
-          <i class="bi bi-trash"></i>
-        </button>
-      </form>
       </div>
 
     </div>
-    {% empty %}
-    <div class="alert alert-info">登録された商品はありません。</div>
     {% endfor %}
+  </div>
+</div>
 
-<!-- 商品追加ボタン -->
 <a href="{% url 'store_registar' %}" class="fab"></a>
-
+</body>
+</html>
 {% endblock %}

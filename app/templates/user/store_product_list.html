@@ -1,0 +1,241 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ store.username }}｜商品一覧
+{% endblock %}
+
+{% block content %}
+
+<style>
+/* =========================
+   ページ全体
+========================= */
+body {
+  background: linear-gradient(180deg, #f7f8fa, #f1f3f6);
+}
+
+/* =========================
+   上部ナビ
+========================= */
+.top-nav {
+  margin-bottom: 18px;
+}
+
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #555;
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #fff;
+  transition: all 0.25s ease;
+}
+
+.back-home:hover {
+  background: #111;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* =========================
+   店舗ヘッダー（フラット）
+========================= */
+.store-header {
+  padding: 22px;
+  border-radius: 22px;
+  background: #ffffff; /* グラデーションなし */
+  margin-bottom: 28px;
+}
+
+.store-header h3 {
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.store-header p {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* =========================
+   並び替え
+========================= */
+.sort-buttons {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 30px;
+}
+
+.sort-buttons a {
+  padding: 9px 20px;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #ddd;
+  text-decoration: none;
+  color: #333;
+  transition: all 0.25s ease;
+}
+
+.sort-buttons a.active,
+.sort-buttons a:hover {
+  background: #111;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* =========================
+   商品カード
+========================= */
+.product-card {
+  position: relative;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 22px;
+  padding: 14px;
+  height: 100%;
+  transition: all 0.35s ease;
+}
+
+/* hover 時だけ浮く */
+.product-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.15);
+}
+
+.product-card img {
+  width: 100%;
+  height: 165px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+/* =========================
+   商品情報
+========================= */
+.product-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-top: 12px;
+  line-height: 1.35;
+}
+
+.product-price {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #e53935;
+}
+
+.product-origin,
+.product-notes {
+  font-size: 0.7rem;
+  color: #777;
+}
+
+/* =========================
+   消費期限バッジ
+========================= */
+.expire-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fff1cc, #ffd98a);
+  color: #7a4b00;
+}
+
+/* 🔴 緊急 */
+.expire-badge.urgent {
+  background: linear-gradient(135deg, #ff4d4d, #ff1f1f);
+  color: #fff;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+</style>
+
+<div class="container mt-4 mb-5">
+
+  <!-- 上部ナビ -->
+  <div class="top-nav">
+    <a href="{% url 'user_home' %}" class="back-home">
+      ← ホーム
+    </a>
+  </div>
+
+  <!-- 店舗情報 -->
+  <div class="store-header">
+    <h3 class="mb-1">{{ store.username }}</h3>
+    <p class="mb-0">
+      📍 {{ store.prefecture }} {{ store.city }}
+    </p>
+  </div>
+
+  <!-- 並び替え -->
+  <div class="sort-buttons">
+    <a href="?sort=expire"
+       class="{% if sort == 'expire' %}active{% endif %}">
+       消費期限順
+    </a>
+
+    <a href="?sort=price"
+       class="{% if sort == 'price' %}active{% endif %}">
+       安い順
+    </a>
+  </div>
+
+  <!-- 商品一覧 -->
+  <div class="row">
+    {% for product in products %}
+      <div class="col-6 col-md-4 col-lg-3 mb-4">
+        <a href="{% url 'user_food_detail' pk=product.product_id %}"
+           class="text-decoration-none text-dark">
+
+          <div class="product-card">
+
+            <span class="expire-badge {% if product.is_urgent %}urgent{% endif %}">
+              残り {{ product.remaining_time_display }}
+            </span>
+
+            <img src="{{ product.image1.url }}" alt="{{ product.name }}">
+
+            <div class="product-name">{{ product.name }}</div>
+            <div class="product-price">¥{{ product.price }}</div>
+
+            {% if product.origin %}
+              <div class="product-origin">
+                原産地：{{ product.origin }}
+              </div>
+            {% endif %}
+
+            {% if product.notes %}
+              <div class="product-notes mt-1">
+                {{ product.notes|truncatechars:28 }}
+              </div>
+            {% endif %}
+
+          </div>
+        </a>
+      </div>
+    {% empty %}
+      <div class="col-12 text-center text-muted mt-5">
+        現在販売中の商品はありません
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+{% endblock %}

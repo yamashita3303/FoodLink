@@ -52,6 +52,37 @@
   color: #777;
 }
 
+/* ===== もっと見るボタン ===== */
+.more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #555;
+  background: #f5f7fa;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: all 0.25s ease;
+}
+
+.more-link .arrow {
+  font-size: 0.85rem;
+  transition: transform 0.25s ease;
+}
+
+.more-link:hover {
+  background: #111;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.more-link:hover .arrow {
+  transform: translateX(4px);
+}
+
 /* ===== 横スクロール ===== */
 .horizontal-scroll {
   display: flex;
@@ -110,32 +141,23 @@
   color: #666;
 }
 
-/* ===== 消費期限バッジ（左上固定） ===== */
+/* ===== 消費期限バッジ ===== */
 .expire-badge {
   position: absolute;
   top: 10px;
   left: 10px;
   z-index: 2;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   font-size: 0.7rem;
   font-weight: 600;
   padding: 5px 10px;
   border-radius: 999px;
-
-  /* 通常（淡いベージュ） */
   background: linear-gradient(135deg, #fff3d6, #ffe8b0);
   color: #8a5a00;
-  box-shadow: 0 3px 8px rgba(255, 200, 120, 0.35);
 }
 
-/* 🔴 残り10分未満 */
 .expire-badge.urgent {
   background: linear-gradient(135deg, #ff4d4d, #ff1f1f);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(255, 50, 50, 0.55);
   animation: expire-blink 1s infinite;
 }
 
@@ -162,10 +184,22 @@
 
       <!-- 店舗ヘッダー -->
       <div class="store-header">
-        <div class="store-name">{{ store.username }}</div>
-        <div class="store-location">
-          {{ store.prefecture }} {{ store.city }}
+        <div>
+          <a href="{% url 'store_product_list' store.id %}"
+             class="store-name text-decoration-none text-dark">
+            {{ store.username }}
+          </a>
+          <div class="store-location">
+            {{ store.prefecture }} {{ store.city }}
+          </div>
         </div>
+
+        <!-- もっと見る -->
+        <a href="{% url 'store_product_list' store.id %}"
+           class="more-link">
+          もっと見る
+          <span class="arrow">▶</span>
+        </a>
       </div>
 
       <!-- 商品横スクロール -->
@@ -176,8 +210,6 @@
                class="text-decoration-none text-dark">
 
               <div class="product-card">
-
-                <!-- 消費期限（期限切れは表示されない前提） -->
                 <span class="expire-badge {% if product.is_urgent %}urgent{% endif %}">
                   残り {{ product.remaining_time_display }}
                 </span>
@@ -185,7 +217,6 @@
                 <img src="{{ product.image1.url }}" alt="{{ product.name }}">
                 <div class="product-name">{{ product.name }}</div>
                 <div class="product-price">¥{{ product.price }}</div>
-
               </div>
 
             </a>
