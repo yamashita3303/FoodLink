@@ -77,6 +77,9 @@ class Product(models.Model):
         "期限切れ通知済み",
         default=False
     )
+    auto_cancel_notified = models.BooleanField(
+        "自動キャンセル通知済み",
+        default=False)
 
     def __str__(self):
         return self.name

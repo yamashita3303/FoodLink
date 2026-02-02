@@ -18,7 +18,7 @@ def notify_unreceived_orders():
             if (
                 product.expiration_date < timezone.now()
                 and product.quantity >= 1
-                and not product.expiration_notified
+                and not product.auto_cancel_notified
             ):
                 has_expired_product = True
 
@@ -43,7 +43,7 @@ def notify_unreceived_orders():
                 )
 
                 # ⭐ 二重通知防止
-                product.expiration_notified = True
+                product.auto_cancel_notified = True
                 product.save()
 
         # ⭐ 1つでも期限切れ商品があれば注文をキャンセル

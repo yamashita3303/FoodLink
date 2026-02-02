@@ -217,7 +217,6 @@
           <div class="scroll-item">
             <a href="{% url 'user_food_detail' pk=product.product_id %}"
                class="text-decoration-none text-dark">
-<<<<<<< HEAD
 
               <div class="product-card">
                 <span class="expire-badge {% if product.is_urgent %}urgent{% endif %}">
@@ -227,15 +226,6 @@
                 <img src="{{ product.image1.url }}" alt="{{ product.name }}">
                 <div class="product-name">{{ product.name }}</div>
                 <div class="product-price">¥{{ product.price }}</div>
-=======
- 
-              <div class="product-card border rounded text-center p-2">
-                <img src="{{ product.image1.url }}"
-                     class="img-fluid rounded"
-                     style="height:140px; object-fit:cover; width:100%;">
-                <p class="mt-2 mb-0 fw-bold">{{ product.name }}</p>
-                <p class="text-muted small mb-0">¥{{ product.price }}</p>
->>>>>>> f2cb1b446bd79daf181c65fb77beb2b43e990d0b
               </div>
  
             </a>
