@@ -48,6 +48,10 @@ from .forms import (
 )
 import datetime
 from django.http import JsonResponse
+from django.utils import timezone
+
+now = timezone.now()
+
 
 # =========================
 # トップページ
@@ -169,9 +173,6 @@ def user_signin(request):
     next_url = request.GET.get('next', '')
     return render(request, 'user/signin.html', {'next': next_url})
 
-def store_alert(request):
-    return render(request, 'store/alert.html')
-
 # @login_required
 from django.db.models import Case, When, Value, IntegerField
 
@@ -195,27 +196,69 @@ def user_home(request):
         )
         .order_by('expiration_date')  # ← ★ここが変更点
     )
-
-    store_products = {}
+ 
     MAX_PER_STORE = 10
-
+    store_products = {}
+ 
     for product in products:
         store = product.store
-
-        # ▼ 同じ市の店舗だけ通す
-        if user.is_authenticated and user.city:
+ 
+        # ユーザーの市で絞る（市情報がある場合のみ）
+        if getattr(user, 'city', None):
             if store.city != user.city:
                 continue
-
+ 
         if store not in store_products:
             store_products[store] = []
 
         # ▼ 左から「期限が近い順」で最大10件
         if len(store_products[store]) < MAX_PER_STORE:
             store_products[store].append(product)
-
+ 
+    # デバッグ出力
+    print("==== USER HOME DEBUG ====")
+    print("全商品数:", products.count())
+    for p in products:
+        print(
+            p.name,
+            "期限:", p.expiration_date,
+            "今:", now,
+            "期限OK:", p.expiration_date >= now,
+            "在庫:", p.quantity
+        )
+ 
+    # 表示用に全店舗取得（市絞り込み済みのもの）
+    stores = User.objects.filter(is_store=True)
+ 
     return render(request, 'user/home.html', {
-        'store_products': store_products
+        'store_products': store_products,
+        'stores': stores,
+    })
+ 
+ 
+def user_search(request):
+    query = request.GET.get('q', '').strip()
+    products = Product.objects.filter(
+    expiration_date__gte=now,
+    quantity__gt=0
+)
+ 
+ 
+    if query:
+        keywords = query.split()  # スペースで区切る
+        # 最初のキーワードで Q を作る
+        q_objects = Q(name__icontains=keywords[0])
+        # 2個目以降は & で追加
+        for kw in keywords[1:]:
+            q_objects &= Q(name__icontains=kw)
+        products = products.filter(q_objects)
+ 
+    categories = Category.objects.all()
+ 
+    return render(request, 'user/search.html', {
+        'products': products,
+        'categories': categories,
+        'query': query,
     })
 
 
@@ -248,7 +291,11 @@ def store_product_list(request, store_id):
 
 def user_search(request):
     query = request.GET.get('q', '').strip()
-    products = Product.objects.all()
+    products = Product.objects.filter(
+    expiration_date__gte=now,
+    quantity__gt=0
+)
+
 
     if query:
         keywords = query.split()  # スペースで区切る
@@ -273,7 +320,12 @@ def user_category_results(request, category_id):
     categories = Category.objects.all()
     category = get_object_or_404(Category, id=category_id)
 
-    products = Product.objects.filter(category=category)  # ← 修正ポイント
+    products = Product.objects.filter(
+    category=category,
+    expiration_date__gte=now,
+    quantity__gt=0
+)
+
 
     context = {
         'categories': categories,
@@ -287,7 +339,13 @@ def user_category_results(request, category_id):
 
 
 def user_food_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(
+    Product,
+    pk=pk,
+    expiration_date__gte=date.today(),
+    quantity__gt=0
+)
+
 
     # 画像リストを作る
     images = [img for img in [product.image1, product.image2, product.image3, product.image4, product.image5] if img]
@@ -356,7 +414,7 @@ def user_store_detail(request, user_id):
     # 新着順（作成日が新しい順）で、期限が切れていないもの
     new_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=today
+        expiration_date__gte=now
     ).order_by('-created_at')
 
     # 期限が近い順（expiration_dateが近い順）で、期限が切れていないもの
@@ -392,13 +450,13 @@ def user_store_detail(request, user_id):
     # 新着順（作成日が新しい順）で、期限が切れていないもの
     new_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=today
+        expiration_date__gte=now
     ).order_by('-created_at')
 
     # 期限が近い順（expiration_dateが近い順）で、期限が切れていないもの
     soon_expire_products = Product.objects.filter(
         store=user,
-        expiration_date__gte=today
+        expiration_date__gte=now
     ).order_by('expiration_date')
 
     # 残り日数を計算してテンプレートに渡す
@@ -785,15 +843,15 @@ def payment_result(request):
         print("決済成功")
         # --- 店舗に通知を作成 ---
         # send_store_notification(order)
-        for item in order.items.all():
-                Notification.objects.create(
-                    type="order",
-                    message=f"{item.product.name} が購入されました（数量: {item.quantity}）",
-                    recipient_type="store",
-                    store=order.store,
-                    order=order,
-                    product=item.product
-                )
+        # for item in order.items.all():
+        #         Notification.objects.create(
+        #             type="order",
+        #             message=f"{item.product.name} が購入されました（数量: {item.quantity}）",
+        #             recipient_type="store",
+        #             store=order.store,
+        #             order=order,
+        #             product=item.product
+        #         )
     else:
         order.status = "canceled"
         message = "決済失敗"
@@ -1256,6 +1314,7 @@ def store_signin(request):
     form = StoreSigninForm()
     return render(request, 'store/signin.html', {'form': form, 'next': next_url})
 
+
 @login_required(login_url='store_signin')
 def store_home(request):
     # 1. ログイン中のユーザー（店舗アカウント）を取得
@@ -1393,28 +1452,19 @@ def store_edit_hours(request):
 @login_required
 def store_purchased_list(request):
 
-    qs = Notification.objects.all()
-
-    print("=== ALL ===", qs.count())
-
-    qs2 = Notification.objects.filter(
-        product__store=request.user
-    )
-    print("=== product__store ===", qs2.count())
-
-    qs3 = Notification.objects.filter(
-        recipient_type="store"
-    )
-    print("=== recipient_type=store ===", qs3.count())
-
-    qs4 = Notification.objects.filter(
+    # ✅ 購入済み通知（購入された商品）
+    notifications = Notification.objects.filter(
+        store=request.user,
         recipient_type="store",
-        product__store=request.user,
-    )
-    print("=== BOTH ===", qs4.count())
+        type="order",
+        product__isnull=False,
+        order__isnull=False,
+    ).select_related(
+        "product", "order"
+    ).order_by("-created_at")
 
     return render(request, "store/store_purchased_list.html", {
-        "notifications": qs4,
+        "notifications": notifications,
     })
 
 
@@ -1721,3 +1771,4 @@ def store_sales(request):
         'label': label,
         'day_type': day_type,
     })
+
