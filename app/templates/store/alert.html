@@ -4,102 +4,134 @@
 {% block title %}キャンセル商品一覧 | FoodLink{% endblock %}
 
 {% block content %}
-<div class="container mt-3 mb-5">
 
-  <!-- 🔀 タブ -->
-  <div class="d-flex mb-3">
-    <a href="?tab=new"
-       class="btn me-2 {% if tab == 'new' %}btn-danger{% else %}btn-outline-danger{% endif %}">
-      お客様キャンセル
-    </a>
+<!-- ===== タブ ===== -->
+<div class="tabs">
+  <a href="?tab=user_cancel"
+     class="tab {% if tab == 'user_cancel' %}active{% endif %}">
+    お客様キャンセル
+  </a>
 
-    <a href="?tab=purchased"
-       class="btn {% if tab == 'purchased' %}btn-warning{% else %}btn-outline-warning{% endif %}">
-      期限切れ自動キャンセル
-    </a>
-  </div>
-
-  <!-- ===================== -->
-  <!-- ❌ お客様キャンセル -->
-  <!-- ===================== -->
-  {% if tab == 'new' %}
-    {% for cancel in user_cancelled_products %}
-      <div class="card mb-3 shadow-sm rounded-4 border-danger">
-        <div class="row g-0 align-items-center">
-
-          <div class="col-4 text-center p-2">
-            {% if cancel.product.image1 %}
-              <img src="{{ cancel.product.image1.url }}"
-                   class="img-fluid rounded-3"
-                   style="max-height:120px; object-fit:contain;">
-            {% else %}
-              <img src="{% static 'img/no-image.png' %}"
-                   class="img-fluid rounded-3"
-                   style="max-height:120px;">
-            {% endif %}
-          </div>
-
-          <div class="col-8 p-2">
-            <strong>{{ cancel.product.name }}</strong>
-
-            <p class="small text-muted mb-1">
-              キャンセル日：{{ cancel.cancelled_at|date:"Y/m/d H:i" }}
-            </p>
-
-            <span class="badge bg-danger">
-              お客様都合によるキャンセル
-            </span>
-          </div>
-
-        </div>
-      </div>
-    {% empty %}
-      <p class="text-center text-muted">
-        お客様にキャンセルされた商品はありません。
-      </p>
-    {% endfor %}
-  {% endif %}
-
-  <!-- ===================== -->
-  <!-- ⏰ 期限切れ自動キャンセル -->
-  <!-- ===================== -->
-  {% if tab == 'purchased' %}
-    {% for expired in expired_products %}
-      <div class="card mb-3 shadow-sm rounded-4 border-warning">
-        <div class="row g-0 align-items-center">
-
-          <div class="col-4 text-center p-2">
-            {% if expired.product.image1 %}
-              <img src="{{ expired.product.image1.url }}"
-                   class="img-fluid rounded-3"
-                   style="max-height:120px; object-fit:contain;">
-            {% else %}
-              <img src="{% static 'img/no-image.png' %}"
-                   class="img-fluid rounded-3"
-                   style="max-height:120px;">
-            {% endif %}
-          </div>
-
-          <div class="col-8 p-2">
-            <strong>{{ expired.product.name }}</strong>
-
-            <p class="small text-muted mb-1">
-              期限切れ日時：{{ expired.expired_at|date:"Y/m/d H:i" }}
-            </p>
-
-            <span class="badge bg-warning text-dark">
-              消費期限切れ（自動キャンセル）
-            </span>
-          </div>
-
-        </div>
-      </div>
-    {% empty %}
-      <p class="text-center text-muted">
-        消費期限切れでキャンセルされた商品はありません。
-      </p>
-    {% endfor %}
-  {% endif %}
-
+  <a href="?tab=expired_cancel"
+     class="tab {% if tab == 'expired_cancel' %}active{% endif %}">
+    期限切れ・自動キャンセル
+  </a>
 </div>
+
+<hr>
+
+<!-- ===== お客様キャンセル ===== -->
+{% if tab == "user_cancel" %}
+  {% if user_cancelled_products %}
+    <ul class="notification-list">
+      {% for notification in user_cancelled_products %}
+        <li class="notification-item {% if not notification.is_read %}unread{% endif %}">
+          <div class="message">
+            {{ notification.message }}
+          </div>
+
+          {% if notification.product %}
+            <div class="sub">
+              商品名：{{ notification.product.name }}
+            </div>
+          {% endif %}
+
+          {% if notification.order %}
+            <div class="sub">
+              注文ID：{{ notification.order.id }}
+            </div>
+          {% endif %}
+
+          <div class="date">
+            {{ notification.created_at|date:"Y/m/d H:i" }}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>お客様キャンセルの通知はありません。</p>
+  {% endif %}
+{% endif %}
+
+<!-- ===== 期限切れ・自動キャンセル ===== -->
+{% if tab == "expired_cancel" %}
+  {% if expired_products %}
+    <ul class="notification-list">
+      {% for notification in expired_products %}
+        <li class="notification-item {% if not notification.is_read %}unread{% endif %}">
+          <div class="message">
+            {{ notification.message }}
+          </div>
+
+          {% if notification.product %}
+            <div class="sub">
+              商品名：{{ notification.product.name }}
+            </div>
+          {% endif %}
+
+          {% if notification.order %}
+            <div class="sub">
+              注文ID：{{ notification.order.id }}
+            </div>
+          {% endif %}
+
+          <div class="date">
+            {{ notification.created_at|date:"Y/m/d H:i" }}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>期限切れ・自動キャンセルの通知はありません。</p>
+  {% endif %}
+{% endif %}
+<style>
+.notification-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .notification-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .notification-item.unread {
+    background-color: #f9f9f9;
+    font-weight: bold;
+  }
+
+  .notification-item .message {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .notification-item .sub {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .notification-item .date {
+    font-size: 0.8rem;
+    color: #999;
+  }
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 16px;
+  }
+  .tab {
+    padding: 10px 16px;
+    text-decoration: none;
+    color: #333;
+    border-bottom: 2px solid transparent;
+    font-weight: 600;
+  }
+  .tab.active {
+    border-bottom-color: #007bff;
+    color: #007bff;
+  }
+</style>
 {% endblock %}

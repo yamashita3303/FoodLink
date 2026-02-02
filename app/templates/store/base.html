@@ -101,13 +101,19 @@
     <a href="{% url 'store_list' %}" class="{% if 'list' in request.path %}active{% endif %}">
       <i class="bi bi-box-seam"></i>
       <span>準備開始</span>
+      {% if order_notification_count > 0 %}
+        <span class="badge">{{ order_notification_count }}</span>
+      {% endif %}
     </a>
 
     <a href="{% url 'store_alert' %}" class="{% if 'store_alert' in request.path %}active{% endif %}">
       <i class="bi bi-bell"></i>
       <span>通知</span>
+      {% if other_notification_count > 0 %}
+        <span class="badge">{{ other_notification_count }}</span>
+      {% endif %}
     </a>
-
+    
     <a href="{% url 'store_mypage' %}" class="{% if 'store_mypage' in request.path %}active{% endif %}">
       <i class="bi bi-person-fill"></i>
       <span>マイページ</span>

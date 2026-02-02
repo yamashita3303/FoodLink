@@ -137,13 +137,38 @@
     a, button {
       -webkit-tap-highlight-color: transparent;
     }
+    .notification-icon {
+      position: relative;
+      display: inline-block;
+    }
+
+    .bi bi-bell {
+      position: absolute;
+      top: -6px;
+      right: -8px;
+      background: red;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 50%;
+      padding: 2px 6px;
+      min-width: 18px;
+      text-align: center;
+    }
+
   </style>
 </head>
 <body>
 
   <!-- 上部バー -->
   <div class="top-bar">
-    <a href="{% url 'user_alert' %}" title="お知らせ"><i class="bi bi-bell"></i></a>
+    <div class="notification-icon">
+      <a href="{% url 'user_alert' %}" title="お知らせ"><i class="bi bi-bell"></i>
+      {% if notification_count > 0 %}
+      {{ notification_count }}</a>
+      {% endif %}
+    </div>
+
     <a href="{% url 'user_mypage' %}" title="マイページ"><i class="bi bi-person-fill"></i></a>
   </div>
 

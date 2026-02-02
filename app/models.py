@@ -226,6 +226,7 @@ class Notification(models.Model):
     type = models.CharField(max_length=50)
     message = models.TextField()
     recipient_type = models.CharField(max_length=10, choices=RECIPIENT_CHOICES)
+    is_read = models.BooleanField(default=False)
      # 受け取るユーザー（一般）
     user = models.ForeignKey(
         User,

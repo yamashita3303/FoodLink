@@ -1066,6 +1066,8 @@ def user_alert(request):
         user=request.user
     ).order_by('-created_at')
 
+    notifications.filter(is_read=False).update(is_read=True)
+
     return render(request, "user/alert.html", {
         "notifications": notifications
     })
@@ -1463,6 +1465,8 @@ def store_purchased_list(request):
         "product", "order"
     ).order_by("-created_at")
 
+    notifications.filter(is_read=False).update(is_read=True)
+
     return render(request, "store/store_purchased_list.html", {
         "notifications": notifications,
     })
@@ -1471,31 +1475,37 @@ def store_purchased_list(request):
 
 @login_required(login_url='store_signin')
 def store_alert(request):
-    tab = request.GET.get('tab', 'new')
+    tab = request.GET.get("tab", "new")
 
-    # 🆕 新着商品（在庫あり）
-    products = Product.objects.filter(
-        store=request.user,
-        quantity__gt=0
-    ).order_by('-created_at')
-
-    # ✅ 購入済み通知（購入された商品）
-    notifications = Notification.objects.filter(
-        store=request.user,
+    # ❌ お客様キャンセル
+    user_cancelled_products = Notification.objects.filter(
         recipient_type="store",
-        type="order",
-        product__isnull=False,
-        order__isnull=False,
+        store=request.user,
+        type="user_cancel",
     ).select_related(
         "product", "order"
     ).order_by("-created_at")
 
-    return render(request, "store/alert.html", {
-        "products": products,
-        "notifications": notifications,
-        "tab": tab,
-    })
+    # ⏰ 期限切れ関連（自動キャンセル＋在庫期限切れ）
+    expired_products = Notification.objects.filter(
+        recipient_type="store",
+        store=request.user,
+        type__in=["auto_cancel", "expiration_date"],
+    ).select_related(
+        "product", "order"
+    ).order_by("-created_at")
 
+    # ✅ 表示されたタブのみ既読
+    if tab == "user_cancel":
+        user_cancelled_products.filter(is_read=False).update(is_read=True)
+    elif tab == "expired_cancel":
+        expired_products.filter(is_read=False).update(is_read=True)
+
+    return render(request, "store/alert.html", {
+        "tab": tab,
+        "user_cancelled_products": user_cancelled_products,
+        "expired_products": expired_products,
+    })
 
 @login_required(login_url='store_signin')
 def store_registar(request):
