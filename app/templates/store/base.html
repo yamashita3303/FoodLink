@@ -98,19 +98,34 @@
     </a>
 
     <!-- ★ 準備開始（旧：出品一覧） -->
-    <a href="{% url 'store_list' %}" class="{% if 'list' in request.path %}active{% endif %}">
-      <i class="bi bi-box-seam"></i>
+    <a href="{% url 'store_list' %}"
+      class="position-relative d-inline-flex align-items-center
+              {% if 'list' in request.path %}active{% endif %}">
+
+      <i class="bi bi-box-seam fs-5"></i>
       <span>準備開始</span>
+      
       {% if order_notification_count > 0 %}
-        <span class="badge">{{ order_notification_count }}</span>
+        <span class="position-absolute top-0 start-100 translate-middle
+                    badge rounded-pill bg-danger notification-badge">
+          {{ order_notification_count }}
+        </span>
       {% endif %}
     </a>
 
-    <a href="{% url 'store_alert' %}" class="{% if 'store_alert' in request.path %}active{% endif %}">
-      <i class="bi bi-bell"></i>
+
+    <a href="{% url 'store_alert' %}"
+      class="position-relative d-inline-flex align-items-center
+              {% if 'store_alert' in request.path %}active{% endif %}">
+
+      <i class="bi bi-bell fs-5"></i>
       <span>通知</span>
+
       {% if other_notification_count > 0 %}
-        <span class="badge">{{ other_notification_count }}</span>
+        <span class="position-absolute top-0 start-100 translate-middle
+                    badge rounded-pill bg-danger notification-badge">
+          {{ other_notification_count }}
+        </span>
       {% endif %}
     </a>
     

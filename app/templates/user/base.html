@@ -155,6 +155,15 @@
       min-width: 18px;
       text-align: center;
     }
+    .notification-badge {
+      font-size: 0.65rem;
+      min-width: 18px;
+      height: 18px;
+      line-height: 18px;
+      padding: 0;
+      text-align: center;
+    }
+
 
   </style>
 </head>
@@ -162,11 +171,17 @@
 
   <!-- 上部バー -->
   <div class="top-bar">
-    <div class="notification-icon">
-      <a href="{% url 'user_alert' %}" title="お知らせ"><i class="bi bi-bell"></i>
-      {% if notification_count > 0 %}
-      {{ notification_count }}</a>
-      {% endif %}
+    <div class="notification-icon position-relative">
+      <a href="{% url 'user_alert' %}" title="お知らせ" class="position-relative">
+        <i class="bi bi-bell fs-5"></i>
+
+        {% if notification_count > 0 %}
+          <span class="position-absolute top-0 start-100 translate-middle
+                      badge rounded-pill bg-danger notification-badge">
+            {{ notification_count }}
+          </span>
+        {% endif %}
+      </a>
     </div>
 
     <a href="{% url 'user_mypage' %}" title="マイページ"><i class="bi bi-person-fill"></i></a>
