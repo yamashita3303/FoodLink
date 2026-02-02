@@ -482,38 +482,47 @@ from collections import defaultdict
 @login_required
 def user_cart(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
-
-    # 🔥 ① 期限切れ商品をカートから削除
-    expired_items = cart.items.select_related("product").filter(
-        product__expiration_date__lt=timezone.now()
-    )
-    expired_items.delete()
  
-    # POST処理
+    # 🔥 期限切れ商品を削除
+    cart.items.filter(
+        product__expiration_date__lt=timezone.now()
+    ).delete()
+ 
     if request.method == "POST":
         action = request.POST.get("action")
+ 
+        # =====================
+        # 🛒 追加
+        # =====================
         if action == "add":
             product_id = request.POST.get("product_id")
             quantity = int(request.POST.get("quantity", 1))
-
-            if product_id:
-                product = get_object_or_404(Product, product_id=product_id)
-                # ❌ 期限切れは追加させない（保険）
-                if product.is_expired:
-                    return redirect("user_cart")
-
-                item, created = CartItem.objects.get_or_create(
-                    cart=cart,
-                    product=product,
-                    defaults={"quantity": quantity}
-                )
-
-                if not created:
-                    item.quantity += quantity
-                    item.save()
-
+ 
+            product = get_object_or_404(Product, product_id=product_id)
+ 
+            # 念のため期限切れ防止
+            if product.is_expired:
+                return redirect("user_cart")
+ 
+            item, _ = CartItem.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={"quantity": 0}
+            )
+ 
+            # 在庫を超えないように制限
+            item.quantity = min(
+                item.quantity + quantity,
+                product.quantity
+            )
+            item.save()
+ 
+            return redirect("user_cart")
+ 
+        # =====================
+        # 🔄 更新・削除
+        # =====================
         elif action == "update":
-            # 🔴 削除ボタンが押された場合
             delete_id = request.POST.get("delete_item_id")
             if delete_id:
                 CartItem.objects.filter(
@@ -521,49 +530,23 @@ def user_cart(request):
                     cart_item_id=delete_id
                 ).delete()
                 return redirect("user_cart")
-
-            # 🔵 数量更新
+ 
             for item in cart.items.select_related("product"):
                 key = f"quantity_{item.cart_item_id}"
                 if key in request.POST:
-                    requested_qty = int(request.POST[key])
-
-                    # 在庫数を超えないように制限
+                    requested = int(request.POST[key])
                     item.quantity = max(
                         1,
-                        min(requested_qty, item.product.quantity)
+                        min(requested, item.product.quantity)
                     )
                     item.save()
-        return redirect("user_cart")
  
-    # GET処理：店舗ごとにグルーピング
+            return redirect("user_cart")
+ 
+    # =====================
+    # 📦 表示用（店舗ごと）
+    # =====================
     stores = defaultdict(list)
-    # select_relatedでProductとUser（store）をまとめて取得
-    for item in cart.items.select_related("product__store"):
-        stores[item.product.store].append(item)
- 
-    store_blocks = []
-    grand_total = 0
-    for store, items in stores.items():
-        total = sum(item.subtotal for item in items)
-        grand_total += total
-        store_blocks.append({
-            "store": store,   # store は User オブジェクト
-            "items": items,
-            "total": total,
-        })
- 
-    return render(request, "user/cart.html", {
-        "stores": store_blocks,
-        "grand_total": grand_total,
-    })
- 
- 
-    # =========================
-    # 店舗ごとにグルーピング
-    # =========================
-    stores = defaultdict(list)
- 
     for item in cart.items.select_related("product__store"):
         stores[item.product.store].append(item)
  
@@ -571,7 +554,7 @@ def user_cart(request):
     grand_total = 0
  
     for store, items in stores.items():
-        total = sum(item.subtotal for item in items)
+        total = sum(i.subtotal for i in items)
         grand_total += total
         store_blocks.append({
             "store": store,
@@ -582,7 +565,7 @@ def user_cart(request):
     return render(request, "user/cart.html", {
         "stores": store_blocks,
         "grand_total": grand_total,
-    })  
+    })
 
 from django.views.decorators.http import require_POST
 @login_required
