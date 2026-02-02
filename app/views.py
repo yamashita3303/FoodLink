@@ -944,7 +944,7 @@ def order_item_cancel(request, order_item_id):
             store=order.store,
             order=order,
             product=product,
-            type="info",
+            type="user_cancel",
             message=f"購入者キャンセルしました。商品「{product.name}」を自己回収してください。"
         )
 
