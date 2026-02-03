@@ -52,6 +52,30 @@ from django.utils import timezone
 
 now = timezone.now()
 
+from django.shortcuts import redirect
+from functools import wraps
+
+def store_only(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('store_signin')
+        if not request.user.is_store:
+            return redirect('user_home')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+def user_only(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('user_signin')
+        if request.user.is_store:
+            return redirect('store_home')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+ 
 
 # =========================
 # トップページ
@@ -157,22 +181,21 @@ def user_signin(request):
         password = request.POST.get('password')
         next_url = request.POST.get('next') or 'user_home'
 
-        if not email or not password:
-            messages.error(request, 'メールアドレスとパスワードを入力してください')
-            return render(request, 'user/signin.html', {'next': next_url})
-
         user = authenticate(request, email=email, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect(next_url)
-        else:
+
+        if user is None:
             messages.error(request, 'メールアドレスかパスワードが間違っています')
-            return render(request, 'user/signin.html', {'next': next_url})
+            return render(request, 'user/signin.html')
 
-    # GET の場合
-    next_url = request.GET.get('next', '')
-    return render(request, 'user/signin.html', {'next': next_url})
+        if user.is_store:
+            messages.error(request, 'このアカウントは店舗用です')
+            return render(request, 'user/signin.html')
 
+        login(request, user)
+        return redirect(next_url)
+
+    return render(request, 'user/signin.html')
+ 
 # @login_required
 from django.db.models import Case, When, Value, IntegerField
 
@@ -1277,28 +1300,21 @@ def store_signin(request):
         password = request.POST.get('password')
         next_url = request.POST.get('next') or 'store_home'
 
-        if not email or not password:
-            messages.error(request, 'メールアドレスとパスワードを入力してください')
-            return render(request, 'store/signin.html', {'next': next_url})
-
         store = authenticate(request, email=email, password=password)
-        if store is not None:
-            login(request, store)
-            return redirect(next_url)
-        else:
+
+        if store is None:
             messages.error(request, 'メールアドレスかパスワードが間違っています')
-            return render(request, 'store/signin.html', {'next': next_url})
+            return render(request, 'store/signin.html')
 
-    # GET の場合
-    next_url = request.GET.get('next', '')
-    return render(request, 'store/signin.html', {'next': next_url})
+        if not store.is_store:
+            messages.error(request, 'このアカウントは一般ユーザー用です')
+            return render(request, 'store/signin.html')
 
+        login(request, store)
+        return redirect(next_url)
 
-    # GET の場合
-    next_url = request.GET.get('next', '')
-    form = StoreSigninForm()
-    return render(request, 'store/signin.html', {'form': form, 'next': next_url})
-
+    return render(request, 'store/signin.html')
+ 
 
 @login_required(login_url='store_signin')
 def store_home(request):
