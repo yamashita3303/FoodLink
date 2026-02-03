@@ -1452,25 +1452,56 @@ def store_edit_hours(request):
 
 @login_required
 def store_purchased_list(request):
+    now = timezone.now()
 
-    # ✅ 購入済み通知（購入された商品）
-    notifications = Notification.objects.filter(
+    base_qs = Notification.objects.filter(
         store=request.user,
         recipient_type="store",
         type="order",
         product__isnull=False,
         order__isnull=False,
-    ).select_related(
-        "product", "order"
-    ).order_by("-created_at")
+    ).select_related("product", "order")
 
-    notifications.filter(is_read=False).update(is_read=True)
+    # 🟡 未準備（急ぎ）
+    unready_notifications = []
+    for n in base_qs.filter(
+        order__status="pending",
+        order__ready=False
+    ).order_by("order__created_at"):
+
+        elapsed_seconds = int((now - n.order.created_at).total_seconds())
+        elapsed_minutes = elapsed_seconds // 60
+        hours = elapsed_minutes // 60
+        minutes = elapsed_minutes % 60
+
+        # 表示用テキスト
+        if hours > 0:
+            n.elapsed_label = f"{hours}時間{minutes}分経過"
+        else:
+            n.elapsed_label = f"{minutes}分経過"
+
+        n.elapsed_minutes = elapsed_minutes  # 緊急度判定用
+        unready_notifications.append(n)
+
+    # 🟢 準備完了
+    ready_notifications = base_qs.filter(
+        order__ready=True
+    ).exclude(
+        order__status="canceled"
+    ).order_by("-order__updated_at")
+
+    # ❌ キャンセル
+    canceled_notifications = base_qs.filter(
+        order__status="canceled"
+    ).order_by("-order__updated_at")
+
+    base_qs.filter(is_read=False).update(is_read=True)
 
     return render(request, "store/store_purchased_list.html", {
-        "notifications": notifications,
+        "unready_notifications": unready_notifications,
+        "ready_notifications": ready_notifications,
+        "canceled_notifications": canceled_notifications,
     })
-
-
 
 @login_required(login_url='store_signin')
 def store_alert(request):
@@ -1570,6 +1601,13 @@ def store_read_qr_code(request, notification_id):
         notification_id=notification_id,
         store=request.user
     )
+    order = notification.order
+
+    # 🚫 キャンセル済みなら弾く
+    if order.status == "canceled":
+        messages.error(request, "この注文はキャンセルされています。")
+        return redirect("store_purchased_list")
+    
     return render(request, "store/read_qr_code.html", {
             "notification": notification
         })
