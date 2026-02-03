@@ -29,6 +29,7 @@ def notify_unreceived_orders():
                     order=order,
                     product=product,
                     type="auto_cancel",
+                    is_read=False,
                     message=f"期限までに受け取り完了しなかったため、商品「{product.name}」の注文がキャンセルされました。"
                 )
 
@@ -39,6 +40,7 @@ def notify_unreceived_orders():
                     order=order,
                     product=product,
                     type="auto_cancel",
+                    is_read=False,
                     message=f"購入者が期限までに受け取れなかったため、商品「{product.name}」を自己回収してください。"
                 )
 
@@ -67,6 +69,7 @@ def notify_expired_products():
             store=product.store,
             product=product,
             type="expiration_date",
+            is_read=False,
             message=f"商品「{product.name}」は消費期限切れですが、在庫が残っています。"
         )
 
