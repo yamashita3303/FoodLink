@@ -105,28 +105,18 @@
       <strong>商品</strong>{{ notification.product.name }}
     </div>
     <div class="item">
-      <strong>ロッカー番号</strong>{{ qr.code_data }}
+      <strong>ロッカー番号</strong>{{ locker_number }}
     </div>
   </div>
 
   <!-- 🔐 暗証番号 -->
   <div class="pin-card">
     <div class="pin-label">暗証番号</div>
-    <div class="pin-value">{{ qr.pin }}</div>
+    <div class="pin-value">{{ locker_pin }}</div>
   </div>
 
-  <div class="time">
-    準備完了日時：{{ qr.created_at|date:"Y/m/d H:i" }}
-  </div>
-
-  <form method="post">
-    {% csrf_token %}
-    <button
-      type="submit"
-      onclick="return confirm('受け取りを完了しますか？');">
-      受け取り完了
-    </button>
-  </form>
+  <a href="{% url 'user_alert' %}">
+      <button class="submit">受け取り完了</button>
 
 </div>
 

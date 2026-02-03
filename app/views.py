@@ -936,7 +936,7 @@ def order_item_cancel(request, order_item_id):
         messages.error(request, "権限がありません")
         return redirect("user_history")
 
-    if order.status == "pending":
+    if order.status in ["pending", "ready"]:
         item.is_canceled = True
         item.save()
 
@@ -1078,78 +1078,37 @@ def user_alert(request):
         "notifications": notifications
     })
 
+@login_required
 def user_read_qr_code(request, notification_id):
     notification = get_object_or_404(
         Notification,
         notification_id=notification_id,
         user=request.user
     )
+
     return render(request, "user/read_qr_code.html", {
-            "notification": notification
-        })
+        "notification": notification
+    })
 
 
+@login_required
 def user_qr_result(request, notification_id):
     notification = get_object_or_404(
         Notification,
         notification_id=notification_id,
         user=request.user
     )
-    code_type = request.GET.get("type")
-    code_data = request.GET.get("data")
-    qr = get_object_or_404(
-        Qr,
-        code_data=code_data
-    )
- 
-    # 通知に紐づく注文を取得
+
     order = notification.order
-    if not order:
-        messages.error(request, "注文情報が見つかりません")
-        return redirect("user_home")
- 
-    # すでに完了している場合
-    if order.status == "completed":
-        messages.info(request, "この注文はすでに完了しています")
-        return redirect("user_home")
- 
-    # 注文を完了にする
-    order.status = "completed"
-    order.save(update_fields=["status"])
 
-    # 🔽 POST（受け取り完了）
-    if request.method == "POST":
-        code_data = request.GET.get("data")
+    # ロッカー情報がまだ設定されていない場合
+    if not order or not order.locker_number or not order.locker_pin:
+        return render(request, "user/qr_error.html", {
+            "message": "ロッカー情報が見つかりません"
+        })
 
-        if not code_data:
-            return render(request, "user/qr_error.html", {
-                "message": "QR情報が不正です"
-            })
-
-        try:
-            code_data = int(code_data)
-        except ValueError:
-            return render(request, "user/qr_error.html", {
-                "message": "QRデータ形式が不正です"
-            })
-
-        qr = Qr.objects.filter(code_data=code_data).first()
-
-        if not qr:
-            return render(request, "user/qr_error.html", {
-                "message": "このQRコードは無効です"
-            })
-
-        # ✅ 受け取り完了処理（例）
-        qr.is_received = True
-        qr.save()
-
-        # ✅ ホーム画面へ戻る
-        return redirect("user_home")  # ← 自分のホームURL名に合わせて
-
-    # 🔽 GET（表示用）
+    # QRから送られてきたロッカー番号
     code_data = request.GET.get("data")
-
     if not code_data:
         return render(request, "user/qr_error.html", {
             "message": "QR情報が不正です"
@@ -1162,19 +1121,26 @@ def user_qr_result(request, notification_id):
             "message": "QRデータ形式が不正です"
         })
 
-    qr = Qr.objects.filter(code_data=code_data).first()
-
-    if not qr:
+    # ロッカー番号が一致するかチェック
+    if code_data != order.locker_number:
         return render(request, "user/qr_error.html", {
-            "message": "このQRコードは無効です"
+            "message": "ロッカー番号が違います。正しいロッカーを確認してください"
         })
+    
+    # 🔹 暗証番号を表示した時点で受け取り可能扱いにする
+    if order.status != "completed":
+        order.status = "completed"  # 受け取り可能に変更
+        order.save(update_fields=["status"])
 
+        # 通知を既読にする（通知一覧でボタンを消す用）
+        notification.is_read = True
+        notification.save(update_fields=["is_read"])
+
+    # 正しい場合は受け取り情報表示
     return render(request, "user/qr_result.html", {
-        "qr": qr,
+        "locker_number": order.locker_number,
+        "locker_pin": order.locker_pin,
     })
-
-
-
 
 
 # store側のビュー
@@ -1595,39 +1561,37 @@ def product_ocr(request, product_id):
 
     return HttpResponse("OCR 完了！コンソールを確認してください")
 
+@login_required
 def store_read_qr_code(request, notification_id):
     notification = get_object_or_404(
         Notification,
         notification_id=notification_id,
         store=request.user
     )
-    order = notification.order
 
-    # 🚫 キャンセル済みなら弾く
-    if order.status == "canceled":
-        messages.error(request, "この注文はキャンセルされています。")
-        return redirect("store_purchased_list")
-    
     return render(request, "store/read_qr_code.html", {
-            "notification": notification
-        })
+        "notification": notification
+    })
 
+@login_required
 def store_qr_result(request, notification_id):
     notification = get_object_or_404(
         Notification,
         notification_id=notification_id,
         store=request.user
     )
+
     code_type = request.GET.get("type")
-    code_data = request.GET.get("data")
+    code_data = request.GET.get("data")  # ← ロッカー番号
 
     return render(request, "store/qr_result.html", {
+        "notification": notification,
         "code_type": code_type,
         "code_data": code_data,
-        "notification": notification
     })
 
 
+@login_required
 def store_qr_verify(request, notification_id):
     notification = get_object_or_404(
         Notification,
@@ -1636,43 +1600,33 @@ def store_qr_verify(request, notification_id):
     )
 
     if request.method != "POST":
-        return redirect("store_qr_read")
+        return redirect("store_qr_read", notification_id=notification_id)
 
-    code_type = request.POST.get("code_type")
-    code_data = request.POST.get("code_data")
-    pin = request.POST.get("pin")
+    code_data = request.POST.get("code_data")  # ロッカー番号
+    pin = request.POST.get("pin")              # 店舗が決める暗証番号
 
     if not pin or not pin.isdigit():
         messages.error(request, "暗証番号は数字で入力してください")
-        return redirect(
-            f"/qr/result/?type={code_type}&data={code_data}"
-        )
+        return redirect("store_qr_result", notification_id=notification_id)
 
-    # QR保存
-    Qr.objects.create(
-        code_data=code_data,
-        pin=int(pin)
-    )
-
-    # ✅ ここが超重要！！！！！！
     order = notification.order
-    order.ready = True
-    order.save(update_fields=["ready"])
-    order.status = 'completed'
-    order.save()
 
-    # ユーザーに準備完了通知
+    # 🔽 ロッカー確定
+    order.mark_ready(int(code_data), pin)
+
+
+    # ユーザーへ通知
     Notification.objects.create(
         type="ready",
         message=(
-            f"ご注文の「{notification.product.name}」の準備が完了しました。\n"
-            f"受け取りロッカー番号：{code_data}"
+            f"ご注文商品の準備が完了しました。\n"
+            f"ロッカー番号：{order.locker_number}"
         ),
         recipient_type="user",
         user=order.user,
-        store=notification.store,
-        product=notification.product,
+        store=order.store,
         order=order,
+        product=notification.product,
     )
 
     messages.success(request, "準備完了にしました")

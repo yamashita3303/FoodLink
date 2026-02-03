@@ -1,3 +1,4 @@
+import random
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import RegexValidator
@@ -144,6 +145,15 @@ class CartItem(models.Model):
     def subtotal(self):
         return self.product.price * self.quantity
 
+class Qr(models.Model):
+    # ロッカー番号（QRの中身）
+    code_data = models.IntegerField(unique=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"QR {self.code_data}"
+
 
 # =========================
 # Orderモデル
@@ -151,30 +161,29 @@ class CartItem(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', '準備待ち'),
-        ('completed', '完了'),
+        ('ready', '準備完了'),
+        ('completed', '受け取り完了'),
         ('canceled', 'キャンセル'),
     ]
 
     order_id = models.AutoField(primary_key=True)
 
-    # 注文した人
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="user_orders"
     )
 
-    # 店舗（注文を受けた側）
     store = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="store_orders"
     )
 
-    total_price = models.IntegerField(default=0)
-
-    # ← ここが「準備完了かどうか」
+    # ロッカーの準備状態
     ready = models.BooleanField(default=False)
+
+    total_price = models.IntegerField(default=0)
 
     status = models.CharField(
         max_length=10,
@@ -185,16 +194,25 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    locker_number = models.IntegerField(null=True, blank=True)
+    locker_pin = models.CharField(max_length=10, null=True, blank=True)
+
+    def mark_ready(self, locker_number, locker_pin):
+        self.locker_number = locker_number
+        self.locker_pin = locker_pin
+        self.ready = True
+        self.status = "ready"
+        self.save()
+
     def update_total_price(self):
         total = sum(item.subtotal for item in self.items.all())
         self.total_price = total
         self.save(update_fields=['total_price'])
 
-    def mark_ready(self):
-        """準備完了にする"""
-        self.ready = True
+    def mark_completed(self):
+        """受け取り完了"""
         self.status = 'completed'
-        self.save(update_fields=['ready', 'status'])
+        self.save(update_fields=['status'])
 
 
 # =========================
@@ -253,9 +271,9 @@ class Notification(models.Model):
             raise ValidationError("recipient_type が user の場合、user を指定してください")
         
 class Qr(models.Model):
-    code_data = models.IntegerField()
-    pin = models.IntegerField()
+    code_data = models.IntegerField()  # ロッカー番号
+    pin = models.IntegerField()        # 記録用（必須ではない）
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.code_data} ({self.pin}) - {self.created_at:%Y-%m-%d %H:%M}"
+        return f"Locker {self.code_data} - {self.created_at:%Y-%m-%d %H:%M}"

@@ -6,7 +6,7 @@ from app.models import Notification, Order, Product
 # 注文の未受取キャンセル通知
 # =========================
 def notify_unreceived_orders():
-    orders = Order.objects.filter(status="pending")
+    orders = Order.objects.filter(status__in=["pending", "ready"])
 
     for order in orders:
         has_expired_product = False
