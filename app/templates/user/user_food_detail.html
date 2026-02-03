@@ -54,7 +54,7 @@
 
     <!-- 📄 詳細 -->
     <div class="product-meta">
-      <p><strong>消費期限</strong><span>{{ product.expiration_date|date:"Y年n月j日" }}</span></p>
+      <p><strong>消費期限</strong><span>{{ product.expiration_date|date:"Y年n月j日 H:i" }}</span></p>
       <p><strong>産地</strong><span>{{ product.origin|default:"-" }}</span></p>
       <p><strong>店舗</strong><span>{{ product.store }}</span></p>
       <p><strong>備考</strong><span>{{ product.notes|default:"記載なし" }}</span></p>

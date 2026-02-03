@@ -1497,10 +1497,16 @@ def store_alert(request):
     elif tab == "expired_cancel":
         expired_products.filter(is_read=False).update(is_read=True)
 
+    # 🔴 未読件数を計算してテンプレートへ渡す
+    user_cancel_count = user_cancelled_products.filter(is_read=False).count()
+    expired_cancel_count = expired_products.filter(is_read=False).count()
+
     return render(request, "store/alert.html", {
         "tab": tab,
         "user_cancelled_products": user_cancelled_products,
         "expired_products": expired_products,
+        "user_cancel_count": user_cancel_count,
+        "expired_cancel_count": expired_cancel_count,
     })
 
 @login_required(login_url='store_signin')

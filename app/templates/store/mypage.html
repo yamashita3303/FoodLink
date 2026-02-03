@@ -19,14 +19,20 @@
     <div class="fs-6">
       〒{{ store.postal_code }}<br>
       {{ store.prefecture }} {{ store.city }}<br>
-      {{ store.address_line1 }} {{ store.address_line2 }}
+      {% if user.address_line1 or user.address_line2 %}
+        {{ store.address_line1|default_if_none:"" }} {{ store.address_line2|default_if_none:"" }}
+      {% endif %}
     </div>
   </div>
 
   <div class="mb-4">
     <div class="text-muted small">営業時間</div>
     <div class="fs-6">
-      {{ store.opening_time }} 〜 {{ store.closing_time }}
+      {% if store.opening_time and store.closing_time %}
+        {{ store.opening_time|time:"H:i" }} 〜 {{ store.closing_time|time:"H:i" }}
+      {% else %}
+        営業時間未設定
+      {% endif %}
     </div>
   </div>
 

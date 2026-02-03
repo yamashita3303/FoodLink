@@ -10,13 +10,20 @@
   <a href="?tab=user_cancel"
      class="tab {% if tab == 'user_cancel' %}active{% endif %}">
     お客様キャンセル
+    {% if user_cancel_count > 0 %}
+      <span class="badge-red">{{ user_cancel_count }}</span>
+    {% endif %}
   </a>
 
   <a href="?tab=expired_cancel"
      class="tab {% if tab == 'expired_cancel' %}active{% endif %}">
     期限切れ・自動キャンセル
+    {% if expired_cancel_count > 0 %}
+      <span class="badge-red">{{ expired_cancel_count }}</span>
+    {% endif %}
   </a>
 </div>
+
 
 <hr>
 
@@ -132,6 +139,17 @@
   .tab.active {
     border-bottom-color: #007bff;
     color: #007bff;
+  }
+  .badge-red {
+    display: inline-block;
+    background-color: #dc3545;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 2px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
   }
 </style>
 {% endblock %}

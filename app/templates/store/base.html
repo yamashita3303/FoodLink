@@ -93,7 +93,7 @@
   <!-- 下部固定ナビ -->
   <nav class="bottom-nav">
     <a href="{% url 'store_home' %}" class="{% if 'store_home' in request.path %}active{% endif %}">
-      <i class="bi bi-house-fill"></i>
+      <i class="bi bi-house"></i>
       <span>ホーム</span>
     </a>
 
@@ -104,7 +104,7 @@
 
       <i class="bi bi-box-seam fs-5"></i>
       <span>準備開始</span>
-      
+
       {% if order_notification_count > 0 %}
         <span class="position-absolute top-0 start-100 translate-middle
                     badge rounded-pill bg-danger notification-badge">
@@ -130,8 +130,8 @@
     </a>
     
     <a href="{% url 'store_mypage' %}" class="{% if 'store_mypage' in request.path %}active{% endif %}">
-      <i class="bi bi-person-fill"></i>
-      <span>マイページ</span>
+      <i class="bi-gear"></i>
+      <span>設定</span>
     </a>
   </nav>
 
