@@ -221,6 +221,9 @@ class StoreSigninForm(forms.Form):
     password = forms.CharField(label='パスワード', widget=forms.PasswordInput)
 
 
+from django import forms
+from .models import Product
+
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
@@ -241,8 +244,15 @@ class ProductForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # 🔥 ここ重要：POSTされた datetime-local を正しく解釈させる
+        # datetime-local 対応
         self.fields['expiration_date'].input_formats = ['%Y-%m-%dT%H:%M']
 
+        # 🔥 画像フィールド設定（ここが肝）
         for i in range(1, 6):
-            self.fields[f'image{i}'].required = False
+            field = self.fields[f'image{i}']
+            field.required = False
+
+            field.widget = forms.ClearableFileInput()
+            field.widget.initial_text = '現在の画像'
+            field.widget.input_text = '画像を変更'
+            field.widget.clear_checkbox_label = ''  # 削除チェック非表示
