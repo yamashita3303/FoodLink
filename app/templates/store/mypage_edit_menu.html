@@ -1,100 +1,215 @@
 {% extends "store/base.html" %}
-{% block title %}編集メニュー | FoodLink{% endblock %}
-
+{% block title %}プロフィール編集 | FoodLink{% endblock %}
 {% block content %}
 
-<!-- Font Awesome（アイコン用） -->
-<link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
 <style>
-.edit-wrapper {
-    max-width: 420px;
-    margin: 20px auto;
-}
+  body {
+    background: #f5f5f7;
+  }
 
-.edit-wrapper h2 {
-    margin-bottom: 20px;
-}
+  .app-card {
+    border-radius: 18px;
+    border: none;
+    padding: 0.6rem;
+  }
 
-.edit-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
+  .app-list-group {
+    border-radius: 16px;
+    overflow: hidden;
+  }
 
-.edit-menu li a {
+  .app-list-item {
+    padding: 0.75rem 1rem;
+    font-size: 1.05rem;
+    border: none;
+    border-bottom: 1px solid #e8e8e8;
+    background-color: #fff;
+    transition: background-color 0.1s ease;
+  }
+
+  .app-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .app-list-item:hover {
+    background-color: #fff !important;
+  }
+
+  .app-list-item:active {
+    background-color: #e5e5ea !important;
+  }
+
+  .app-icon {
+    font-size: 1.15rem;
+    color: #5c5c5c;
+  }
+
+  .app-btn {
+    border-radius: 14px;
+    width: 100%;
+    padding: 0.65rem;
+    font-size: 1rem;
+  }
+
+  /* ▼ ここが今回の重要ポイント ▼ */
+
+  .item-left {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 10px;
-    font-size: 16px;
-    color: #222;
-    text-decoration: none;
-    border-bottom: 1px solid #ddd;
-}
+  }
 
-.edit-menu li a:hover {
-    background-color: #f5f5f5;
-}
+  .item-center {
+    flex: 0;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    color: #666;
+    margin-right: 6px;
+    text-align: right;
+  }
 
-.edit-menu i {
-    width: 20px;
-    text-align: center;
-    color: #555;
-}
+  .item-right {
+    flex: 0;
+    font-size: 1.2rem;
+    color: #999;
+  }
 
-/* ログアウト */
-.edit-menu li.logout a {
-    color: #d32f2f;
-}
-
-.edit-menu li.logout i {
-    color: #d32f2f;
-}
 </style>
 
-<div class="edit-wrapper">
-    <h2>マイページ</h2>
 
-    <ul class="edit-menu">
-        <li>
-            <a href="{% url 'store_edit_username' %}">
-                <i class="fa-solid fa-user"></i>
-                ユーザネーム変更
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'store_edit_phone' %}">
-                <i class="fa-solid fa-phone"></i>
-                電話番号変更
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'store_edit_password' %}">
-                <i class="fa-solid fa-lock"></i>
-                パスワード変更
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'store_edit_address' %}">
-                <i class="fa-solid fa-location-dot"></i>
-                住所変更
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'store_edit_hours' %}">
-                <i class="fa-solid fa-clock"></i>
-                営業時間変更
-            </a>
-        </li>
-        <li class="logout">
-            <a href="{% url 'store_mypage' %}">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                戻る
-            </a>
-        </li>
+<div class="container mt-3 mb-4">
+
+  <div class="mb-3">
+    <h4 class="app-title fw-bold">設定</h4>
+    <p class="text-muted small mb-1">編集したい項目を選択してください</p>
+  </div>
+
+  <div class="card app-card shadow-sm">
+    <ul class="list-group app-list-group">
+
+
+      <!-- ユーザー名 -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'store_edit_username' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-person app-icon me-2"></i>
+            ユーザ名を変更
+          </div>
+
+          <div class="item-center">
+            {{ user.username }}
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+      <!-- メールアドレス -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'store_edit_email' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-envelope app-icon me-2"></i>
+            メールアドレスを変更
+          </div>
+
+          <div class="item-center">
+            {{ user.email }}
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+
+      <!-- パスワード（伏せる） -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'store_edit_password' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-key app-icon me-2"></i>
+            パスワードを変更
+          </div>
+
+          <div class="item-center">
+            ●●●●●●
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+
+      <!-- 電話番号 -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'store_edit_phone' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-telephone app-icon me-2"></i>
+            電話番号を変更
+          </div>
+
+          <div class="item-center">
+            {{ user.phone }}
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+
+
+      <!-- 住所 -->
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'store_edit_address' %}" 
+           class="text-decoration-none text-dark d-flex align-items-center w-100">
+          
+          <div class="item-left">
+            <i class="bi bi-geo-alt app-icon me-2"></i>
+            住所を変更
+          </div>
+
+          <div class="item-center">
+            {{ user.prefecture }} {{ user.city }}
+          </div>
+
+          <i class="bi bi-chevron-right item-right"></i>
+        </a>
+      </li>
+    <!-- 営業時間 -->
+    <li class="list-group-item app-list-item">
+    <a href="{% url 'store_edit_hours' %}" 
+        class="text-decoration-none text-dark d-flex align-items-center w-100">
+        
+        <div class="item-left">
+        <i class="bi bi-clock app-icon me-2"></i>
+        営業時間を変更
+        </div>
+
+        <div class="item-center">
+        {% if user.opening_time and user.closing_time %}
+            {{ user.opening_time|time:"H:i" }} 〜 {{ user.closing_time|time:"H:i" }}
+        {% else %}
+            未設定
+        {% endif %}
+        </div>
+
+        <i class="bi bi-chevron-right item-right"></i>
+
     </ul>
+  </div>
+
+
+  <div class="mt-3">
+    <a href="{% url 'store_mypage' %}" class="btn btn-secondary app-btn">
+      <i class="bi bi-chevron-left me-1"></i> マイページに戻る
+    </a>
+  </div>
+
 </div>
 
 {% endblock %}

@@ -68,12 +68,18 @@ class UserEditUsernameForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username']
+        labels = {
+            'username': 'ユーザネーム',
+        }
 
 # メールアドレス
 class UserEditEmailForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['email']
+        labels = {
+            'email': 'メールアドレス',
+        }
 
 # パスワード
 class UserEditPasswordForm(forms.Form):
@@ -119,12 +125,22 @@ class UserEditPhoneForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['phone']
+        labels = {
+            'phone': '電話番号',
+        }
 
 # 住所
 class UserEditAddressForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['postal_code', 'prefecture', 'city', 'address_line1', 'address_line2']
+        labels = {
+            'postal_code': '郵便番号',
+            'prefecture': '都道府県',
+            'city': '市区町村',
+            'address_line1': '町名・番地',
+            'address_line2': '建物名・部屋番号',
+        }
 
 class StoreSignupStep1Form(forms.ModelForm):
     password = forms.CharField(label='パスワード', widget=forms.PasswordInput)
@@ -159,6 +175,18 @@ class StoreEditUsernameForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username']
+        labels = {
+            'username': 'ユーザネーム',
+        }
+
+# メールアドレス
+class StoreEditEmailForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['email']
+        labels = {
+            'email': 'メールアドレス',
+        }
 
 # パスワード
 class StoreEditPasswordForm(forms.Form):
@@ -204,6 +232,12 @@ class StoreEditAddressForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['postal_code', 'prefecture', 'city', 'address_line1']
+        labels = {
+            'postal_code': '郵便番号',
+            'prefecture': '都道府県',
+            'city': '市区町村',
+            'address_line1': '町名・番地',
+        }
 
 # 営業時間
 class StoreEditHoursForm(forms.ModelForm):
@@ -213,6 +247,10 @@ class StoreEditHoursForm(forms.ModelForm):
         widgets = {
             'opening_time': forms.TimeInput(format='%H:%M', attrs={'type': 'time'}),
             'closing_time': forms.TimeInput(format='%H:%M', attrs={'type': 'time'}),
+        }
+        labels = {
+            'opening_time': '開店時間',
+            'closing_time': '閉店時間',
         }
 
 

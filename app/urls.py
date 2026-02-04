@@ -43,6 +43,7 @@ urlpatterns = [
     path('store_mypage/', views.store_mypage, name='store_mypage'),
     path('store_mypage/edit/', views.store_edit_menu, name='store_edit_menu'),
     path('store_mypage/edit/username/', views.store_edit_username, name='store_edit_username'),
+    path('store_mypage/edit/email/', views.store_edit_email, name='store_edit_email'),
     path('store_mypage/edit/phone/', views.store_edit_phone, name='store_edit_phone'),
     path('store_mypage/edit/password/', views.store_edit_password, name='store_edit_password'),
     path('store_mypage/edit/address/', views.store_edit_address, name='store_edit_address'),

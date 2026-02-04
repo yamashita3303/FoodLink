@@ -1,53 +1,154 @@
 {% extends "store/base.html" %}
-{% block title %}ストアマイページ | FoodLink{% endblock %}
-
+{% block title %}マイページ | FoodLink{% endblock %}
 {% block content %}
-<div class="container mt-4" style="max-width: 600px;">
 
-  <h3 class="text-center mb-2">マイページ</h3>
-  <p class="text-center text-muted mb-4">
-    ようこそ、<strong>{{ store.username }}</strong> さん
-  </p>
+<style>
+  body {
+    background: #f5f5f7;
+  }
 
-  <div class="mb-3">
-    <div class="text-muted small">電話番号</div>
-    <div class="fs-6">{{ store.phone }}</div>
+  /* ==== ヘッダー ==== */
+  .back-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding-top: 0.3rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .back-header .back-btn-wrapper {
+    position: absolute;
+    left: 0;
+  }
+
+  .back-btn-icon {
+    font-size: 1.4rem;
+    color: #333;
+    padding: 0.4rem 0.6rem;
+    border-radius: 10px;
+  }
+
+  .back-btn-icon:active {
+    background-color: #e5e5ea;
+  }
+
+  /* ==== カードデザイン ==== */
+  .app-card {
+    border-radius: 18px;
+    border: none;
+    padding: 0.6rem;
+  }
+
+  .app-list-group {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .app-list-item {
+    padding: 0.75rem 1rem;
+    font-size: 1.05rem;
+    border-bottom: 1px solid #e8e8e8;
+    background-color: #fff;
+    transition: background-color 0.1s ease;
+  }
+
+  .app-list-item:last-child {
+    border-bottom: none;
+  }
+
+  /* hover 無し、active のみ */
+  .app-list-item:hover {
+    background-color: #fff !important;
+  }
+  .app-list-item:active {
+    background-color: #e5e5ea !important;
+  }
+
+  .app-icon {
+    font-size: 1.15rem;
+    color: #5c5c5c;
+  }
+
+  .logout-btn {
+    margin-top: 1.2rem;
+    width: 100%;
+    border-radius: 14px;
+    padding: 0.7rem;
+  }
+</style>
+
+
+<div class="container mt-3 mb-4">
+
+  <!-- ヘッダー（アプリの設定ページ風） -->
+  <div class="back-header">
+    <h4 class="app-title fw-bold text-center w-100">設定</h4>
   </div>
 
-  <div class="mb-3">
-    <div class="text-muted small">住所</div>
-    <div class="fs-6">
-      〒{{ store.postal_code }}<br>
-      {{ store.prefecture }} {{ store.city }}<br>
-      {% if user.address_line1 or user.address_line2 %}
-        {{ store.address_line1|default_if_none:"" }} {{ store.address_line2|default_if_none:"" }}
-      {% endif %}
-    </div>
+  <!-- ユーザー情報カード -->
+  <div class="card app-card shadow-sm mb-3">
+    <ul class="list-group app-list-group">
+      <li class="list-group-item app-list-item">
+        <i class="bi bi-person app-icon me-2"></i>
+        {{ store.username }}
+      </li>
+      <li class="list-group-item app-list-item">
+        <i class="bi bi-envelope app-icon me-2"></i>
+        {{ store.email }}
+      </li>
+      <li class="list-group-item app-list-item">
+        <i class="bi bi-telephone app-icon me-2"></i>
+        {{ store.phone }}
+      </li>
+      <li class="list-group-item app-list-item d-flex align-items-start">
+      <i class="bi bi-geo-alt app-icon me-2"></i>
+      <span>
+        {% if store.postal_code %}
+          {{ store.postal_code }}<br>
+        {% endif %}
+
+        {{ store.prefecture }} {{ store.city }}
+
+        {% if store.address_line1 %}
+          {{ store.address_line1|default_if_none:"" }}
+        {% endif %}
+      </span>
+      </li>
+      <li class="list-group-item app-list-item d-flex align-items-start">
+        <i class="bi bi-clock app-icon me-2 mt-1"></i>
+        <span>
+          <strong>営業時間</strong><br>
+          {% if store.opening_time and store.closing_time %}
+            {{ store.opening_time|time:"H:i" }} 〜 {{ store.closing_time|time:"H:i" }}
+          {% else %}
+            <span class="text-muted">未設定</span>
+          {% endif %}
+        </span>
+      </li>
+    </ul>
   </div>
 
-  <div class="mb-4">
-    <div class="text-muted small">営業時間</div>
-    <div class="fs-6">
-      {% if store.opening_time and store.closing_time %}
-        {{ store.opening_time|time:"H:i" }} 〜 {{ store.closing_time|time:"H:i" }}
-      {% else %}
-        営業時間未設定
-      {% endif %}
-    </div>
+  <!-- 編集メニュー card -->
+  <div class="card app-card shadow-sm mb-3">
+    <ul class="list-group app-list-group">
+      <li class="list-group-item app-list-item">
+        <a href="{% url 'store_edit_menu' %}" class="text-dark text-decoration-none d-flex align-items-center w-100">
+          <i class="bi bi-pencil-square app-icon me-2"></i>
+          プロフィールを編集する
+        </a>
+      </li>
+    </ul>
   </div>
 
-  <div class="d-flex gap-2">
-    <a href="{% url 'store_edit_menu' %}" class="btn btn-primary flex-fill">
-      情報を編集する
-    </a>
-
-    <form method="post" class="flex-fill">
-      {% csrf_token %}
-      <button type="submit" name="logout" class="btn btn-outline-secondary w-100">
-        ログアウト
-      </button>
-    </form>
-  </div>
+  <!-- ログアウト -->
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" name="logout" class="btn btn-outline-danger logout-btn">
+      ログアウト
+    </button>
+  </form>
 
 </div>
+
 {% endblock %}

@@ -39,6 +39,7 @@ from .forms import (
     StoreSignupStep1Form, 
     StoreSignupStep2Form, 
     StoreEditUsernameForm,
+    StoreEditEmailForm,
     StoreEditPhoneForm,
     StoreEditPasswordForm,
     StoreEditAddressForm,
@@ -1338,6 +1339,23 @@ def store_edit_username(request):
     })
 
 @login_required(login_url='store_signin')
+def store_edit_email(request):
+    store = request.user
+    if request.method == 'POST':
+        form = StoreEditEmailForm(request.POST, instance=store)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'メールアドレスを更新しました。')
+            return redirect('store_mypage')
+    else:
+        form = StoreEditEmailForm()
+    return render(request, 'store/mypage_edit_form.html', {
+        'form': form,
+        'title': 'メールアドレスを変更',
+        'current_value': store.email
+    })
+
+@login_required(login_url='store_signin')
 def store_edit_phone(request):
     store = request.user
     if request.method == 'POST':
@@ -1383,6 +1401,14 @@ def store_edit_address(request):
             return redirect('store_mypage')
     else:
         form = StoreEditAddressForm()
+    
+    current_value = (
+        f"{store.postal_code or ''} "
+        f"{store.prefecture or ''} "
+        f"{store.city or ''} "
+        f"{store.address_line1 or ''}"
+    ).strip()
+    
     return render(request, 'store/mypage_edit_form.html', {
         'form': form,
         'title': '住所を変更',
