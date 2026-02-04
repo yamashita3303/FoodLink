@@ -52,6 +52,43 @@
           <div class="date">
             {{ notification.created_at|date:"Y/m/d H:i" }}
           </div>
+          <button type="button"
+                  class="btn btn-sm btn-outline-warning complete-btn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#confirmModal{{ notification.notification_id }}">
+            完了
+          </button>
+          <!-- 確認モーダル -->
+           <div class="modal fade"
+              id="confirmModal{{ notification.notification_id }}"
+              tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+
+                <div class="modal-header">
+                  <h5 class="modal-title">確認</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                  この通知を完了にして非表示にします。<br>
+                  よろしいですか？
+                </div>
+
+                <div class="modal-footer">
+                  <form method="post"
+                        action="{% url 'store_notification_done' notification.notification_id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                      完了する
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
         </li>
       {% endfor %}
     </ul>
@@ -85,6 +122,42 @@
           <div class="date">
             {{ notification.created_at|date:"Y/m/d H:i" }}
           </div>
+
+          <button type="button"
+                  class="btn btn-sm btn-outline-warning complete-btn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#confirmModal{{ notification.notification_id }}">
+            完了
+          </button>
+          <!-- 確認モーダル -->
+           <div class="modal fade"
+              id="confirmModal{{ notification.notification_id }}"
+              tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+
+                <div class="modal-header">
+                  <h5 class="modal-title">確認</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                  この通知を完了にして非表示にします。<br>
+                  よろしいですか？
+                </div>
+
+                <div class="modal-footer">
+                  <form method="post"
+                        action="{% url 'store_notification_done' notification.notification_id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                      完了する
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+            </div>
         </li>
       {% endfor %}
     </ul>
@@ -150,6 +223,19 @@
     padding: 2px 6px;
     margin-left: 6px;
     vertical-align: middle;
+  }
+  .complete-btn {
+    border-radius: 12px;
+    font-size: 0.8rem;
+    padding: 4px 10px;
+
+    background-color: #fad567;   /* やさしい黄色 */
+    color: #000000;
+    border: 1px solid #fad567;
+  }
+  .complete-btn:active {
+    background-color: #fad567;
+    border-color: #fad567;
   }
 </style>
 {% endblock %}

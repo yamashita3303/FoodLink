@@ -952,6 +952,8 @@ def order_item_cancel(request, order_item_id):
             order=order,
             product=product,
             type="user_cancel",
+            is_read=False,
+            is_done=False,
             message=f"購入者キャンセルしました。商品「{product.name}」を自己回収してください。"
         )
 
@@ -1504,6 +1506,7 @@ def store_alert(request):
         recipient_type="store",
         store=request.user,
         type="user_cancel",
+        is_done=False,
     ).select_related(
         "product", "order"
     ).order_by("-created_at")
@@ -1513,6 +1516,7 @@ def store_alert(request):
         recipient_type="store",
         store=request.user,
         type__in=["auto_cancel", "expiration_date"],
+        is_done=False,
     ).select_related(
         "product", "order"
     ).order_by("-created_at")
@@ -1534,6 +1538,21 @@ def store_alert(request):
         "user_cancel_count": user_cancel_count,
         "expired_cancel_count": expired_cancel_count,
     })
+
+from django.views.decorators.http import require_POST
+
+@require_POST
+@login_required(login_url='store_signin')
+def store_notification_done(request, notification_id):
+    notification = get_object_or_404(
+        Notification,
+        notification_id=notification_id,
+        store=request.user
+    )
+    notification.is_done = True
+    notification.save()
+    return redirect(request.META.get("HTTP_REFERER", "store_alert"))
+
 
 @login_required(login_url='store_signin')
 def store_registar(request):

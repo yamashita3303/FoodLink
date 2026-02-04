@@ -245,6 +245,7 @@ class Notification(models.Model):
     message = models.TextField()
     recipient_type = models.CharField(max_length=10, choices=RECIPIENT_CHOICES)
     is_read = models.BooleanField(default=False)
+    is_done = models.BooleanField(default=False)
      # 受け取るユーザー（一般）
     user = models.ForeignKey(
         User,
@@ -270,10 +271,3 @@ class Notification(models.Model):
         if self.recipient_type == 'user' and not self.user:
             raise ValidationError("recipient_type が user の場合、user を指定してください")
         
-class Qr(models.Model):
-    code_data = models.IntegerField()  # ロッカー番号
-    pin = models.IntegerField()        # 記録用（必須ではない）
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Locker {self.code_data} - {self.created_at:%Y-%m-%d %H:%M}"
