@@ -744,6 +744,8 @@ def create_order_from_store(request):
 # テスト用 ExecTran
 # -------------------------
 from django.shortcuts import redirect
+from django.db import transaction
+from django.db.models import F
  
 @login_required
 def test_exec_tran(request, order_id):
@@ -779,28 +781,50 @@ def test_exec_tran(request, order_id):
  
         approve = result.get("Approve")
         if approve:
-            order.status = "pending"
-            order.save()
- 
-            for item in order.items.all():
-                product = item.product
-                product.quantity -= item.quantity
-                if product.quantity < 0:
-                    product.quantity = 0
-                product.save()
- 
-                Notification.objects.create(
-                    type="order",
-                    message=f"{product.name} が購入されました（数量: {item.quantity}）",
-                    recipient_type="store",
-                    store=order.store,
-                    order=order,
-                    product=product
-                )
- 
-            # ✅ 決済完了後に home.html へ
+            try:
+                with transaction.atomic():
+                    order = Order.objects.select_for_update().get(pk=order.pk)
+
+                    for item in order.items.select_related("product"):
+                        product = Product.objects.select_for_update().get(pk=item.product.pk)
+
+                        if product.quantity < item.quantity:
+                            order.status = "canceled"
+                            order.save()
+                            return render(request, "user/payment_page.html", {
+                                "order": order,
+                                "ShopID": settings.GMO_SHOP_ID,
+                                "AccessID": access_id,
+                                "AccessPass": access_pass,
+                                "OrderID": order.order_id,
+                                "JobCd": "CAPTURE",
+                                "Amount": int(order.total_price),
+                                "error_message": "申し訳ありません。他のお客様の購入により在庫切れとなりました。",
+                            })
+
+                        product.quantity = F("quantity") - item.quantity
+                        product.save()
+
+                        Notification.objects.create(
+                            type="order",
+                            message=f"{product.name} が購入されました（数量: {item.quantity}）",
+                            recipient_type="store",
+                            store=order.store,
+                            order=order,
+                            product=product
+                        )
+
+                    order.status = "pending"
+                    order.save()
+
+            except Exception as e:
+                print(e)
+                order.status = "canceled"
+                order.save()
+                return redirect("user_cart")
+
             return redirect("user_home")
- 
+
         else:
             order.status = "canceled"
             order.save()
@@ -815,6 +839,7 @@ def test_exec_tran(request, order_id):
         "OrderID": order.order_id,
         "JobCd": "CAPTURE",
         "Amount": int(order.total_price),
+        "error_message": "申し訳ありません。他のお客様の購入により在庫切れとなりました。",
     })
  
  
